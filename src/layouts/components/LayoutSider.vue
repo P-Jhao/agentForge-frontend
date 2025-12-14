@@ -71,13 +71,26 @@ const menuOptions: MenuOption[] = [
     :width="240"
     :collapsed="collapsed"
     show-trigger
+    class="bg-dark-800/80 border-r border-white/5 backdrop-blur-xl"
     @collapse="collapsed = true"
     @expand="collapsed = false"
   >
     <!-- Logo 区域 -->
-    <RouterLink to="/" class="flex h-16 items-center justify-center border-b border-gray-200">
-      <span v-if="!collapsed" class="text-primary-600 text-xl font-bold">🤖 AgentForge</span>
-      <span v-else class="text-2xl">🤖</span>
+    <RouterLink to="/" class="flex h-16 items-center justify-center border-b border-white/5">
+      <div v-if="!collapsed" class="flex items-center gap-2">
+        <div
+          class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
+        >
+          <span class="text-lg">🤖</span>
+        </div>
+        <span class="text-gradient text-lg font-bold">AgentForge</span>
+      </div>
+      <div
+        v-else
+        class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
+      >
+        <span class="text-lg">🤖</span>
+      </div>
     </RouterLink>
 
     <!-- 导航菜单 -->

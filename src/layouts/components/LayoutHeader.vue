@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { h, type Component } from 'vue';
 import { useRouter } from 'vue-router';
-import { NLayoutHeader, NButton, NSpace, NAvatar, NDropdown, NIcon } from 'naive-ui';
-import { PersonOutline, LogOutOutline } from '@vicons/ionicons5';
+import { NLayoutHeader, NButton, NSpace, NAvatar, NDropdown, NIcon, NBadge } from 'naive-ui';
+import { PersonOutline, LogOutOutline, NotificationsOutline } from '@vicons/ionicons5';
 
 const router = useRouter();
 
@@ -17,6 +17,10 @@ const userOptions = [
     label: '个人中心',
     key: 'profile',
     icon: renderIcon(PersonOutline),
+  },
+  {
+    type: 'divider',
+    key: 'd1',
   },
   {
     label: '退出登录',
@@ -37,17 +41,36 @@ function handleUserSelect(key: string) {
 </script>
 
 <template>
-  <NLayoutHeader bordered class="flex h-16 items-center justify-between px-6">
-    <div>AgentForge - 多功能 AI Agent 平台</div>
+  <NLayoutHeader
+    class="bg-dark-800/80 flex h-16 items-center justify-between border-b border-white/5 px-6 backdrop-blur-xl"
+  >
+    <!-- 左侧标题 -->
+    <div class="flex items-center gap-3">
+      <span class="text-lg font-medium text-white">AgentForge</span>
+      <span class="bg-primary-500/20 text-primary-400 rounded-full px-2 py-0.5 text-xs">Beta</span>
+    </div>
 
-    <NSpace align="center">
-      <NDropdown :options="userOptions" @select="handleUserSelect">
-        <NButton quaternary>
+    <!-- 右侧操作区 -->
+    <NSpace align="center" :size="16">
+      <!-- 通知 -->
+      <NBadge :value="3" :max="9">
+        <NButton quaternary circle>
           <template #icon>
-            <NAvatar round size="small">U</NAvatar>
+            <NIcon :component="NotificationsOutline" :size="20" />
           </template>
-          用户名
         </NButton>
+      </NBadge>
+
+      <!-- 用户 -->
+      <NDropdown :options="userOptions" @select="handleUserSelect">
+        <div
+          class="flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pr-3 pl-1 transition-colors hover:bg-white/10"
+        >
+          <NAvatar round size="small" class="from-primary-500 to-accent-purple bg-linear-to-br">
+            U
+          </NAvatar>
+          <span class="text-sm text-gray-300">用户名</span>
+        </div>
       </NDropdown>
     </NSpace>
   </NLayoutHeader>

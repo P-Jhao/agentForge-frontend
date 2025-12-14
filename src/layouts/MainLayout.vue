@@ -8,17 +8,17 @@ const collapsed = ref(false);
 </script>
 
 <template>
-  <NLayout has-sider class="h-screen">
+  <NLayout has-sider class="bg-dark-900 h-screen">
     <!-- 侧边栏 -->
     <LayoutSider v-model:collapsed="collapsed" />
 
     <!-- 右侧主体 -->
-    <NLayout>
+    <NLayout class="bg-dark-900">
       <!-- 顶部导航栏 -->
       <LayoutHeader />
 
       <!-- 内容区域 -->
-      <NLayoutContent class="p-6">
+      <NLayoutContent class="bg-grid overflow-auto p-6">
         <RouterView />
       </NLayoutContent>
     </NLayout>
