@@ -59,12 +59,19 @@ function handleUserSelect(key: string) {
 
 <template>
   <NLayoutHeader
-    class="bg-dark-800/80 dark:bg-dark-800/80 flex h-16 items-center justify-between border-b border-white/5 px-6 backdrop-blur-xl dark:border-white/5"
+    class="flex h-16 items-center justify-between border-b px-6"
+    :class="
+      themeStore.isDark
+        ? 'bg-dark-800/80 border-white/5 backdrop-blur-xl'
+        : 'border-gray-200 bg-white'
+    "
   >
     <!-- 左侧标题 -->
     <div class="flex items-center gap-3">
-      <span class="text-lg font-medium text-gray-900 dark:text-white">AgentForge</span>
-      <span class="bg-primary-500/20 text-primary-400 rounded-full px-2 py-0.5 text-xs">Beta</span>
+      <span class="text-lg font-medium" :class="themeStore.isDark ? 'text-white' : 'text-gray-900'">
+        AgentForge
+      </span>
+      <span class="bg-primary-500/20 text-primary-500 rounded-full px-2 py-0.5 text-xs">Beta</span>
     </div>
 
     <!-- 右侧操作区 -->
@@ -93,12 +100,19 @@ function handleUserSelect(key: string) {
       <!-- 用户 -->
       <NDropdown :options="userOptions" @select="handleUserSelect">
         <div
-          class="flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pr-3 pl-1 transition-colors hover:bg-white/10"
+          class="flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
+          :class="
+            themeStore.isDark
+              ? 'border-white/10 bg-white/5 hover:bg-white/10'
+              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+          "
         >
           <NAvatar round size="small" class="from-primary-500 to-accent-purple bg-linear-to-br">
             U
           </NAvatar>
-          <span class="text-sm text-gray-600 dark:text-gray-300">用户名</span>
+          <span class="text-sm" :class="themeStore.isDark ? 'text-gray-300' : 'text-gray-700'">
+            用户名
+          </span>
         </div>
       </NDropdown>
     </NSpace>

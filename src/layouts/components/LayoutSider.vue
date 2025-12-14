@@ -10,11 +10,13 @@ import {
   SearchOutline,
   SettingsOutline,
 } from '@vicons/ionicons5';
+import { useThemeStore } from '@/stores';
 
 // 接收折叠状态
 const collapsed = defineModel<boolean>('collapsed', { default: false });
 
 const route = useRoute();
+const themeStore = useThemeStore();
 
 // 当前选中的菜单（根据路由自动计算）
 const activeKey = computed(() => {
@@ -71,12 +73,20 @@ const menuOptions: MenuOption[] = [
     :width="240"
     :collapsed="collapsed"
     show-trigger
-    class="bg-dark-800/80 border-r border-white/5 backdrop-blur-xl"
+    :class="
+      themeStore.isDark
+        ? 'bg-dark-800/80 border-r border-white/5 backdrop-blur-xl'
+        : 'border-r border-gray-200 bg-white'
+    "
     @collapse="collapsed = true"
     @expand="collapsed = false"
   >
     <!-- Logo 区域 -->
-    <RouterLink to="/" class="flex h-16 items-center justify-center border-b border-white/5">
+    <RouterLink
+      to="/"
+      class="flex h-16 items-center justify-center border-b"
+      :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
+    >
       <div v-if="!collapsed" class="flex items-center gap-2">
         <div
           class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"

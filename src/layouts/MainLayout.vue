@@ -22,7 +22,7 @@ const themeStore = useThemeStore();
       <!-- 内容区域 -->
       <NLayoutContent
         class="overflow-auto p-6"
-        :class="themeStore.isDark ? 'bg-dark-900 bg-grid' : 'bg-slate-50'"
+        :class="themeStore.isDark ? 'bg-dark-900 bg-grid' : 'bg-light-100 bg-grid-light'"
       >
         <RouterView />
       </NLayoutContent>

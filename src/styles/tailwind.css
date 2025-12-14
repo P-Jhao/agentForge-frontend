@@ -27,11 +27,25 @@
   --color-dark-500: #2a2a38;
 }
 
+/* 浅色背景 */
+@theme {
+  --color-light-50: #f8fafc;
+  --color-light-100: #f1f5f9;
+  --color-light-200: #e2e8f0;
+  --color-light-300: #cbd5e1;
+  --color-light-400: #94a3b8;
+}
+
 /* 全局样式 */
 @layer base {
   body {
     @apply bg-dark-900 text-gray-100;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* 浅色模式下的 body 样式 */
+  html:not(.dark) body {
+    @apply bg-light-100 text-gray-800;
   }
 }
 
@@ -88,12 +102,41 @@
     @apply from-primary-400 via-accent-purple to-accent-pink bg-linear-to-r bg-clip-text text-transparent;
   }
 
+  /* 浅色模式渐变文字 - 使用更深的颜色 */
+  html:not(.dark) .text-gradient {
+    @apply from-primary-600 via-primary-700 to-accent-purple bg-linear-to-r bg-clip-text text-transparent;
+  }
+
   /* 动画网格背景 */
   .bg-grid {
     background-image:
       linear-gradient(rgba(97, 114, 243, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(97, 114, 243, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
+  }
+
+  /* 浅色模式网格背景 */
+  .bg-grid-light {
+    background-image:
+      linear-gradient(rgba(80, 70, 229, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80, 70, 229, 0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* 浅色模式卡片 */
+  .card-light {
+    @apply border-light-200 rounded-2xl border bg-white p-6 shadow-sm;
+    transition: all 0.3s ease;
+  }
+
+  .card-light:hover {
+    @apply shadow-md;
+    border-color: rgba(80, 70, 229, 0.2);
+  }
+
+  /* 浅色模式玻璃态 */
+  .glass-light {
+    @apply border-light-200 rounded-2xl border bg-white/80 backdrop-blur-xl;
   }
 }
 
