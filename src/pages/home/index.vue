@@ -138,7 +138,12 @@ const stats = [
             round
             class="flex-1"
           />
-          <NButton type="primary" size="large" round :class="themeStore.isDark ? 'btn-glow' : ''">
+          <NButton
+            type="primary"
+            size="large"
+            round
+            :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
+          >
             <template #icon>
               <NIcon :component="SendOutline" />
             </template>

@@ -104,9 +104,12 @@ export const lightThemeOverrides: GlobalThemeOverrides = {
   },
   Button: {
     textColorPrimary: '#ffffff',
+    // hover 时文字变为青色，科技感
+    textColorHoverPrimary: '#a5f3fc',
+    textColorPressedPrimary: '#67e8f9',
     colorPrimary: '#5046e5',
-    colorHoverPrimary: '#4338ca',
-    colorPressedPrimary: '#3730a3',
+    colorHoverPrimary: '#5046e5',
+    colorPressedPrimary: '#4338ca',
   },
   Card: {
     color: '#ffffff',

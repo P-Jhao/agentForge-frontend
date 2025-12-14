@@ -76,7 +76,7 @@
     pointer-events: none;
   }
 
-  /* 发光按钮 */
+  /* 发光按钮（暗色模式） */
   .btn-glow {
     @apply from-primary-600 to-accent-purple relative rounded-xl bg-linear-to-r px-6 py-3 font-medium text-white transition-all;
     box-shadow: 0 0 20px rgba(97, 114, 243, 0.4);
@@ -84,7 +84,18 @@
 
   .btn-glow:hover {
     box-shadow: 0 0 30px rgba(97, 114, 243, 0.6);
-    transform: translateY(-2px);
+  }
+
+  /* 渐变按钮（浅色模式） */
+  .btn-gradient {
+    @apply relative rounded-xl px-6 py-3 font-medium transition-all duration-300;
+    background: linear-gradient(135deg, #6172f3 0%, #3538cd 100%);
+    box-shadow: 0 4px 14px rgba(80, 70, 229, 0.25);
+    color: #ffffff;
+  }
+
+  .btn-gradient:hover {
+    color: #a5f3fc;
   }
 
   /* 玻璃态效果 */
