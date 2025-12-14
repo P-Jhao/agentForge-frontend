@@ -41,6 +41,15 @@ export default [
           html: { void: 'always', normal: 'never', component: 'always' },
         },
       ],
+      // 模板缩进使用 2 空格（与 vue/recommended 一致）
+      'vue/html-indent': ['warn', 2],
+      'vue/script-indent': ['warn', 2, { baseIndent: 0 }],
+      // 关闭一些过于严格的格式规则（交给 Prettier 处理）
+      'vue/max-attributes-per-line': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/multiline-html-element-content-indent': 'off',
+      'vue/first-attribute-linebreak': 'off',
+      'vue/html-closing-bracket-newline': 'off',
     },
   },
 ]
