@@ -17,10 +17,10 @@
 /* 自定义组件类 */
 @layer components {
   .btn-primary {
-    @apply bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors;
+    @apply bg-primary-500 hover:bg-primary-600 rounded-lg px-4 py-2 text-white transition-colors;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm p-6;
+    @apply rounded-xl bg-white p-6 shadow-sm;
   }
 }
