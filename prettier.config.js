@@ -16,4 +16,6 @@ export default {
   vueIndentScriptAndStyle: false,
   // HTML 空白敏感度
   htmlWhitespaceSensitivity: 'ignore',
+  // Tailwind 类名自动排序
+  plugins: ['prettier-plugin-tailwindcss'],
 }
