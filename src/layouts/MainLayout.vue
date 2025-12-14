@@ -2,9 +2,11 @@
 import { ref } from 'vue';
 import { NLayout, NLayoutContent } from 'naive-ui';
 import { LayoutSider, LayoutHeader } from './components';
+import { useThemeStore } from '@/stores';
 
 // 侧边栏折叠状态
 const collapsed = ref(false);
+const themeStore = useThemeStore();
 </script>
 
 <template>
@@ -18,7 +20,10 @@ const collapsed = ref(false);
       <LayoutHeader />
 
       <!-- 内容区域 -->
-      <NLayoutContent class="bg-grid bg-dark-900 overflow-auto p-6">
+      <NLayoutContent
+        class="overflow-auto p-6"
+        :class="themeStore.isDark ? 'bg-dark-900 bg-grid' : 'bg-slate-50'"
+      >
         <RouterView />
       </NLayoutContent>
     </NLayout>

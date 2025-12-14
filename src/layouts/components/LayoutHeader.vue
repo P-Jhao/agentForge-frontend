@@ -1,10 +1,27 @@
 <script setup lang="ts">
 import { h, type Component } from 'vue';
 import { useRouter } from 'vue-router';
-import { NLayoutHeader, NButton, NSpace, NAvatar, NDropdown, NIcon, NBadge } from 'naive-ui';
-import { PersonOutline, LogOutOutline, NotificationsOutline } from '@vicons/ionicons5';
+import {
+  NLayoutHeader,
+  NButton,
+  NSpace,
+  NAvatar,
+  NDropdown,
+  NIcon,
+  NBadge,
+  NTooltip,
+} from 'naive-ui';
+import {
+  PersonOutline,
+  LogOutOutline,
+  NotificationsOutline,
+  SunnyOutline,
+  MoonOutline,
+} from '@vicons/ionicons5';
+import { useThemeStore } from '@/stores';
 
 const router = useRouter();
+const themeStore = useThemeStore();
 
 // 渲染图标的辅助函数
 function renderIcon(icon: Component) {
@@ -42,16 +59,28 @@ function handleUserSelect(key: string) {
 
 <template>
   <NLayoutHeader
-    class="bg-dark-800/80 flex h-16 items-center justify-between border-b border-white/5 px-6 backdrop-blur-xl"
+    class="bg-dark-800/80 dark:bg-dark-800/80 flex h-16 items-center justify-between border-b border-white/5 px-6 backdrop-blur-xl dark:border-white/5"
   >
     <!-- 左侧标题 -->
     <div class="flex items-center gap-3">
-      <span class="text-lg font-medium text-white">AgentForge</span>
+      <span class="text-lg font-medium text-gray-900 dark:text-white">AgentForge</span>
       <span class="bg-primary-500/20 text-primary-400 rounded-full px-2 py-0.5 text-xs">Beta</span>
     </div>
 
     <!-- 右侧操作区 -->
     <NSpace align="center" :size="16">
+      <!-- 主题切换 -->
+      <NTooltip>
+        <template #trigger>
+          <NButton quaternary circle @click="themeStore.toggleTheme">
+            <template #icon>
+              <NIcon :component="themeStore.isDark ? SunnyOutline : MoonOutline" :size="20" />
+            </template>
+          </NButton>
+        </template>
+        {{ themeStore.isDark ? '切换到浅色模式' : '切换到深色模式' }}
+      </NTooltip>
+
       <!-- 通知 -->
       <NBadge :value="3" :max="9">
         <NButton quaternary circle>
@@ -69,7 +98,7 @@ function handleUserSelect(key: string) {
           <NAvatar round size="small" class="from-primary-500 to-accent-purple bg-linear-to-br">
             U
           </NAvatar>
-          <span class="text-sm text-gray-300">用户名</span>
+          <span class="text-sm text-gray-600 dark:text-gray-300">用户名</span>
         </div>
       </NDropdown>
     </NSpace>

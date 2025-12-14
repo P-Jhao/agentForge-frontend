@@ -1,15 +1,14 @@
 /**
  * Naive UI 主题配置
- * 暗色科技风格
  */
-import { darkTheme } from 'naive-ui';
+import { darkTheme, lightTheme } from 'naive-ui';
 import type { GlobalThemeOverrides } from 'naive-ui';
 
-// 导出暗色主题
-export { darkTheme };
+// 导出主题
+export { darkTheme, lightTheme };
 
-// 主题覆盖配置
-export const themeOverrides: GlobalThemeOverrides = {
+// 暗色主题覆盖配置
+export const darkThemeOverrides: GlobalThemeOverrides = {
   common: {
     primaryColor: '#6172f3',
     primaryColorHover: '#444ce7',
@@ -53,5 +52,48 @@ export const themeOverrides: GlobalThemeOverrides = {
   Card: {
     color: '#12121a',
     borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+};
+
+// 浅色主题覆盖配置
+export const lightThemeOverrides: GlobalThemeOverrides = {
+  common: {
+    primaryColor: '#6172f3',
+    primaryColorHover: '#444ce7',
+    primaryColorPressed: '#3538cd',
+    primaryColorSuppl: '#8098f9',
+    bodyColor: '#f8fafc',
+    cardColor: '#ffffff',
+    modalColor: '#ffffff',
+    popoverColor: '#ffffff',
+    tableColor: '#ffffff',
+  },
+  Layout: {
+    color: '#f8fafc',
+    siderColor: '#ffffff',
+    headerColor: '#ffffff',
+  },
+  Menu: {
+    color: 'transparent',
+    itemTextColor: '#64748b',
+    itemTextColorHover: '#1e293b',
+    itemTextColorActive: '#6172f3',
+    itemIconColor: '#64748b',
+    itemIconColorHover: '#1e293b',
+    itemIconColorActive: '#6172f3',
+    itemColorActive: 'rgba(97, 114, 243, 0.1)',
+    itemColorActiveHover: 'rgba(97, 114, 243, 0.15)',
+  },
+  Input: {
+    border: '1px solid #e2e8f0',
+    borderHover: '1px solid rgba(97, 114, 243, 0.5)',
+    borderFocus: '1px solid #6172f3',
+  },
+  Button: {
+    textColorPrimary: '#ffffff',
+  },
+  Card: {
+    color: '#ffffff',
+    borderColor: '#e2e8f0',
   },
 };
