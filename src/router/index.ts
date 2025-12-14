@@ -3,58 +3,10 @@
  */
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
+import { mainRoutes, authRoutes, errorRoutes } from './modules';
 
-// 路由配置
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    component: () => import('@/layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
-        name: 'Home',
-        component: () => import('@/pages/home/index.vue'),
-        meta: { title: '首页' },
-      },
-      {
-        path: 'code-audit',
-        name: 'CodeAudit',
-        component: () => import('@/pages/code-audit/index.vue'),
-        meta: { title: '代码审计' },
-      },
-      {
-        path: 'scoring',
-        name: 'Scoring',
-        component: () => import('@/pages/scoring/index.vue'),
-        meta: { title: '智能评分' },
-      },
-      {
-        path: 'rag-search',
-        name: 'RagSearch',
-        component: () => import('@/pages/rag-search/index.vue'),
-        meta: { title: 'RAG 检索' },
-      },
-      {
-        path: 'settings',
-        name: 'Settings',
-        component: () => import('@/pages/settings/index.vue'),
-        meta: { title: '系统设置' },
-      },
-    ],
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/pages/login/index.vue'),
-    meta: { title: '登录' },
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: () => import('@/pages/not-found/index.vue'),
-    meta: { title: '页面不存在' },
-  },
-];
+// 合并所有路由模块
+const routes: RouteRecordRaw[] = [mainRoutes, ...authRoutes, ...errorRoutes];
 
 // 创建路由实例
 const router = createRouter({
