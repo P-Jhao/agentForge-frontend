@@ -55,7 +55,9 @@ const taskHistory = ref({
 const activeKey = computed(() => {
   const path = route.path;
   if (path === '/') return 'home';
+  if (path === '/forge/plaza') return 'forge-plaza';
   if (path.startsWith('/forge/')) return `forge-${route.params.id}`;
+  if (path === '/task/list') return 'task-list';
   if (path.startsWith('/task/')) return `task-${route.params.id}`;
   return path.slice(1);
 });
@@ -166,7 +168,7 @@ const bottomNavItems = [
                 我的 Forge
               </span>
               <RouterLink
-                to="/forge-plaza"
+                to="/forge/plaza"
                 class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
               >
                 Forge 广场
@@ -258,7 +260,7 @@ const bottomNavItems = [
                 </button>
               </div>
               <RouterLink
-                to="/tasks"
+                to="/task/list"
                 class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
               >
                 任务管理
@@ -365,7 +367,7 @@ const bottomNavItems = [
             <NTooltip placement="right">
               <template #trigger>
                 <RouterLink
-                  to="/tasks"
+                  to="/task/list"
                   class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
                   :class="
                     themeStore.isDark

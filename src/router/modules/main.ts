@@ -14,21 +14,26 @@ const mainRoutes: RouteRecordRaw = {
       component: () => import('@/pages/home/index.vue'),
       meta: { title: '首页' },
     },
-    // Forge 广场
+    // Forge 模块
     {
-      path: 'forge-plaza',
+      path: 'forge/plaza',
       name: 'ForgePlaza',
       component: () => import('@/pages/forge-plaza/index.vue'),
       meta: { title: 'Forge 广场' },
     },
-    // Forge 详情
     {
       path: 'forge/:id',
       name: 'ForgeDetail',
       component: () => import('@/pages/forge-detail/index.vue'),
       meta: { title: 'Forge 详情' },
     },
-    // 任务详情
+    // 任务模块
+    {
+      path: 'task/list',
+      name: 'TaskList',
+      component: () => import('@/pages/tasks/index.vue'),
+      meta: { title: '任务列表' },
+    },
     {
       path: 'task/:id',
       name: 'TaskDetail',
@@ -42,19 +47,20 @@ const mainRoutes: RouteRecordRaw = {
       component: () => import('@/pages/mcp/index.vue'),
       meta: { title: 'MCP 管理' },
     },
-    // 任务管理
-    {
-      path: 'tasks',
-      name: 'TaskManage',
-      component: () => import('@/pages/tasks/index.vue'),
-      meta: { title: '任务管理' },
-    },
+
     // 设置
     {
       path: 'settings',
       name: 'Settings',
       component: () => import('@/pages/settings/index.vue'),
       meta: { title: '设置' },
+    },
+    // 个人中心
+    {
+      path: 'profile',
+      name: 'Profile',
+      component: () => import('@/pages/profile/index.vue'),
+      meta: { title: '个人中心' },
     },
   ],
 };

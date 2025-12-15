@@ -52,7 +52,7 @@ function handleUserSelect(key: string) {
     // TODO: 清除登录状态
     router.push('/login');
   } else if (key === 'profile') {
-    // TODO: 跳转个人中心
+    router.push('/profile');
   }
 }
 </script>
