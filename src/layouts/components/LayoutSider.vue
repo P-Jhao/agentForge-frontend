@@ -10,7 +10,6 @@ import {
   AddOutline,
   SearchOutline,
   ExtensionPuzzleOutline,
-  ListOutline,
   SettingsOutline,
   ChevronForwardOutline,
   TimeOutline,
@@ -64,7 +63,6 @@ const activeKey = computed(() => {
 // 底部导航项
 const bottomNavItems = [
   { key: 'mcp', label: 'MCP 管理', icon: ExtensionPuzzleOutline, path: '/mcp' },
-  { key: 'tasks', label: '任务管理', icon: ListOutline, path: '/tasks' },
   { key: 'settings', label: '设置', icon: SettingsOutline, path: '/settings' },
 ];
 </script>
