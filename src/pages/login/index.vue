@@ -50,16 +50,22 @@ async function handleLogin() {
 
 // 注册
 async function handleRegister() {
-  if (!formData.value.username || !formData.value.password) {
+  const { username, password, confirmPassword } = formData.value;
+
+  if (!username || !password) {
     message.warning('请输入用户名和密码');
     return;
   }
-  if (formData.value.password !== formData.value.confirmPassword) {
-    message.warning('两次密码输入不一致');
+  if (username.length < 3 || username.length > 20) {
+    message.warning('用户名长度需在 3-20 字符之间');
     return;
   }
-  if (formData.value.password.length < 6) {
-    message.warning('密码长度至少6位');
+  if (password.length < 6 || password.length > 32) {
+    message.warning('密码长度需在 6-32 字符之间');
+    return;
+  }
+  if (password !== confirmPassword) {
+    message.warning('两次密码输入不一致');
     return;
   }
   loading.value = true;

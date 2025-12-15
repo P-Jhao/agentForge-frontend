@@ -26,6 +26,8 @@ export default [
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
+        // 指定 tsconfig 根目录，解决 monorepo 环境下的问题
+        tsconfigRootDir: import.meta.dirname,
       },
       globals: {
         console: 'readonly',
