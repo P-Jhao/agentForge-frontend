@@ -89,21 +89,12 @@ function isActive(key: string) {
   >
     <div class="flex h-full flex-col">
       <!-- Logo 区域 -->
-      <RouterLink to="/" class="flex h-16 shrink-0 items-center justify-center">
+      <RouterLink to="/" class="flex h-16 shrink-0 items-center px-4">
         <div v-if="!collapsed" class="flex items-center gap-2">
-          <div
-            class="logo-glow from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
-          >
-            <span class="text-lg">🤖</span>
-          </div>
+          <img src="@/assets/imgs/logo.png" alt="AgentForge Logo" class="h-10" />
           <span class="text-gradient text-lg font-bold">AgentForge</span>
         </div>
-        <div
-          v-else
-          class="logo-glow from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
-        >
-          <span class="text-lg">🤖</span>
-        </div>
+        <img v-else src="@/assets/imgs/logo.png" alt="AgentForge Logo" class="h-10" />
       </RouterLink>
 
       <!-- 渐变分割线 -->
