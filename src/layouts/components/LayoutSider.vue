@@ -5,7 +5,7 @@
  */
 import { ref, computed } from 'vue';
 import { useRoute, useRouter, RouterLink } from 'vue-router';
-import { NLayoutSider, NButton, NIcon, NInput, NDivider, NScrollbar, NTooltip } from 'naive-ui';
+import { NLayoutSider, NButton, NIcon, NInput, NScrollbar, NTooltip } from 'naive-ui';
 import {
   AddOutline,
   SearchOutline,
@@ -85,14 +85,11 @@ const bottomNavItems = [
   >
     <div class="flex h-full flex-col">
       <!-- Logo 区域 -->
-      <RouterLink
-        to="/"
-        class="flex h-16 shrink-0 items-center justify-center border-b"
-        :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
-      >
+      <RouterLink to="/" class="flex h-16 shrink-0 items-center justify-center">
         <div v-if="!collapsed" class="flex items-center gap-2">
           <div
             class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
+            :class="themeStore.isDark ? 'logo-glow' : ''"
           >
             <span class="text-lg">🤖</span>
           </div>
@@ -101,19 +98,25 @@ const bottomNavItems = [
         <div
           v-else
           class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
+          :class="themeStore.isDark ? 'logo-glow' : ''"
         >
           <span class="text-lg">🤖</span>
         </div>
       </RouterLink>
 
+      <!-- 渐变分割线 -->
+      <div :class="themeStore.isDark ? 'divider-gradient' : 'h-px bg-gray-200'"></div>
+
       <!-- 搜索框 + 新建任务 -->
-      <div
-        v-if="!collapsed"
-        class="shrink-0 space-y-3 border-b p-3"
-        :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
-      >
+      <div v-if="!collapsed" class="shrink-0 space-y-3 p-3">
         <!-- 搜索框 -->
-        <NInput v-model:value="searchKeyword" placeholder="搜索..." size="small" round>
+        <NInput
+          v-model:value="searchKeyword"
+          placeholder="搜索..."
+          size="small"
+          round
+          :class="themeStore.isDark ? 'glass' : ''"
+        >
           <template #prefix>
             <NIcon :component="SearchOutline" />
           </template>
@@ -170,21 +173,21 @@ const bottomNavItems = [
                 <NIcon :component="ChevronForwardOutline" :size="12" />
               </RouterLink>
             </div>
-            <!-- Forge 列表 -->
-            <div class="space-y-1">
+            <!-- Forge 列表 - 玻璃态容器 -->
+            <div :class="themeStore.isDark ? 'sider-section-glass space-y-1 p-2' : 'space-y-1'">
               <RouterLink
                 v-for="forge in myForges"
                 :key="forge.id"
                 :to="`/forge/${forge.id}`"
-                class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+                class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
                 :class="[
                   activeKey === `forge-${forge.id}`
                     ? themeStore.isDark
-                      ? 'bg-primary-500/20 text-primary-400'
-                      : 'bg-primary-500/10 text-primary-600'
+                      ? 'sider-item-active text-primary-400'
+                      : 'bg-primary-500/10 text-primary-600 rounded-lg'
                     : themeStore.isDark
-                      ? 'text-gray-300 hover:bg-white/5'
-                      : 'text-gray-700 hover:bg-gray-100',
+                      ? 'sider-item-hover text-gray-300'
+                      : 'rounded-lg text-gray-700 hover:bg-gray-100',
                 ]"
               >
                 <span class="text-base">{{ forge.icon }}</span>
@@ -217,10 +220,11 @@ const bottomNavItems = [
             </NTooltip>
           </div>
 
-          <NDivider
+          <!-- 渐变分割线 -->
+          <div
             v-if="!collapsed"
-            :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
-          />
+            :class="themeStore.isDark ? 'divider-gradient my-3' : 'my-3 h-px bg-gray-200'"
+          ></div>
 
           <!-- 历史任务 -->
           <div v-if="!collapsed" class="mb-4">
@@ -262,8 +266,8 @@ const bottomNavItems = [
               </RouterLink>
             </div>
 
-            <!-- 任务列表 -->
-            <div class="space-y-3">
+            <!-- 任务列表 - 玻璃态容器 -->
+            <div :class="themeStore.isDark ? 'sider-section-glass space-y-3 p-2' : 'space-y-3'">
               <!-- 今天 -->
               <div v-if="taskHistory.today.length">
                 <div
@@ -278,15 +282,15 @@ const bottomNavItems = [
                     v-for="task in taskHistory.today"
                     :key="task.id"
                     :to="`/task/${task.id}`"
-                    class="block truncate rounded-lg px-3 py-2 text-sm transition-colors"
+                    class="block truncate px-3 py-2 text-sm transition-all duration-200"
                     :class="[
                       activeKey === `task-${task.id}`
                         ? themeStore.isDark
-                          ? 'bg-primary-500/20 text-primary-400'
-                          : 'bg-primary-500/10 text-primary-600'
+                          ? 'sider-item-active text-primary-400'
+                          : 'bg-primary-500/10 text-primary-600 rounded-lg'
                         : themeStore.isDark
-                          ? 'text-gray-300 hover:bg-white/5'
-                          : 'text-gray-700 hover:bg-gray-100',
+                          ? 'sider-item-hover text-gray-300'
+                          : 'rounded-lg text-gray-700 hover:bg-gray-100',
                     ]"
                   >
                     {{ task.title }}
@@ -308,15 +312,15 @@ const bottomNavItems = [
                     v-for="task in taskHistory.yesterday"
                     :key="task.id"
                     :to="`/task/${task.id}`"
-                    class="block truncate rounded-lg px-3 py-2 text-sm transition-colors"
+                    class="block truncate px-3 py-2 text-sm transition-all duration-200"
                     :class="[
                       activeKey === `task-${task.id}`
                         ? themeStore.isDark
-                          ? 'bg-primary-500/20 text-primary-400'
-                          : 'bg-primary-500/10 text-primary-600'
+                          ? 'sider-item-active text-primary-400'
+                          : 'bg-primary-500/10 text-primary-600 rounded-lg'
                         : themeStore.isDark
-                          ? 'text-gray-300 hover:bg-white/5'
-                          : 'text-gray-700 hover:bg-gray-100',
+                          ? 'sider-item-hover text-gray-300'
+                          : 'rounded-lg text-gray-700 hover:bg-gray-100',
                     ]"
                   >
                     {{ task.title }}
@@ -338,15 +342,15 @@ const bottomNavItems = [
                     v-for="task in taskHistory.earlier"
                     :key="task.id"
                     :to="`/task/${task.id}`"
-                    class="block truncate rounded-lg px-3 py-2 text-sm transition-colors"
+                    class="block truncate px-3 py-2 text-sm transition-all duration-200"
                     :class="[
                       activeKey === `task-${task.id}`
                         ? themeStore.isDark
-                          ? 'bg-primary-500/20 text-primary-400'
-                          : 'bg-primary-500/10 text-primary-600'
+                          ? 'sider-item-active text-primary-400'
+                          : 'bg-primary-500/10 text-primary-600 rounded-lg'
                         : themeStore.isDark
-                          ? 'text-gray-300 hover:bg-white/5'
-                          : 'text-gray-700 hover:bg-gray-100',
+                          ? 'sider-item-hover text-gray-300'
+                          : 'rounded-lg text-gray-700 hover:bg-gray-100',
                     ]"
                   >
                     {{ task.title }}
@@ -378,25 +382,23 @@ const bottomNavItems = [
         </div>
       </NScrollbar>
 
-      <!-- 底部导航 -->
-      <div
-        class="shrink-0 border-t"
-        :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
-      >
+      <!-- 底部导航 - 渐变分割线 -->
+      <div class="shrink-0">
+        <div :class="themeStore.isDark ? 'divider-gradient' : 'h-px bg-gray-200'"></div>
         <div v-if="!collapsed" class="space-y-1 p-2">
           <RouterLink
             v-for="item in bottomNavItems"
             :key="item.key"
             :to="item.path"
-            class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+            class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
             :class="[
               activeKey === item.key
                 ? themeStore.isDark
-                  ? 'bg-primary-500/20 text-primary-400'
-                  : 'bg-primary-500/10 text-primary-600'
+                  ? 'sider-item-active text-primary-400'
+                  : 'bg-primary-500/10 text-primary-600 rounded-lg'
                 : themeStore.isDark
-                  ? 'text-gray-400 hover:bg-white/5 hover:text-gray-300'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  ? 'nav-item-glow rounded-lg text-gray-400'
+                  : 'rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900',
             ]"
           >
             <NIcon :component="item.icon" :size="18" />
@@ -408,14 +410,14 @@ const bottomNavItems = [
             <template #trigger>
               <RouterLink
                 :to="item.path"
-                class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
+                class="flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200"
                 :class="[
                   activeKey === item.key
                     ? themeStore.isDark
                       ? 'bg-primary-500/20 text-primary-400'
                       : 'bg-primary-500/10 text-primary-600'
                     : themeStore.isDark
-                      ? 'text-gray-400 hover:bg-white/5'
+                      ? 'nav-item-glow text-gray-400'
                       : 'text-gray-500 hover:bg-gray-100',
                 ]"
               >

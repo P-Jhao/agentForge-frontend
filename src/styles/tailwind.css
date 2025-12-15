@@ -137,20 +137,114 @@
     background-size: 50px 50px;
   }
 
-  /* 浅色模式卡片 */
-  .card-light {
-    @apply border-light-200 rounded-2xl border bg-white p-6 shadow-sm;
-    transition: all 0.3s ease;
+  /* ===== 侧边栏科技感样式 ===== */
+
+  /* 渐变分割线 */
+  .divider-gradient {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(97, 114, 243, 0.3),
+      rgba(168, 85, 247, 0.3),
+      transparent
+    );
   }
 
-  .card-light:hover {
-    @apply shadow-md;
-    border-color: rgba(80, 70, 229, 0.2);
+  /* 侧边栏菜单项 - 选中状态（带左侧发光边框） */
+  .sider-item-active {
+    @apply relative rounded-lg;
+    background: linear-gradient(90deg, rgba(97, 114, 243, 0.15) 0%, transparent 100%);
   }
 
-  /* 浅色模式玻璃态 */
-  .glass-light {
-    @apply border-light-200 rounded-2xl border bg-white/80 backdrop-blur-xl;
+  .sider-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(180deg, #6172f3, #a855f7);
+    box-shadow: 0 0 10px rgba(97, 114, 243, 0.6);
+  }
+
+  /* 侧边栏菜单项 - hover 状态 */
+  .sider-item-hover {
+    @apply rounded-lg transition-all duration-200;
+  }
+
+  .sider-item-hover:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* 侧边栏区域玻璃态背景 */
+  .sider-section-glass {
+    @apply rounded-xl;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Logo 发光效果 */
+  .logo-glow {
+    filter: drop-shadow(0 0 8px rgba(97, 114, 243, 0.4));
+  }
+
+  /* 底部导航项 hover 发光 */
+  .nav-item-glow:hover {
+    background: rgba(97, 114, 243, 0.1);
+    box-shadow: 0 0 15px rgba(97, 114, 243, 0.2);
+  }
+
+  /* 侧边栏整体科技感边框 */
+  .sider-tech-border {
+    border-right: 1px solid transparent;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(97, 114, 243, 0.1),
+      rgba(168, 85, 247, 0.05),
+      transparent
+    );
+    background-origin: border-box;
+  }
+
+  /* 搜索框科技感样式 */
+  .search-tech {
+    @apply rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm;
+    transition: all 0.2s ease;
+  }
+
+  .search-tech:focus-within {
+    border-color: rgba(97, 114, 243, 0.4);
+    box-shadow: 0 0 15px rgba(97, 114, 243, 0.15);
+  }
+
+  /* 任务项脉冲动画（新任务提示） */
+  .task-item-new::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6172f3;
+    box-shadow: 0 0 8px rgba(97, 114, 243, 0.6);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: translateY(-50%) scale(1.2);
+    }
   }
 }
 
