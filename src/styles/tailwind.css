@@ -158,11 +158,10 @@
   /* 侧边栏菜单项 - 选中状态（暗色：发光边框，浅色：背景高亮） */
   .sider-item-active {
     @apply relative rounded-lg;
-    background: linear-gradient(90deg, rgba(97, 114, 243, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%);
+    background: linear-gradient(90deg, rgba(97, 114, 243, 0.15) 0%, transparent 100%);
     box-shadow:
-      0 0 20px rgba(97, 114, 243, 0.3),
-      0 0 40px rgba(97, 114, 243, 0.15),
-      0 0 60px rgba(168, 85, 247, 0.1);
+      0 0 12px rgba(97, 114, 243, 0.2),
+      0 0 24px rgba(97, 114, 243, 0.1);
   }
 
   .sider-item-active::before {
@@ -172,13 +171,12 @@
     top: 50%;
     transform: translateY(-50%);
     width: 3px;
-    height: 70%;
+    height: 60%;
     border-radius: 0 2px 2px 0;
     background: linear-gradient(180deg, #6172f3, #a855f7);
     box-shadow:
-      0 0 8px rgba(97, 114, 243, 0.8),
-      0 0 16px rgba(97, 114, 243, 0.5),
-      0 0 24px rgba(168, 85, 247, 0.3);
+      0 0 6px rgba(97, 114, 243, 0.6),
+      0 0 12px rgba(97, 114, 243, 0.3);
   }
 
   html:not(.dark) .sider-item-active {
