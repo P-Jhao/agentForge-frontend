@@ -28,7 +28,8 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config) => {
     // 从 localStorage 获取 token
-    const token = localStorage.getItem('token');
+    // 从 localStorage 获取 token
+    const token = localStorage.getItem('forgeToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -61,7 +62,7 @@ service.interceptors.response.use(
 
     // 401 未授权，跳转登录
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      localStorage.removeItem('forgeToken');
       router.push('/login');
       return Promise.reject(error);
     }

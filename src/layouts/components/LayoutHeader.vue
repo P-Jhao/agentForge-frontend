@@ -18,10 +18,11 @@ import {
   SunnyOutline,
   MoonOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
+import { useThemeStore, useUserStore } from '@/stores';
 
 const router = useRouter();
 const themeStore = useThemeStore();
+const userStore = useUserStore();
 
 // 渲染图标的辅助函数
 function renderIcon(icon: Component) {
@@ -49,11 +50,16 @@ const userOptions = [
 // 处理用户菜单点击
 function handleUserSelect(key: string) {
   if (key === 'logout') {
-    // TODO: 清除登录状态
+    userStore.logout();
     router.push('/login');
   } else if (key === 'profile') {
     router.push('/profile');
   }
+}
+
+// 跳转登录页
+function goLogin() {
+  router.push('/login');
 }
 </script>
 
@@ -97,8 +103,8 @@ function handleUserSelect(key: string) {
         </NButton>
       </NBadge>
 
-      <!-- 用户 -->
-      <NDropdown :options="userOptions" @select="handleUserSelect">
+      <!-- 用户（已登录） -->
+      <NDropdown v-if="userStore.isLoggedIn" :options="userOptions" @select="handleUserSelect">
         <div
           class="flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
           :class="
@@ -108,13 +114,30 @@ function handleUserSelect(key: string) {
           "
         >
           <NAvatar round size="small" class="from-primary-500 to-accent-purple bg-linear-to-br">
-            U
+            {{ userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U' }}
           </NAvatar>
           <span class="text-sm" :class="themeStore.isDark ? 'text-gray-300' : 'text-gray-700'">
-            用户名
+            {{ userStore.userInfo?.username || '用户' }}
           </span>
         </div>
       </NDropdown>
+
+      <!-- 未登录 -->
+      <div
+        v-else
+        class="flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
+        :class="
+          themeStore.isDark
+            ? 'border-white/10 bg-white/5 hover:bg-white/10'
+            : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+        "
+        @click="goLogin"
+      >
+        <NAvatar round size="small" class="bg-gray-400">?</NAvatar>
+        <span class="text-sm" :class="themeStore.isDark ? 'text-gray-300' : 'text-gray-700'">
+          未登录
+        </span>
+      </div>
     </NSpace>
   </NLayoutHeader>
 </template>
