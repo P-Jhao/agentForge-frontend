@@ -2,6 +2,7 @@
 /**
  * 侧边栏组件
  * 结构：Logo + 新建任务 + 我的 Forge + 历史任务 + 底部导航
+ * 使用主题自适应 CSS 类，减少 isDark 判断
  */
 import { ref, computed } from 'vue';
 import { useRoute, useRouter, RouterLink } from 'vue-router';
@@ -67,6 +68,11 @@ const bottomNavItems = [
   { key: 'mcp', label: 'MCP 管理', icon: ExtensionPuzzleOutline, path: '/mcp' },
   { key: 'settings', label: '设置', icon: SettingsOutline, path: '/settings' },
 ];
+
+// 判断是否选中
+function isActive(key: string) {
+  return activeKey.value === key;
+}
 </script>
 
 <template>
@@ -77,11 +83,7 @@ const bottomNavItems = [
     :width="260"
     :collapsed="collapsed"
     show-trigger
-    :class="
-      themeStore.isDark
-        ? 'bg-dark-800/80 border-r border-white/5 backdrop-blur-xl'
-        : 'border-r border-gray-200 bg-white'
-    "
+    class="sider-bg"
     @collapse="collapsed = true"
     @expand="collapsed = false"
   >
@@ -90,8 +92,7 @@ const bottomNavItems = [
       <RouterLink to="/" class="flex h-16 shrink-0 items-center justify-center">
         <div v-if="!collapsed" class="flex items-center gap-2">
           <div
-            class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
-            :class="themeStore.isDark ? 'logo-glow' : ''"
+            class="logo-glow from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
           >
             <span class="text-lg">🤖</span>
           </div>
@@ -99,31 +100,22 @@ const bottomNavItems = [
         </div>
         <div
           v-else
-          class="from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
-          :class="themeStore.isDark ? 'logo-glow' : ''"
+          class="logo-glow from-primary-500 to-accent-purple flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br"
         >
           <span class="text-lg">🤖</span>
         </div>
       </RouterLink>
 
       <!-- 渐变分割线 -->
-      <div :class="themeStore.isDark ? 'divider-gradient' : 'h-px bg-gray-200'"></div>
+      <div class="divider-gradient"></div>
 
       <!-- 搜索框 + 新建任务 -->
       <div v-if="!collapsed" class="shrink-0 space-y-3 p-3">
-        <!-- 搜索框 -->
-        <NInput
-          v-model:value="searchKeyword"
-          placeholder="搜索..."
-          size="small"
-          round
-          :class="themeStore.isDark ? 'glass' : ''"
-        >
+        <NInput v-model:value="searchKeyword" placeholder="搜索..." size="small" round>
           <template #prefix>
             <NIcon :component="SearchOutline" />
           </template>
         </NInput>
-        <!-- 新建任务按钮 -->
         <NButton
           type="primary"
           block
@@ -138,11 +130,7 @@ const bottomNavItems = [
       </div>
 
       <!-- 折叠状态下的新建按钮 -->
-      <div
-        v-else
-        class="flex shrink-0 justify-center border-b py-3"
-        :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
-      >
+      <div v-else class="border-theme flex shrink-0 justify-center border-b py-3">
         <NTooltip placement="right">
           <template #trigger>
             <NButton type="primary" circle @click="handleNewTask">
@@ -161,12 +149,7 @@ const bottomNavItems = [
           <!-- 我的 Forge -->
           <div v-if="!collapsed" class="mb-4">
             <div class="mb-2 flex items-center justify-between">
-              <span
-                class="text-xs font-medium"
-                :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'"
-              >
-                我的 Forge
-              </span>
+              <span class="text-theme-secondary text-xs font-medium">我的 Forge</span>
               <RouterLink
                 to="/forge/plaza"
                 class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
@@ -175,22 +158,18 @@ const bottomNavItems = [
                 <NIcon :component="ChevronForwardOutline" :size="12" />
               </RouterLink>
             </div>
-            <!-- Forge 列表 - 玻璃态容器 -->
-            <div :class="themeStore.isDark ? 'sider-section-glass space-y-1 p-2' : 'space-y-1'">
+            <!-- Forge 列表 -->
+            <div class="sider-section-glass space-y-1 p-2">
               <RouterLink
                 v-for="forge in myForges"
                 :key="forge.id"
                 :to="`/forge/${forge.id}`"
                 class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
-                :class="[
-                  activeKey === `forge-${forge.id}`
-                    ? themeStore.isDark
-                      ? 'sider-item-active text-primary-400'
-                      : 'bg-primary-500/10 text-primary-600 rounded-lg'
-                    : themeStore.isDark
-                      ? 'sider-item-hover text-gray-300'
-                      : 'rounded-lg text-gray-700 hover:bg-gray-100',
-                ]"
+                :class="
+                  isActive(`forge-${forge.id}`)
+                    ? 'sider-item-active sider-item-active-text'
+                    : 'sider-item-hover sider-item-text'
+                "
               >
                 <span class="text-base">{{ forge.icon }}</span>
                 <span class="truncate text-sm">{{ forge.name }}</span>
@@ -205,15 +184,11 @@ const bottomNavItems = [
                 <RouterLink
                   :to="`/forge/${forge.id}`"
                   class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
-                  :class="[
-                    activeKey === `forge-${forge.id}`
-                      ? themeStore.isDark
-                        ? 'bg-primary-500/20'
-                        : 'bg-primary-500/10'
-                      : themeStore.isDark
-                        ? 'hover:bg-white/5'
-                        : 'hover:bg-gray-100',
-                  ]"
+                  :class="
+                    isActive(`forge-${forge.id}`)
+                      ? 'bg-primary-500/10 dark:bg-primary-500/20'
+                      : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                  "
                 >
                   <span class="text-lg">{{ forge.icon }}</span>
                 </RouterLink>
@@ -223,10 +198,7 @@ const bottomNavItems = [
           </div>
 
           <!-- 渐变分割线 -->
-          <div
-            v-if="!collapsed"
-            :class="themeStore.isDark ? 'divider-gradient my-3' : 'my-3 h-px bg-gray-200'"
-          ></div>
+          <div v-if="!collapsed" class="divider-gradient my-3"></div>
 
           <!-- 历史任务 -->
           <div v-if="!collapsed" class="mb-4">
@@ -235,11 +207,7 @@ const bottomNavItems = [
                 <button
                   class="text-xs font-medium transition-colors"
                   :class="
-                    taskTab === 'all'
-                      ? 'text-primary-500'
-                      : themeStore.isDark
-                        ? 'text-gray-400 hover:text-gray-300'
-                        : 'text-gray-500 hover:text-gray-700'
+                    taskTab === 'all' ? 'text-primary-500' : 'text-theme-secondary hover:text-theme'
                   "
                   @click="taskTab = 'all'"
                 >
@@ -250,9 +218,7 @@ const bottomNavItems = [
                   :class="
                     taskTab === 'favorite'
                       ? 'text-primary-500'
-                      : themeStore.isDark
-                        ? 'text-gray-400 hover:text-gray-300'
-                        : 'text-gray-500 hover:text-gray-700'
+                      : 'text-theme-secondary hover:text-theme'
                   "
                   @click="taskTab = 'favorite'"
                 >
@@ -268,14 +234,11 @@ const bottomNavItems = [
               </RouterLink>
             </div>
 
-            <!-- 任务列表 - 玻璃态容器 -->
-            <div :class="themeStore.isDark ? 'sider-section-glass space-y-3 p-2' : 'space-y-3'">
+            <!-- 任务列表 -->
+            <div class="sider-section-glass space-y-3 p-2">
               <!-- 今天 -->
               <div v-if="taskHistory.today.length">
-                <div
-                  class="mb-1 flex items-center gap-1 text-xs"
-                  :class="themeStore.isDark ? 'text-gray-500' : 'text-gray-400'"
-                >
+                <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
                   <NIcon :component="TimeOutline" :size="12" />
                   今天
                 </div>
@@ -285,15 +248,11 @@ const bottomNavItems = [
                     :key="task.id"
                     :to="`/task/${task.id}`"
                     class="block truncate px-3 py-2 text-sm transition-all duration-200"
-                    :class="[
-                      activeKey === `task-${task.id}`
-                        ? themeStore.isDark
-                          ? 'sider-item-active text-primary-400'
-                          : 'bg-primary-500/10 text-primary-600 rounded-lg'
-                        : themeStore.isDark
-                          ? 'sider-item-hover text-gray-300'
-                          : 'rounded-lg text-gray-700 hover:bg-gray-100',
-                    ]"
+                    :class="
+                      isActive(`task-${task.id}`)
+                        ? 'sider-item-active sider-item-active-text'
+                        : 'sider-item-hover sider-item-text'
+                    "
                   >
                     {{ task.title }}
                   </RouterLink>
@@ -302,10 +261,7 @@ const bottomNavItems = [
 
               <!-- 昨天 -->
               <div v-if="taskHistory.yesterday.length">
-                <div
-                  class="mb-1 flex items-center gap-1 text-xs"
-                  :class="themeStore.isDark ? 'text-gray-500' : 'text-gray-400'"
-                >
+                <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
                   <NIcon :component="TimeOutline" :size="12" />
                   昨天
                 </div>
@@ -315,15 +271,11 @@ const bottomNavItems = [
                     :key="task.id"
                     :to="`/task/${task.id}`"
                     class="block truncate px-3 py-2 text-sm transition-all duration-200"
-                    :class="[
-                      activeKey === `task-${task.id}`
-                        ? themeStore.isDark
-                          ? 'sider-item-active text-primary-400'
-                          : 'bg-primary-500/10 text-primary-600 rounded-lg'
-                        : themeStore.isDark
-                          ? 'sider-item-hover text-gray-300'
-                          : 'rounded-lg text-gray-700 hover:bg-gray-100',
-                    ]"
+                    :class="
+                      isActive(`task-${task.id}`)
+                        ? 'sider-item-active sider-item-active-text'
+                        : 'sider-item-hover sider-item-text'
+                    "
                   >
                     {{ task.title }}
                   </RouterLink>
@@ -332,10 +284,7 @@ const bottomNavItems = [
 
               <!-- 更早 -->
               <div v-if="taskHistory.earlier.length">
-                <div
-                  class="mb-1 flex items-center gap-1 text-xs"
-                  :class="themeStore.isDark ? 'text-gray-500' : 'text-gray-400'"
-                >
+                <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
                   <NIcon :component="TimeOutline" :size="12" />
                   更早
                 </div>
@@ -345,15 +294,11 @@ const bottomNavItems = [
                     :key="task.id"
                     :to="`/task/${task.id}`"
                     class="block truncate px-3 py-2 text-sm transition-all duration-200"
-                    :class="[
-                      activeKey === `task-${task.id}`
-                        ? themeStore.isDark
-                          ? 'sider-item-active text-primary-400'
-                          : 'bg-primary-500/10 text-primary-600 rounded-lg'
-                        : themeStore.isDark
-                          ? 'sider-item-hover text-gray-300'
-                          : 'rounded-lg text-gray-700 hover:bg-gray-100',
-                    ]"
+                    :class="
+                      isActive(`task-${task.id}`)
+                        ? 'sider-item-active sider-item-active-text'
+                        : 'sider-item-hover sider-item-text'
+                    "
                   >
                     {{ task.title }}
                   </RouterLink>
@@ -368,12 +313,7 @@ const bottomNavItems = [
               <template #trigger>
                 <RouterLink
                   to="/task/list"
-                  class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
-                  :class="
-                    themeStore.isDark
-                      ? 'text-gray-400 hover:bg-white/5'
-                      : 'text-gray-500 hover:bg-gray-100'
-                  "
+                  class="text-theme-secondary flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-white/5"
                 >
                   <NIcon :component="TimeOutline" :size="20" />
                 </RouterLink>
@@ -384,24 +324,20 @@ const bottomNavItems = [
         </div>
       </NScrollbar>
 
-      <!-- 底部导航 - 渐变分割线 -->
+      <!-- 底部导航 -->
       <div class="shrink-0">
-        <div :class="themeStore.isDark ? 'divider-gradient' : 'h-px bg-gray-200'"></div>
+        <div class="divider-gradient"></div>
         <div v-if="!collapsed" class="space-y-1 p-2">
           <RouterLink
             v-for="item in bottomNavItems"
             :key="item.key"
             :to="item.path"
             class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
-            :class="[
-              activeKey === item.key
-                ? themeStore.isDark
-                  ? 'sider-item-active text-primary-400'
-                  : 'bg-primary-500/10 text-primary-600 rounded-lg'
-                : themeStore.isDark
-                  ? 'nav-item-glow rounded-lg text-gray-400'
-                  : 'rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-            ]"
+            :class="
+              isActive(item.key)
+                ? 'sider-item-active sider-item-active-text'
+                : 'nav-item-glow sider-item-text rounded-lg'
+            "
           >
             <NIcon :component="item.icon" :size="18" />
             <span class="text-sm">{{ item.label }}</span>
@@ -413,15 +349,11 @@ const bottomNavItems = [
               <RouterLink
                 :to="item.path"
                 class="flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200"
-                :class="[
-                  activeKey === item.key
-                    ? themeStore.isDark
-                      ? 'bg-primary-500/20 text-primary-400'
-                      : 'bg-primary-500/10 text-primary-600'
-                    : themeStore.isDark
-                      ? 'nav-item-glow text-gray-400'
-                      : 'text-gray-500 hover:bg-gray-100',
-                ]"
+                :class="
+                  isActive(item.key)
+                    ? 'bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400'
+                    : 'nav-item-glow text-theme-secondary'
+                "
               >
                 <NIcon :component="item.icon" :size="20" />
               </RouterLink>
