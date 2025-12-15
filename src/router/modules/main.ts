@@ -18,26 +18,26 @@ const mainRoutes: RouteRecordRaw = {
     {
       path: 'forge/plaza',
       name: 'ForgePlaza',
-      component: () => import('@/pages/forge-plaza/index.vue'),
+      component: () => import('@/pages/forge/plaza/index.vue'),
       meta: { title: 'Forge 广场' },
     },
     {
       path: 'forge/:id',
       name: 'ForgeDetail',
-      component: () => import('@/pages/forge-detail/index.vue'),
+      component: () => import('@/pages/forge/[id]/index.vue'),
       meta: { title: 'Forge 详情' },
     },
     // 任务模块
     {
       path: 'task/list',
       name: 'TaskList',
-      component: () => import('@/pages/tasks/index.vue'),
+      component: () => import('@/pages/task/list/index.vue'),
       meta: { title: '任务列表' },
     },
     {
       path: 'task/:id',
       name: 'TaskDetail',
-      component: () => import('@/pages/task-detail/index.vue'),
+      component: () => import('@/pages/task/[id]/index.vue'),
       meta: { title: '任务详情' },
     },
     // MCP 管理
