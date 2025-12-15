@@ -112,16 +112,6 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 处理回车键
-   */
-  const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  /**
    * 初始化：读取 sessionStorage 中的初始消息
    */
   const initFromSession = async () => {
@@ -152,7 +142,6 @@ export function useChat(options: UseChatOptions) {
     // 方法
     sendMessage,
     handleSend,
-    handleKeydown,
     initFromSession,
     clearMessages,
     scrollToBottom,

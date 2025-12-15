@@ -5,10 +5,11 @@
  */
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { NInput, NButton, NIcon, NSpin } from 'naive-ui';
-import { SendOutline, PersonOutline } from '@vicons/ionicons5';
+import { NIcon, NSpin } from 'naive-ui';
+import { PersonOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
 import { useChat } from '@/composable/task';
+import ChatInput from '@/components/ChatInput.vue';
 
 const route = useRoute();
 const themeStore = useThemeStore();
@@ -20,7 +21,7 @@ const taskId = computed(() => route.params.id as string);
 const messagesContainer = ref<HTMLElement | null>(null);
 
 // 使用 chat composable
-const { messages, inputValue, isLoading, handleSend, handleKeydown, initFromSession } = useChat({
+const { messages, inputValue, isLoading, handleSend, initFromSession } = useChat({
   taskId: taskId.value,
   containerRef: messagesContainer,
 });
@@ -117,26 +118,13 @@ onMounted(() => {
 
     <!-- 输入区域 -->
     <div class="border-t p-4" :class="themeStore.isDark ? 'border-gray-700' : 'border-gray-200'">
-      <div class="flex gap-3">
-        <NInput
-          v-model:value="inputValue"
-          type="textarea"
-          placeholder="输入消息..."
-          :autosize="{ minRows: 1, maxRows: 4 }"
-          class="flex-1"
-          @keydown="handleKeydown"
-        />
-        <NButton
-          type="primary"
-          :disabled="!inputValue.trim() || isLoading"
-          :loading="isLoading"
-          @click="handleSend"
-        >
-          <template #icon>
-            <NIcon :component="SendOutline" />
-          </template>
-        </NButton>
-      </div>
+      <ChatInput
+        v-model="inputValue"
+        placeholder="输入消息..."
+        type="multi"
+        :loading="isLoading"
+        @send="handleSend"
+      />
     </div>
   </div>
 </template>

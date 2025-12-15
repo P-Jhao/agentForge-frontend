@@ -5,9 +5,10 @@
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { NInput, NButton, NIcon, NTag } from 'naive-ui';
-import { SendOutline, SparklesOutline, ChevronForwardOutline } from '@vicons/ionicons5';
+import { NIcon, NTag } from 'naive-ui';
+import { SparklesOutline, ChevronForwardOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
+import ChatInput from '@/components/ChatInput.vue';
 
 const router = useRouter();
 const askInput = ref('');
@@ -27,24 +28,12 @@ const generateUUID = () => {
 /**
  * 发送消息，跳转到任务页
  */
-const handleSend = () => {
-  const message = askInput.value.trim();
-  if (!message) return;
-
+const handleSend = (message: string) => {
   const taskId = generateUUID();
   // 将初始消息存储到 sessionStorage，供任务页读取
   sessionStorage.setItem(`task_${taskId}_init`, message);
+  askInput.value = '';
   router.push(`/task/${taskId}`);
-};
-
-/**
- * 处理回车键
- */
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSend();
-  }
 };
 
 // 推荐 Forge 数据
@@ -185,28 +174,13 @@ const stats = [
             </p>
           </div>
         </div>
-        <div class="flex gap-3">
-          <NInput
-            v-model:value="askInput"
-            placeholder="例如：帮我审计这段代码的安全性..."
-            size="large"
-            round
-            class="flex-1"
-            @keydown="handleKeydown"
-          />
-          <NButton
-            type="primary"
-            size="large"
-            round
-            :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-            @click="handleSend"
-          >
-            <template #icon>
-              <NIcon :component="SendOutline" />
-            </template>
-            发送
-          </NButton>
-        </div>
+        <ChatInput
+          v-model="askInput"
+          placeholder="例如：帮我审计这段代码的安全性..."
+          type="single"
+          show-button-text
+          @send="handleSend"
+        />
       </div>
 
       <!-- 快速分类 -->
