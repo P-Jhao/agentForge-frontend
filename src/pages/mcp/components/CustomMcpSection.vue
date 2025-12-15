@@ -10,7 +10,7 @@ const router = useRouter();
 
 // 查看更多
 function handleViewMore() {
-  router.push('/mcp/custom');
+  router.push('/mcp/my');
 }
 </script>
 

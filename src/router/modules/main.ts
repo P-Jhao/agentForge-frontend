@@ -53,6 +53,12 @@ const mainRoutes: RouteRecordRaw = {
       component: () => import('@/pages/mcp/add/index.vue'),
       meta: { title: '新建 MCP' },
     },
+    {
+      path: 'mcp/my',
+      name: 'McpMy',
+      component: () => import('@/pages/mcp/my/index.vue'),
+      meta: { title: '我的 MCP' },
+    },
 
     // 设置
     {
