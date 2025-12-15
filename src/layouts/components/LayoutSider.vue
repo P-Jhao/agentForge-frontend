@@ -87,7 +87,7 @@ const bottomNavItems = [
       <!-- Logo 区域 -->
       <RouterLink
         to="/"
-        class="flex h-14 shrink-0 items-center justify-center border-b"
+        class="flex h-16 shrink-0 items-center justify-center border-b"
         :class="themeStore.isDark ? 'border-white/5' : 'border-gray-200'"
       >
         <div v-if="!collapsed" class="flex items-center gap-2">
