@@ -4,12 +4,48 @@
  * 欢迎页 + 快速入口 + 推荐 Forge
  */
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { NInput, NButton, NIcon, NTag } from 'naive-ui';
 import { SendOutline, SparklesOutline, ChevronForwardOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
 
+const router = useRouter();
 const askInput = ref('');
 const themeStore = useThemeStore();
+
+/**
+ * 生成 UUID
+ */
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+/**
+ * 发送消息，跳转到任务页
+ */
+const handleSend = () => {
+  const message = askInput.value.trim();
+  if (!message) return;
+
+  const taskId = generateUUID();
+  // 将初始消息存储到 sessionStorage，供任务页读取
+  sessionStorage.setItem(`task_${taskId}_init`, message);
+  router.push(`/task/${taskId}`);
+};
+
+/**
+ * 处理回车键
+ */
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+};
 
 // 推荐 Forge 数据
 const recommendForges = [
@@ -156,12 +192,14 @@ const stats = [
             size="large"
             round
             class="flex-1"
+            @keydown="handleKeydown"
           />
           <NButton
             type="primary"
             size="large"
             round
             :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
+            @click="handleSend"
           >
             <template #icon>
               <NIcon :component="SendOutline" />
