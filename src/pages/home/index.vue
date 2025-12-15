@@ -1,42 +1,61 @@
 <script setup lang="ts">
+/**
+ * 首页
+ * 欢迎页 + 快速入口 + 推荐 Forge
+ */
 import { ref } from 'vue';
-import { NInput, NButton, NIcon } from 'naive-ui';
-import { SendOutline, SparklesOutline } from '@vicons/ionicons5';
+import { NInput, NButton, NIcon, NTag } from 'naive-ui';
+import { SendOutline, SparklesOutline, ChevronForwardOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
 
 const askInput = ref('');
 const themeStore = useThemeStore();
 
-// 功能卡片数据
-const features = [
+// 推荐 Forge 数据
+const recommendForges = [
   {
+    id: '1',
     icon: '🔍',
-    title: '代码审计',
+    name: '代码审计专家',
     desc: '智能分析代码安全漏洞，提供修复建议',
-    path: '/code-audit',
     gradient: 'from-cyan-500 to-blue-500',
+    usageCount: 128,
   },
   {
+    id: '2',
     icon: '📊',
-    title: '智能评分',
+    name: '智能评分助手',
     desc: '根据样本案例自动评分，判断是否符合要求',
-    path: '/scoring',
     gradient: 'from-purple-500 to-pink-500',
+    usageCount: 86,
   },
   {
+    id: '3',
     icon: '📚',
-    title: 'RAG 检索',
+    name: 'RAG 知识检索',
     desc: '上传文档构建知识库，智能语义检索',
-    path: '/rag-search',
     gradient: 'from-orange-500 to-red-500',
+    usageCount: 64,
   },
+];
+
+// 快速分类标签
+const categories = [
+  '推荐',
+  '渗透测试',
+  '代码审计',
+  '应急响应',
+  '安全咨询',
+  '数字教师',
+  'MSS运营',
+  '主机安全',
 ];
 
 // 统计数据
 const stats = [
-  { label: '已处理请求', value: '12,847' },
-  { label: '活跃 Agent', value: '5' },
-  { label: '知识库文档', value: '128' },
+  { label: '已处理任务', value: '12,847' },
+  { label: '活跃 Forge', value: '5' },
+  { label: 'MCP 工具', value: '28' },
 ];
 </script>
 
@@ -86,7 +105,7 @@ const stats = [
           class="mx-auto max-w-2xl text-lg"
           :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-600'"
         >
-          多功能 AI Agent 平台，支持代码审计、智能评分、RAG 知识检索等功能， 让 AI 成为你的得力助手
+          锻造你的专属 AI Agent，通过 MCP 选配打造强大的智能助手
         </p>
       </div>
 
@@ -126,7 +145,7 @@ const stats = [
               Ask AI
             </h3>
             <p class="text-sm" :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
-              输入你的问题，AI 将智能路由到对应功能
+              输入你的问题，AI 将智能路由到对应 Forge
             </p>
           </div>
         </div>
@@ -152,44 +171,81 @@ const stats = [
         </div>
       </div>
 
-      <!-- 功能卡片 -->
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <RouterLink
-          v-for="feature in features"
-          :key="feature.path"
-          :to="feature.path"
-          class="group cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2"
-          :class="
-            themeStore.isDark
-              ? 'card-gradient'
-              : 'border border-gray-200 bg-white shadow-sm hover:shadow-md'
-          "
+      <!-- 快速分类 -->
+      <div class="flex flex-wrap gap-2">
+        <NTag
+          v-for="(category, index) in categories"
+          :key="category"
+          :type="index === 0 ? 'primary' : 'default'"
+          round
+          :bordered="false"
+          class="cursor-pointer"
         >
-          <!-- 图标 -->
-          <div
-            class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br text-2xl"
-            :class="feature.gradient"
-          >
-            {{ feature.icon }}
-          </div>
-          <!-- 内容 -->
-          <h3
-            class="group-hover:text-primary-500 mb-2 text-lg font-semibold"
+          {{ category }}
+        </NTag>
+      </div>
+
+      <!-- 推荐 Forge -->
+      <div>
+        <div class="mb-4 flex items-center justify-between">
+          <h2
+            class="text-xl font-semibold"
             :class="themeStore.isDark ? 'text-white' : 'text-gray-900'"
           >
-            {{ feature.title }}
-          </h3>
-          <p class="text-sm" :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
-            {{ feature.desc }}
-          </p>
-          <!-- 箭头 -->
-          <div
-            class="text-primary-500 mt-4 flex items-center text-sm opacity-0 transition-opacity group-hover:opacity-100"
+            推荐 Forge
+          </h2>
+          <RouterLink
+            to="/forge-plaza"
+            class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-sm"
           >
-            <span>开始使用</span>
-            <span class="ml-1">→</span>
-          </div>
-        </RouterLink>
+            查看全部
+            <NIcon :component="ChevronForwardOutline" :size="14" />
+          </RouterLink>
+        </div>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <RouterLink
+            v-for="forge in recommendForges"
+            :key="forge.id"
+            :to="`/forge/${forge.id}`"
+            class="group cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2"
+            :class="
+              themeStore.isDark
+                ? 'card-gradient'
+                : 'border border-gray-200 bg-white shadow-sm hover:shadow-md'
+            "
+          >
+            <!-- 图标 -->
+            <div
+              class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br text-2xl"
+              :class="forge.gradient"
+            >
+              {{ forge.icon }}
+            </div>
+            <!-- 内容 -->
+            <h3
+              class="group-hover:text-primary-500 mb-2 text-lg font-semibold"
+              :class="themeStore.isDark ? 'text-white' : 'text-gray-900'"
+            >
+              {{ forge.name }}
+            </h3>
+            <p class="text-sm" :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
+              {{ forge.desc }}
+            </p>
+            <!-- 使用次数 -->
+            <div
+              class="mt-4 flex items-center justify-between text-sm"
+              :class="themeStore.isDark ? 'text-gray-500' : 'text-gray-400'"
+            >
+              <span>使用 {{ forge.usageCount }} 次</span>
+              <span
+                class="text-primary-500 flex items-center opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                开始使用
+                <NIcon :component="ChevronForwardOutline" :size="14" class="ml-1" />
+              </span>
+            </div>
+          </RouterLink>
+        </div>
       </div>
     </div>
   </div>
