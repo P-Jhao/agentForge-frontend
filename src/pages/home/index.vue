@@ -160,11 +160,11 @@ const stats = [
         :class="themeStore.isDark ? 'card-gradient' : 'border border-gray-200 bg-white shadow-sm'"
       >
         <div class="mb-4 flex items-center gap-3">
-          <div
-            class="from-primary-500 to-accent-purple flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br"
-          >
-            <span class="text-xl">💬</span>
-          </div>
+          <img
+            src="@/assets/imgs/listen-nobg-670x720.png"
+            alt="Ask AI"
+            class="h-10 w-10 object-contain"
+          />
           <div>
             <h3 class="font-semibold" :class="themeStore.isDark ? 'text-white' : 'text-gray-900'">
               Ask AI
