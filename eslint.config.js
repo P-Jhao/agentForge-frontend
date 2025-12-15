@@ -1,9 +1,9 @@
 /**
  * ESLint 配置 (Flat Config)
  */
-import eslint from '@eslint/js'
-import tseslint from 'typescript-eslint'
-import vue from 'eslint-plugin-vue'
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import vue from 'eslint-plugin-vue';
 
 export default [
   // 忽略文件
@@ -27,8 +27,16 @@ export default [
       parserOptions: {
         parser: tseslint.parser,
       },
+      globals: {
+        console: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+      },
     },
     rules: {
+      // 允许 console（开发调试用）
+      'no-console': 'off',
+
       // TypeScript
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -52,4 +60,4 @@ export default [
       'vue/html-closing-bracket-newline': 'off',
     },
   },
-]
+];

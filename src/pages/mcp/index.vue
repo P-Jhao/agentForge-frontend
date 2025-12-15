@@ -3,11 +3,20 @@
  * MCP 管理页面
  * 内置 MCP + 自定义 MCP（SSE/HTTP）
  */
+import McpHeader from './components/McpHeader.vue';
+import CustomMcpSection from './components/CustomMcpSection.vue';
+import McpPlazaSection from './components/McpPlazaSection.vue';
 </script>
 
 <template>
   <div class="mcp-manage">
-    <h1 class="text-2xl font-bold">MCP 管理</h1>
-    <p class="text-gray-500">管理内置和自定义的 MCP</p>
+    <!-- 页面头部 -->
+    <McpHeader />
+
+    <!-- 自定义 MCP 区域 -->
+    <CustomMcpSection />
+
+    <!-- MCP 广场区域 -->
+    <McpPlazaSection />
   </div>
 </template>
