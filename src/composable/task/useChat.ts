@@ -129,11 +129,17 @@ export function useChat(options: UseChatOptions) {
 
   /**
    * 加载历史消息
+   * 如果任务正在运行，会继续接收流式输出
    */
   const loadHistory = async () => {
     if (historyLoaded.value) return;
 
     isLoading.value = true;
+
+    // 用于收集正在进行的 LLM 回复段落
+    const segments: MessageSegment[] = [];
+    let currentType: string | null = null;
+    let isReceivingStream = false;
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
@@ -145,11 +151,44 @@ export function useChat(options: UseChatOptions) {
           const historyMessages = chunk.data as Message[];
           messages.value = historyMessages.map(convertMessage);
           await scrollToBottom();
+        } else if (
+          ['thinking', 'chat', 'tool'].includes(chunk.type) &&
+          typeof chunk.data === 'string'
+        ) {
+          // 正在进行的流式输出（任务正在运行）
+          const chunkType = chunk.type as 'thinking' | 'chat' | 'tool';
+          const chunkContent = chunk.data;
+
+          // 第一次收到流式内容时，添加一个空的 assistant 消息
+          if (!isReceivingStream) {
+            isReceivingStream = true;
+            addAssistantMessage();
+          }
+
+          if (currentType !== chunkType) {
+            // 开始新段落
+            segments.push({ type: chunkType, content: chunkContent });
+            currentType = chunkType;
+          } else {
+            // 拼接到当前段落
+            const lastSegment = segments[segments.length - 1];
+            if (lastSegment) {
+              lastSegment.content += chunkContent;
+            }
+          }
+
+          // 更新 UI
+          updateLastAssistantSegments(segments);
+          await scrollToBottom();
         } else if (chunk.type === 'error' && chunk.data) {
           const data = chunk.data as { message: string };
           console.error('加载历史消息失败:', data.message);
+          if (isReceivingStream) {
+            segments.push({ type: 'error', content: data.message });
+            updateLastAssistantSegments(segments);
+          }
         }
-        // done 类型不需要特殊处理
+        // done 类型表示结束
       },
       onComplete: () => {
         isLoading.value = false;
