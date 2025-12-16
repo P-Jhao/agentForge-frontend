@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { h, type Component } from 'vue';
-import { useRouter } from 'vue-router';
+import { h, watch, type Component } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import {
   NLayoutHeader,
   NButton,
@@ -18,11 +18,23 @@ import {
   SunnyOutline,
   MoonOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore, useUserStore } from '@/stores';
+import { useThemeStore, useUserStore, useTaskStore } from '@/stores';
 
 const router = useRouter();
+const route = useRoute();
 const themeStore = useThemeStore();
 const userStore = useUserStore();
+const taskStore = useTaskStore();
+
+// 监听路由变化，离开任务页面时清除当前任务
+watch(
+  () => route.path,
+  (newPath) => {
+    if (!newPath.startsWith('/task/') || newPath === '/task/list') {
+      taskStore.clearCurrentTask();
+    }
+  }
+);
 
 // 渲染图标的辅助函数
 function renderIcon(icon: Component) {
@@ -75,9 +87,14 @@ function goLogin() {
     <!-- 左侧标题 -->
     <div class="flex items-center gap-3">
       <span class="text-lg font-medium" :class="themeStore.isDark ? 'text-white' : 'text-gray-900'">
-        AgentForge
+        {{ taskStore.hasCurrentTask ? taskStore.currentTaskName : 'AgentForge' }}
       </span>
-      <span class="bg-primary-500/20 text-primary-500 rounded-full px-2 py-0.5 text-xs">Beta</span>
+      <span
+        v-if="!taskStore.hasCurrentTask"
+        class="bg-primary-500/20 text-primary-500 rounded-full px-2 py-0.5 text-xs"
+      >
+        Beta
+      </span>
     </div>
 
     <!-- 右侧操作区 -->

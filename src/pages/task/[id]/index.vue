@@ -38,7 +38,7 @@ onMounted(() => {
     <!-- 消息列表（可滚动区域，需要预留底部输入框空间） -->
     <ChatMessageList
       ref="messagesContainer"
-      class="flex-1 overflow-y-auto pb-32"
+      class="flex-1 overflow-y-auto pb-48"
       :messages="messages"
       :is-loading="isLoading"
     />

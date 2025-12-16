@@ -15,7 +15,7 @@ import {
   ChevronForwardOutline,
   TimeOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
+import { useThemeStore, useTaskStore } from '@/stores';
 
 // 接收折叠状态
 const collapsed = defineModel<boolean>('collapsed', { default: false });
@@ -23,6 +23,7 @@ const collapsed = defineModel<boolean>('collapsed', { default: false });
 const route = useRoute();
 const router = useRouter();
 const themeStore = useThemeStore();
+const taskStore = useTaskStore();
 
 // 新建任务 - 跳转到首页
 function handleNewTask() {
@@ -72,6 +73,11 @@ const bottomNavItems = [
 // 判断是否选中
 function isActive(key: string) {
   return activeKey.value === key;
+}
+
+// 点击任务时设置当前任务
+function handleTaskClick(task: { id: string; title: string }) {
+  taskStore.setCurrentTask({ id: task.id, name: task.title });
 }
 </script>
 
@@ -244,6 +250,7 @@ function isActive(key: string) {
                         ? 'sider-item-active sider-item-active-text'
                         : 'sider-item-hover sider-item-text'
                     "
+                    @click="handleTaskClick(task)"
                   >
                     {{ task.title }}
                   </RouterLink>
@@ -267,6 +274,7 @@ function isActive(key: string) {
                         ? 'sider-item-active sider-item-active-text'
                         : 'sider-item-hover sider-item-text'
                     "
+                    @click="handleTaskClick(task)"
                   >
                     {{ task.title }}
                   </RouterLink>
@@ -290,6 +298,7 @@ function isActive(key: string) {
                         ? 'sider-item-active sider-item-active-text'
                         : 'sider-item-hover sider-item-text'
                     "
+                    @click="handleTaskClick(task)"
                   >
                     {{ task.title }}
                   </RouterLink>

@@ -31,9 +31,8 @@ const subtitleClass = computed(() => ({
 </script>
 
 <template>
-  <div class="flex items-center justify-between border-b px-6 py-4" :class="headerClass">
+  <div class="flex items-center justify-between border-b px-6 py-2" :class="headerClass">
     <div>
-      <h1 class="text-lg font-semibold" :class="titleClass">AI 对话</h1>
       <p class="text-xs" :class="subtitleClass">任务 ID: {{ taskId }}</p>
     </div>
   </div>
