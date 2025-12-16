@@ -3,6 +3,8 @@
  * 封装与 AI 交互的核心逻辑
  */
 import { ref, nextTick } from 'vue';
+import { createStreamRequest } from '@/utils';
+import type { StreamChunk } from '@/types';
 
 // 消息类型
 export interface ChatMessage {
@@ -19,6 +21,9 @@ export interface UseChatOptions {
   // 消息容器元素引用（用于自动滚动）
   containerRef?: { value: HTMLElement | null };
 }
+
+// API 基础路径（开发环境使用代理，生产环境使用完整 URL）
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 /**
  * 生成消息 ID
@@ -41,6 +46,9 @@ export function useChat(options: UseChatOptions) {
 
   // 是否正在加载
   const isLoading = ref(false);
+
+  // 当前流式请求的取消函数
+  let abortCurrentRequest: (() => void) | null = null;
 
   /**
    * 滚动到底部
@@ -65,19 +73,31 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 添加 AI 消息
+   * 添加 AI 消息（空内容，后续流式填充）
    */
-  const addAssistantMessage = (content: string) => {
-    messages.value.push({
+  const addAssistantMessage = (content: string = '') => {
+    const msg: ChatMessage = {
       id: generateId(),
       role: 'assistant',
       content,
       timestamp: Date.now(),
-    });
+    };
+    messages.value.push(msg);
+    return msg;
   };
 
   /**
-   * 发送消息（模拟 AI 响应，后续接入真实 API）
+   * 更新最后一条 AI 消息的内容
+   */
+  const updateLastAssistantMessage = (content: string) => {
+    const lastMsg = messages.value[messages.value.length - 1];
+    if (lastMsg && lastMsg.role === 'assistant') {
+      lastMsg.content = content;
+    }
+  };
+
+  /**
+   * 发送消息并获取流式响应
    */
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading.value) return;
@@ -86,18 +106,58 @@ export function useChat(options: UseChatOptions) {
     addUserMessage(content);
     await scrollToBottom();
 
-    // 模拟 AI 响应（后续替换为真实 API 调用）
+    // 开始加载
     isLoading.value = true;
-    return new Promise<void>((resolve) => {
-      setTimeout(async () => {
-        addAssistantMessage(
-          `收到你的消息：「${content}」\n\n这是一个模拟响应，后续将接入真实的 AI 服务。`
-        );
+
+    // 添加空的 AI 消息，用于流式填充
+    const assistantMsg = addAssistantMessage();
+    let fullContent = '';
+
+    // 构建消息历史（简化版，只发送当前消息）
+    const chatMessages = [{ role: 'user' as const, content }];
+
+    // 获取 token
+    const token = localStorage.getItem('forgeToken') || '';
+
+    // 发起流式请求
+    const { abort, promise } = createStreamRequest<StreamChunk>({
+      url: `${API_BASE}/chat/stream`,
+      body: {
+        agentId: 'default',
+        messages: chatMessages,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      onChunk: async (chunk) => {
+        // 处理流式文本
+        if (chunk.type === 'chatStream' && chunk.data) {
+          const data = chunk.data as { event: string; content?: string };
+          if (data.event === 'data' && data.content) {
+            fullContent += data.content;
+            updateLastAssistantMessage(fullContent);
+            await scrollToBottom();
+          }
+        }
+        // 处理错误
+        if (chunk.type === 'error' && chunk.data) {
+          const data = chunk.data as { message: string };
+          updateLastAssistantMessage(`错误：${data.message}`);
+        }
+      },
+      onComplete: () => {
         isLoading.value = false;
-        await scrollToBottom();
-        resolve();
-      }, 1000);
+        abortCurrentRequest = null;
+      },
+      onError: (error) => {
+        updateLastAssistantMessage(`请求失败：${error.message}`);
+        isLoading.value = false;
+        abortCurrentRequest = null;
+      },
     });
+
+    abortCurrentRequest = abort;
+    await promise;
   };
 
   /**
@@ -133,6 +193,17 @@ export function useChat(options: UseChatOptions) {
     messages.value = [];
   };
 
+  /**
+   * 取消当前请求
+   */
+  const cancelRequest = () => {
+    if (abortCurrentRequest) {
+      abortCurrentRequest();
+      abortCurrentRequest = null;
+      isLoading.value = false;
+    }
+  };
+
   return {
     // 状态
     messages,
@@ -144,6 +215,7 @@ export function useChat(options: UseChatOptions) {
     handleSend,
     initFromSession,
     clearMessages,
+    cancelRequest,
     scrollToBottom,
     addUserMessage,
     addAssistantMessage,
