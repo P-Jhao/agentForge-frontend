@@ -38,7 +38,10 @@ const generateId = () => {
  * AI 对话 composable
  */
 export function useChat(options: UseChatOptions) {
-  const { taskId, containerRef } = options;
+  const { containerRef } = options;
+
+  // 当前任务 ID（响应式，支持切换任务）
+  const currentTaskId = ref(options.taskId);
 
   // 消息列表
   const messages = ref<ChatMessage[]>([]);
@@ -54,6 +57,14 @@ export function useChat(options: UseChatOptions) {
 
   // 当前流式请求的取消函数
   let abortCurrentRequest: (() => void) | null = null;
+
+  /**
+   * 设置任务 ID（切换任务时调用）
+   */
+  const setTaskId = (newTaskId: string) => {
+    currentTaskId.value = newTaskId;
+    historyLoaded.value = false;
+  };
 
   /**
    * 滚动到底部
@@ -125,7 +136,7 @@ export function useChat(options: UseChatOptions) {
     isLoading.value = true;
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
-      url: `${API_BASE}/task/${taskId}/message`,
+      url: `${API_BASE}/task/${currentTaskId.value}/message`,
       body: { loadHistory: true },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
@@ -177,7 +188,7 @@ export function useChat(options: UseChatOptions) {
     let currentType: string | null = null;
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
-      url: `${API_BASE}/task/${taskId}/message`,
+      url: `${API_BASE}/task/${currentTaskId.value}/message`,
       body: { content },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
@@ -243,6 +254,7 @@ export function useChat(options: UseChatOptions) {
    * 初始化：检查是否有初始消息，决定是创建新任务还是加载历史
    */
   const init = async () => {
+    const taskId = currentTaskId.value;
     const initKey = `task_${taskId}_init`;
     const initMessage = sessionStorage.getItem(initKey);
 
@@ -320,6 +332,7 @@ export function useChat(options: UseChatOptions) {
 
     // 方法
     init,
+    setTaskId,
     loadHistory,
     sendMessage,
     handleSend,

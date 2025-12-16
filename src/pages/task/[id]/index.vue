@@ -3,7 +3,7 @@
  * 任务对话页面
  * 展示与 AI 的对话过程
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useChat } from '@/composable/task';
 import ChatInput from '@/components/ChatInput.vue';
@@ -19,15 +19,24 @@ const taskId = computed(() => route.params.id as string);
 const messagesContainer = ref<HTMLElement | null>(null);
 
 // 使用 chat composable
-const { messages, inputValue, isLoading, handleSend, init } = useChat({
+const { messages, inputValue, isLoading, handleSend, init, clearMessages, setTaskId } = useChat({
   taskId: taskId.value,
   containerRef: messagesContainer,
 });
 
-// 初始化：加载历史消息，检查初始消息
-onMounted(() => {
-  init();
-});
+// 监听 taskId 变化，切换任务时重新初始化
+watch(
+  taskId,
+  (newTaskId, oldTaskId) => {
+    if (newTaskId && newTaskId !== oldTaskId) {
+      // 清空当前消息，更新 taskId，重新初始化
+      clearMessages();
+      setTaskId(newTaskId);
+      init();
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
