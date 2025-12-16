@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* 暗色模式使用 class 选择器而非媒体查询 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* 自定义主题变量 */
 @theme {
   /* 主色调 - 科技蓝紫渐变 */
