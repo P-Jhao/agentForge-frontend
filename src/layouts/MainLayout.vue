@@ -20,10 +20,14 @@ const themeStore = useThemeStore();
       <LayoutHeader />
 
       <!-- 内容区域 -->
-      <NLayoutContent :native-scrollbar="false">
+      <NLayoutContent
+        :native-scrollbar="false"
+        class="flex flex-col"
+        content-class="flex-1"
+        content-style="height: calc(100vh - 64px); overflow: hidden;"
+      >
         <div
-          class="p-6"
-          style="min-height: calc(100vh - 64px)"
+          class="h-full overflow-y-auto p-6"
           :class="themeStore.isDark ? 'bg-dark-900 bg-grid' : 'bg-light-100 bg-grid-light'"
         >
           <RouterView />

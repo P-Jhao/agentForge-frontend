@@ -31,17 +31,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen flex-col">
-    <!-- 头部和消息列表容器（负责滚动） -->
-    <div class="flex flex-1 flex-col overflow-hidden">
-      <!-- 头部 -->
-      <TaskHeader :task-id="taskId" />
+  <div class="relative flex h-full flex-col overflow-hidden">
+    <!-- 头部（固定不滚动） -->
+    <TaskHeader :task-id="taskId" />
 
-      <!-- 消息列表 -->
-      <ChatMessageList ref="messagesContainer" :messages="messages" :is-loading="isLoading" />
-    </div>
+    <!-- 消息列表（可滚动区域，需要预留底部输入框空间） -->
+    <ChatMessageList
+      ref="messagesContainer"
+      class="flex-1 overflow-y-auto pb-32"
+      :messages="messages"
+      :is-loading="isLoading"
+    />
 
-    <!-- 输入区域（绝对定位到底部） -->
     <!-- 输入区域（绝对定位到底部） -->
     <div class="absolute right-0 bottom-0 left-0 p-4">
       <ChatInput
