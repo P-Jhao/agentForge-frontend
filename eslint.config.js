@@ -36,6 +36,8 @@ export default [
         sessionStorage: 'readonly',
         localStorage: 'readonly',
         KeyboardEvent: 'readonly',
+        MouseEvent: 'readonly',
+        Event: 'readonly',
         HTMLElement: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
@@ -61,7 +63,7 @@ export default [
       ],
       // 模板缩进使用 2 空格
       'vue/html-indent': ['warn', 2],
-      'vue/script-indent': ['warn', 2, { baseIndent: 0 }],
+      'vue/script-indent': ['warn', 2, { baseIndent: 0, switchCase: 1 }],
       // 关闭一些过于严格的格式规则（交给 Prettier 处理）
       'vue/max-attributes-per-line': 'off',
       'vue/singleline-html-element-content-newline': 'off',

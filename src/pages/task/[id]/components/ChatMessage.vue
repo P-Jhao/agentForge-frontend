@@ -67,28 +67,28 @@ const messageClass = computed(() => {
 // 获取段落的样式类
 const getSegmentClass = (type: string) => {
   switch (type) {
-  case 'thinking':
-    return themeStore.isDark ? 'text-gray-400 italic' : 'text-gray-500 italic';
-  case 'error':
-    return 'text-red-500';
-  case 'tool':
-    return themeStore.isDark ? 'text-blue-400' : 'text-blue-600';
-  default:
-    return '';
+    case 'thinking':
+      return themeStore.isDark ? 'text-gray-400 italic' : 'text-gray-500 italic';
+    case 'error':
+      return 'text-red-500';
+    case 'tool':
+      return themeStore.isDark ? 'text-blue-400' : 'text-blue-600';
+    default:
+      return '';
   }
 };
 
 // 获取段落的前缀标签
 const getSegmentLabel = (type: string) => {
   switch (type) {
-  case 'thinking':
-    return '💭 ';
-  case 'tool':
-    return '🔧 ';
-  case 'error':
-    return '❌ ';
-  default:
-    return '';
+    case 'thinking':
+      return '💭 ';
+    case 'tool':
+      return '🔧 ';
+    case 'error':
+      return '❌ ';
+    default:
+      return '';
   }
 };
 </script>
