@@ -148,6 +148,18 @@ function formatUpdateTime(dateStr: string): string {
   return `${year}-${month}-${day}`;
 }
 
+// 格式化完整时间（用于 tooltip）
+function formatFullTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // 获取任务状态文本
 function getStatusText(status: string): string {
   switch (status) {
@@ -394,7 +406,12 @@ watch(searchKeyword, (keyword) => {
                       <div class="truncate text-sm">{{ task.title }}</div>
                       <div class="mt-1 flex items-center justify-between text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
-                        <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                        <NTooltip>
+                          <template #trigger>
+                            <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                          </template>
+                          {{ formatFullTime(task.updatedAt) }}
+                        </NTooltip>
                       </div>
                     </RouterLink>
                   </div>
@@ -422,7 +439,12 @@ watch(searchKeyword, (keyword) => {
                       <div class="truncate text-sm">{{ task.title }}</div>
                       <div class="mt-1 flex items-center justify-between text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
-                        <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                        <NTooltip>
+                          <template #trigger>
+                            <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                          </template>
+                          {{ formatFullTime(task.updatedAt) }}
+                        </NTooltip>
                       </div>
                     </RouterLink>
                   </div>
@@ -450,7 +472,12 @@ watch(searchKeyword, (keyword) => {
                       <div class="truncate text-sm">{{ task.title }}</div>
                       <div class="mt-1 flex items-center justify-between text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
-                        <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                        <NTooltip>
+                          <template #trigger>
+                            <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                          </template>
+                          {{ formatFullTime(task.updatedAt) }}
+                        </NTooltip>
                       </div>
                     </RouterLink>
                   </div>

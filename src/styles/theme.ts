@@ -117,4 +117,9 @@ export const lightThemeOverrides: GlobalThemeOverrides = {
     titleTextColor: '#1e293b',
     textColor: '#475569',
   },
+  Tooltip: {
+    color: '#ffffff',
+    textColor: '#1e293b',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+  },
 };
