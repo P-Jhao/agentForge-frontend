@@ -110,7 +110,7 @@ export function useChat(options: UseChatOptions) {
     isLoading.value = true;
 
     // 添加空的 AI 消息，用于流式填充
-    const assistantMsg = addAssistantMessage();
+    addAssistantMessage();
     let fullContent = '';
 
     // 构建消息历史（简化版，只发送当前消息）
@@ -123,7 +123,6 @@ export function useChat(options: UseChatOptions) {
     const { abort, promise } = createStreamRequest<StreamChunk>({
       url: `${API_BASE}/chat/stream`,
       body: {
-        agentId: 'default',
         messages: chatMessages,
       },
       headers: {
