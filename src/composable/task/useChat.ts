@@ -226,6 +226,9 @@ export function useChat(options: UseChatOptions) {
       onComplete: () => {
         isLoading.value = false;
         abortCurrentRequest = null;
+        // 乐观更新：更新任务的 updatedAt 并移动到列表最前面
+        const taskStore = useTaskStore();
+        taskStore.touchTask(currentTaskId.value);
       },
       onError: (error) => {
         segments.push({ type: 'error', content: `请求失败：${error.message}` });

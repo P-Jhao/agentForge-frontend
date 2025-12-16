@@ -178,6 +178,25 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  /**
+   * 触碰任务（乐观更新）
+   * 更新任务的 updatedAt 为当前时间，并将其移动到列表最前面
+   * 用于发送消息后立即更新侧边栏显示
+   */
+  function touchTask(uuid: string) {
+    const index = tasks.value.findIndex((t) => t.uuid === uuid);
+    if (index !== -1) {
+      const task = tasks.value[index]!;
+      // 更新时间为当前时间
+      task.updatedAt = new Date().toISOString();
+      // 如果不在第一位，移动到最前面
+      if (index > 0) {
+        tasks.value.splice(index, 1);
+        tasks.value.unshift(task);
+      }
+    }
+  }
+
   return {
     // 状态
     tasks,
@@ -200,5 +219,6 @@ export const useTaskStore = defineStore('task', () => {
     clearCurrentTask,
     toggleFavorite,
     updateLocalTask,
+    touchTask,
   };
 });
