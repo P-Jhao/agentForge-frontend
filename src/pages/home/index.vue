@@ -177,8 +177,6 @@ const stats = [
         <ChatInput
           v-model="askInput"
           placeholder="例如：帮我审计这段代码的安全性..."
-          type="single"
-          show-button-text
           @send="handleSend"
         />
       </div>
