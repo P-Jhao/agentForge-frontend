@@ -40,20 +40,20 @@ watch(
 </script>
 
 <template>
-  <div class="relative flex h-full flex-col overflow-hidden">
+  <div class="flex h-full flex-col overflow-hidden">
     <!-- 头部（固定不滚动） -->
     <TaskHeader :task-id="taskId" />
 
-    <!-- 消息列表（可滚动区域，需要预留底部输入框空间） -->
+    <!-- 消息列表（可滚动区域） -->
     <ChatMessageList
       ref="messagesContainer"
-      class="flex-1 overflow-y-auto pb-48"
+      class="min-h-0 flex-1 overflow-y-auto"
       :messages="messages"
       :is-loading="isLoading"
     />
 
-    <!-- 输入区域（绝对定位到底部） -->
-    <div class="absolute right-0 bottom-0 left-0 p-4">
+    <!-- 输入区域（固定在底部） -->
+    <div class="shrink-0 p-4">
       <ChatInput
         :model-value="inputValue"
         placeholder="输入消息..."
