@@ -255,9 +255,10 @@ export function useChat(options: UseChatOptions) {
           firstMessage: initMessage,
         });
 
-        // 2. 添加到 TaskStore
+        // 2. 添加到 TaskStore 并设置为当前任务
         const taskStore = useTaskStore();
         taskStore.addTask(task);
+        taskStore.setCurrentTask(taskId);
 
         // 3. 清除 sessionStorage
         sessionStorage.removeItem(initKey);
@@ -274,6 +275,8 @@ export function useChat(options: UseChatOptions) {
       }
     } else {
       // 没有初始消息，说明是已有任务，加载历史
+      const taskStore = useTaskStore();
+      taskStore.setCurrentTask(taskId);
       await loadHistory();
     }
   };
