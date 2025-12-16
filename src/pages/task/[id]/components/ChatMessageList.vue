@@ -20,11 +20,21 @@ interface Props {
   containerRef?: HTMLElement | null;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const themeStore = useThemeStore();
 
 const emptyStateClass = computed(() => (themeStore.isDark ? 'text-gray-500' : 'text-gray-400'));
+
+// 判断是否需要显示独立的加载状态
+// 如果最后一条消息是空的 assistant 消息，则不显示（因为该消息会显示加载动画）
+const showLoadingState = computed(() => {
+  if (!props.isLoading) return false;
+  const lastMsg = props.messages[props.messages.length - 1];
+  // 如果最后一条是 assistant 消息，不显示独立的加载状态
+  if (lastMsg && lastMsg.role === 'assistant') return false;
+  return true;
+});
 </script>
 
 <template>
@@ -37,7 +47,7 @@ const emptyStateClass = computed(() => (themeStore.isDark ? 'text-gray-500' : 't
     <!-- 消息列表 -->
     <ChatMessage v-for="msg in messages" :key="msg.id" :message="msg" />
 
-    <!-- 加载状态 -->
-    <ChatLoadingState v-if="isLoading" />
+    <!-- 加载状态（仅在没有空的 assistant 消息时显示） -->
+    <ChatLoadingState v-if="showLoadingState" />
   </div>
 </template>

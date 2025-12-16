@@ -4,7 +4,7 @@
  * 展示用户或 AI 的消息
  */
 import { computed } from 'vue';
-import { NIcon } from 'naive-ui';
+import { NIcon, NSpin } from 'naive-ui';
 import { PersonOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
 
@@ -23,6 +23,9 @@ const props = defineProps<Props>();
 const themeStore = useThemeStore();
 
 const isUserMessage = computed(() => props.message.role === 'user');
+
+// 是否显示加载状态（assistant 消息内容为空时）
+const showLoading = computed(() => props.message.role === 'assistant' && !props.message.content);
 
 const containerClass = computed(() => ({
   'flex-row-reverse': isUserMessage.value,
@@ -56,7 +59,10 @@ const messageClass = computed(() => {
 
     <!-- 消息内容 -->
     <div class="max-w-[70%] rounded-2xl px-4 py-3" :class="messageClass">
-      <p class="text-sm whitespace-pre-wrap">{{ props.message.content }}</p>
+      <!-- 加载状态 -->
+      <NSpin v-if="showLoading" size="small" />
+      <!-- 消息文本 -->
+      <p v-else class="text-sm whitespace-pre-wrap">{{ props.message.content }}</p>
     </div>
   </div>
 </template>
