@@ -89,7 +89,8 @@ const handleToggleFavorite = async (task: Task, e: MouseEvent) => {
   e.stopPropagation();
   try {
     await taskStore.toggleFavorite(task.uuid);
-    message.success(task.favorite ? '已取消收藏' : '已收藏');
+    // 乐观更新后 task.favorite 已经反转，所以判断逻辑也要反过来
+    message.success(task.favorite ? '已收藏' : '已取消收藏');
   } catch {
     message.error('操作失败');
   }
