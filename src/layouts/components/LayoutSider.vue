@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /**
  * 侧边栏组件
- * 结构：Logo + 新建任务 + 我的 Forge + 历史任务 + 底部导航
- * 使用主题自适应 CSS 类，减少 isDark 判断
+ * 结构：Logo + 新建任务 + 我的 Forge（可展开/收起） + 历史任务（可滚动） + 底部导航
  */
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter, RouterLink } from 'vue-router';
@@ -13,6 +12,8 @@ import {
   ExtensionPuzzleOutline,
   SettingsOutline,
   ChevronForwardOutline,
+  ChevronDownOutline,
+  ChevronUpOutline,
   TimeOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useTaskStore } from '@/stores';
@@ -37,21 +38,49 @@ const searchKeyword = ref('');
 // 任务历史 Tab
 const taskTab = ref<'all' | 'favorite'>('all');
 
+// Forge 展开状态
+const forgeExpanded = ref(false);
+
 // 模拟数据 - 我的 Forge 列表（后续从 API 获取）
 const myForges = ref([
   { id: '1', name: '代码审计专家', icon: '🔍' },
   { id: '2', name: '智能评分助手', icon: '📊' },
   { id: '3', name: 'RAG 知识检索', icon: '📚' },
+  { id: '4', name: 'API 文档生成', icon: '📝' },
+  { id: '5', name: '单元测试助手', icon: '🧪' },
+  { id: '6', name: '代码重构顾问', icon: '🔧' },
+  { id: '7', name: 'SQL 优化专家', icon: '🗄️' },
+  { id: '8', name: '安全漏洞扫描', icon: '🛡️' },
+  { id: '9', name: '性能分析工具', icon: '⚡' },
 ]);
+
+// 显示的 Forge 数量限制
+const FORGE_COLLAPSED_COUNT = 3;
+
+// 是否需要显示「更多/收起」按钮
+const showForgeToggle = computed(() => myForges.value.length > FORGE_COLLAPSED_COUNT);
+
+// 当前显示的 Forge 列表
+const displayedForges = computed(() => {
+  if (!showForgeToggle.value || forgeExpanded.value) {
+    // 不需要折叠或已展开：显示全部
+    return myForges.value;
+  }
+  // 收起状态：只显示前 3 个
+  return myForges.value.slice(0, FORGE_COLLAPSED_COUNT);
+});
+
+// 切换 Forge 展开/收起
+function toggleForgeExpand() {
+  forgeExpanded.value = !forgeExpanded.value;
+}
 
 // 根据 Tab 显示的任务列表
 const displayedTasks = computed(() => {
   if (taskTab.value === 'favorite') {
-    // 收藏模式：按时间分组收藏的任务
     const favorites = taskStore.favoriteTasks;
     return groupTasksByTime(favorites);
   }
-  // 所有任务模式：使用 store 的分组
   return taskStore.groupedTasks;
 });
 
@@ -197,25 +226,43 @@ watch(searchKeyword, (keyword) => {
         </NTooltip>
       </div>
 
-      <!-- 可滚动区域 -->
-      <NScrollbar class="flex-1">
-        <div class="p-3">
-          <!-- 我的 Forge -->
-          <div v-if="!collapsed" class="mb-4">
-            <div class="mb-2 flex items-center justify-between">
-              <span class="text-theme-secondary text-xs font-medium">我的 Forge</span>
+      <!-- 主内容区域（Forge + 任务列表） -->
+      <div v-if="!collapsed" class="flex min-h-0 flex-1 flex-col overflow-hidden p-3">
+        <!-- 我的 Forge 区域 -->
+        <div :class="forgeExpanded ? 'flex max-h-[60%] min-h-[280px] flex-col' : 'shrink-0'">
+          <div class="mb-2 flex shrink-0 items-center justify-between">
+            <span class="text-theme-secondary text-xs font-medium">我的 Forge</span>
+            <RouterLink
+              to="/forge/plaza"
+              class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
+            >
+              Forge 广场
+              <NIcon :component="ChevronForwardOutline" :size="12" />
+            </RouterLink>
+          </div>
+          <!-- Forge 列表 -->
+          <div class="sider-section-glass flex min-h-0 flex-1 flex-col p-2">
+            <NScrollbar v-if="forgeExpanded" class="min-h-0 flex-1">
+              <div class="space-y-1">
+                <RouterLink
+                  v-for="forge in displayedForges"
+                  :key="forge.id"
+                  :to="`/forge/${forge.id}`"
+                  class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
+                  :class="
+                    isActive(`forge-${forge.id}`)
+                      ? 'sider-item-active sider-item-active-text'
+                      : 'sider-item-hover sider-item-text'
+                  "
+                >
+                  <span class="text-base">{{ forge.icon }}</span>
+                  <span class="truncate text-sm">{{ forge.name }}</span>
+                </RouterLink>
+              </div>
+            </NScrollbar>
+            <div v-else class="space-y-1">
               <RouterLink
-                to="/forge/plaza"
-                class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
-              >
-                Forge 广场
-                <NIcon :component="ChevronForwardOutline" :size="12" />
-              </RouterLink>
-            </div>
-            <!-- Forge 列表 -->
-            <div class="sider-section-glass space-y-1 p-2">
-              <RouterLink
-                v-for="forge in myForges"
+                v-for="forge in displayedForges"
                 :key="forge.id"
                 :to="`/forge/${forge.id}`"
                 class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
@@ -229,66 +276,60 @@ watch(searchKeyword, (keyword) => {
                 <span class="truncate text-sm">{{ forge.name }}</span>
               </RouterLink>
             </div>
+            <!-- 更多/收起 按钮 -->
+            <button
+              v-if="showForgeToggle"
+              class="text-primary-500 hover:text-primary-600 mt-1 flex w-full shrink-0 items-center gap-1 px-3 py-2 text-xs"
+              @click="toggleForgeExpand"
+            >
+              <NIcon
+                :component="forgeExpanded ? ChevronUpOutline : ChevronDownOutline"
+                :size="14"
+              />
+              {{ forgeExpanded ? '收起' : '更多' }}
+            </button>
           </div>
+        </div>
 
-          <!-- 折叠状态下的 Forge 图标 -->
-          <div v-else class="mb-4 space-y-2">
-            <NTooltip v-for="forge in myForges" :key="forge.id" placement="right">
-              <template #trigger>
-                <RouterLink
-                  :to="`/forge/${forge.id}`"
-                  class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
-                  :class="
-                    isActive(`forge-${forge.id}`)
-                      ? 'bg-primary-500/10 dark:bg-primary-500/20'
-                      : 'hover:bg-gray-100 dark:hover:bg-white/5'
-                  "
-                >
-                  <span class="text-lg">{{ forge.icon }}</span>
-                </RouterLink>
-              </template>
-              {{ forge.name }}
-            </NTooltip>
-          </div>
+        <!-- 渐变分割线 -->
+        <div class="divider-gradient my-3 shrink-0"></div>
 
-          <!-- 渐变分割线 -->
-          <div v-if="!collapsed" class="divider-gradient my-3"></div>
-
-          <!-- 历史任务 -->
-          <div v-if="!collapsed" class="mb-4">
-            <div class="mb-2 flex items-center justify-between">
-              <div class="flex gap-3">
-                <button
-                  class="text-xs font-medium transition-colors"
-                  :class="
-                    taskTab === 'all' ? 'text-primary-500' : 'text-theme-secondary hover:text-theme'
-                  "
-                  @click="taskTab = 'all'"
-                >
-                  所有任务
-                </button>
-                <button
-                  class="text-xs font-medium transition-colors"
-                  :class="
-                    taskTab === 'favorite'
-                      ? 'text-primary-500'
-                      : 'text-theme-secondary hover:text-theme'
-                  "
-                  @click="taskTab = 'favorite'"
-                >
-                  收藏
-                </button>
-              </div>
-              <RouterLink
-                to="/task/list"
-                class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
+        <!-- 历史任务区域（可滚动） -->
+        <div class="flex min-h-0 flex-1 flex-col">
+          <div class="mb-2 flex shrink-0 items-center justify-between">
+            <div class="flex gap-3">
+              <button
+                class="text-xs font-medium transition-colors"
+                :class="
+                  taskTab === 'all' ? 'text-primary-500' : 'text-theme-secondary hover:text-theme'
+                "
+                @click="taskTab = 'all'"
               >
-                任务管理
-                <NIcon :component="ChevronForwardOutline" :size="12" />
-              </RouterLink>
+                所有任务
+              </button>
+              <button
+                class="text-xs font-medium transition-colors"
+                :class="
+                  taskTab === 'favorite'
+                    ? 'text-primary-500'
+                    : 'text-theme-secondary hover:text-theme'
+                "
+                @click="taskTab = 'favorite'"
+              >
+                收藏
+              </button>
             </div>
+            <RouterLink
+              to="/task/list"
+              class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
+            >
+              任务管理
+              <NIcon :component="ChevronForwardOutline" :size="12" />
+            </RouterLink>
+          </div>
 
-            <!-- 任务列表 -->
+          <!-- 任务列表（可滚动） -->
+          <NScrollbar class="min-h-0 flex-1">
             <div class="sider-section-glass space-y-3 p-2">
               <!-- 加载状态 -->
               <div v-if="taskStore.loading" class="text-theme-muted py-4 text-center text-xs">
@@ -381,24 +422,43 @@ watch(searchKeyword, (keyword) => {
                 </div>
               </template>
             </div>
-          </div>
-
-          <!-- 折叠状态下的任务图标 -->
-          <div v-else class="space-y-2">
-            <NTooltip placement="right">
-              <template #trigger>
-                <RouterLink
-                  to="/task/list"
-                  class="text-theme-secondary flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-white/5"
-                >
-                  <NIcon :component="TimeOutline" :size="20" />
-                </RouterLink>
-              </template>
-              历史任务
-            </NTooltip>
-          </div>
+          </NScrollbar>
         </div>
-      </NScrollbar>
+      </div>
+
+      <!-- 折叠状态下的图标 -->
+      <div v-else class="flex-1 space-y-2 p-3">
+        <!-- Forge 图标 -->
+        <NTooltip v-for="forge in displayedForges" :key="forge.id" placement="right">
+          <template #trigger>
+            <RouterLink
+              :to="`/forge/${forge.id}`"
+              class="flex h-10 w-10 items-center justify-center rounded-lg transition-colors"
+              :class="
+                isActive(`forge-${forge.id}`)
+                  ? 'bg-primary-500/10 dark:bg-primary-500/20'
+                  : 'hover:bg-gray-100 dark:hover:bg-white/5'
+              "
+            >
+              <span class="text-lg">{{ forge.icon }}</span>
+            </RouterLink>
+          </template>
+          {{ forge.name }}
+        </NTooltip>
+
+        <!-- 任务图标 -->
+        <NTooltip placement="right">
+          <template #trigger>
+            <RouterLink
+              to="/task/list"
+              class="text-theme-secondary flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-white/5"
+            >
+              <NIcon :component="TimeOutline" :size="20" />
+            </RouterLink>
+          </template>
+          历史任务
+        </NTooltip>
+      </div>
 
       <!-- 底部导航 -->
       <div class="shrink-0">
