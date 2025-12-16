@@ -3,7 +3,7 @@
  * 任务对话页面
  * 展示与 AI 的对话过程
  */
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { useChat } from '@/composable/task';
 import ChatInput from '@/components/ChatInput.vue';
@@ -19,7 +19,16 @@ const taskId = computed(() => route.params.id as string);
 const messagesContainer = ref<HTMLElement | null>(null);
 
 // 使用 chat composable
-const { messages, inputValue, isLoading, handleSend, init, clearMessages, setTaskId } = useChat({
+const {
+  messages,
+  inputValue,
+  isLoading,
+  handleSend,
+  init,
+  clearMessages,
+  setTaskId,
+  cancelRequest,
+} = useChat({
   taskId: taskId.value,
   containerRef: messagesContainer,
 });
@@ -29,6 +38,8 @@ watch(
   taskId,
   (newTaskId, oldTaskId) => {
     if (newTaskId && newTaskId !== oldTaskId) {
+      // 先取消当前正在进行的 SSE 请求
+      cancelRequest();
       // 清空当前消息，更新 taskId，重新初始化
       clearMessages();
       setTaskId(newTaskId);
@@ -37,6 +48,11 @@ watch(
   },
   { immediate: true }
 );
+
+// 组件销毁前取消 SSE 请求
+onBeforeUnmount(() => {
+  cancelRequest();
+});
 </script>
 
 <template>
