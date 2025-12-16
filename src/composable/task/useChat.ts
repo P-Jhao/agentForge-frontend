@@ -20,8 +20,8 @@ export interface ChatMessage {
 export interface UseChatOptions {
   // 任务 UUID
   taskId: string;
-  // 消息容器元素引用（用于自动滚动）
-  containerRef?: { value: HTMLElement | null };
+  // 滚动到底部的回调函数
+  onScrollToBottom?: () => void;
 }
 
 // API 基础路径
@@ -38,7 +38,7 @@ const generateId = () => {
  * AI 对话 composable
  */
 export function useChat(options: UseChatOptions) {
-  const { containerRef } = options;
+  const { onScrollToBottom } = options;
 
   // 当前任务 ID（响应式，支持切换任务）
   const currentTaskId = ref(options.taskId);
@@ -71,9 +71,7 @@ export function useChat(options: UseChatOptions) {
    */
   const scrollToBottom = async () => {
     await nextTick();
-    if (containerRef?.value) {
-      containerRef.value.scrollTop = containerRef.value.scrollHeight;
-    }
+    onScrollToBottom?.();
   };
 
   /**

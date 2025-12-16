@@ -15,8 +15,13 @@ const route = useRoute();
 // 任务 UUID
 const taskId = computed(() => route.params.id as string);
 
-// 消息容器引用
-const messagesContainer = ref<HTMLElement | null>(null);
+// 消息列表组件引用
+const messageListRef = ref<InstanceType<typeof ChatMessageList> | null>(null);
+
+// 滚动到底部的方法（供 useChat 使用）
+const scrollToBottom = () => {
+  messageListRef.value?.scrollToBottom();
+};
 
 // 使用 chat composable
 const {
@@ -30,7 +35,7 @@ const {
   cancelRequest,
 } = useChat({
   taskId: taskId.value,
-  containerRef: messagesContainer,
+  onScrollToBottom: scrollToBottom,
 });
 
 // 监听 taskId 变化，切换任务时重新初始化
@@ -62,8 +67,8 @@ onBeforeUnmount(() => {
 
     <!-- 消息列表（可滚动区域） -->
     <ChatMessageList
-      ref="messagesContainer"
-      class="min-h-0 flex-1 overflow-y-auto"
+      ref="messageListRef"
+      class="min-h-0 flex-1"
       :messages="messages"
       :is-loading="isLoading"
     />

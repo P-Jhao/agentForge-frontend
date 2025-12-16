@@ -3,7 +3,7 @@
  * 聊天消息列表组件
  * 展示所有消息和加载状态
  */
-import { computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useThemeStore } from '@/stores';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
@@ -19,12 +19,30 @@ interface Message {
 interface Props {
   messages: Message[];
   isLoading: boolean;
-  containerRef?: HTMLElement | null;
 }
 
 const props = defineProps<Props>();
 
 const themeStore = useThemeStore();
+
+// 滚动容器引用
+const containerRef = ref<HTMLElement | null>(null);
+
+// 滚动到底部（带平滑过渡效果）
+const scrollToBottom = async (smooth = true) => {
+  await nextTick();
+  if (containerRef.value) {
+    containerRef.value.scrollTo({
+      top: containerRef.value.scrollHeight,
+      behavior: smooth ? 'smooth' : 'instant',
+    });
+  }
+};
+
+// 暴露方法给父组件
+defineExpose({
+  scrollToBottom,
+});
 
 const emptyStateClass = computed(() => (themeStore.isDark ? 'text-gray-500' : 'text-gray-400'));
 
@@ -40,7 +58,7 @@ const showLoadingState = computed(() => {
 </script>
 
 <template>
-  <div class="flex-1 space-y-4 overflow-y-auto p-6">
+  <div ref="containerRef" class="flex-1 space-y-4 overflow-y-auto p-6">
     <!-- 空状态 -->
     <div v-if="messages.length === 0 && !isLoading" class="flex h-full items-center justify-center">
       <p :class="emptyStateClass">开始你的对话吧</p>
