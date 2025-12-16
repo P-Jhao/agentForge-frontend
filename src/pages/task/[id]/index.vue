@@ -12,21 +12,21 @@ import ChatMessageList from './components/ChatMessageList.vue';
 
 const route = useRoute();
 
-// 任务 ID
+// 任务 UUID
 const taskId = computed(() => route.params.id as string);
 
 // 消息容器引用
 const messagesContainer = ref<HTMLElement | null>(null);
 
 // 使用 chat composable
-const { messages, inputValue, isLoading, handleSend, initFromSession } = useChat({
+const { messages, inputValue, isLoading, handleSend, init } = useChat({
   taskId: taskId.value,
   containerRef: messagesContainer,
 });
 
-// 初始化
+// 初始化：加载历史消息，检查初始消息
 onMounted(() => {
-  initFromSession();
+  init();
 });
 </script>
 

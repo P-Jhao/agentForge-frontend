@@ -7,11 +7,13 @@ import { computed } from 'vue';
 import { useThemeStore } from '@/stores';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
+import type { MessageSegment } from '@/types';
 
+// 消息类型（与 useChat 中的 ChatMessage 一致）
 interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string;
+  content: string | MessageSegment[];
 }
 
 interface Props {

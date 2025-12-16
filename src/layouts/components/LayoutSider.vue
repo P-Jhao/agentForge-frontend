@@ -4,7 +4,7 @@
  * 结构：Logo + 新建任务 + 我的 Forge + 历史任务 + 底部导航
  * 使用主题自适应 CSS 类，减少 isDark 判断
  */
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter, RouterLink } from 'vue-router';
 import { NLayoutSider, NButton, NIcon, NInput, NScrollbar, NTooltip } from 'naive-ui';
 import {
@@ -16,6 +16,7 @@ import {
   TimeOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useTaskStore } from '@/stores';
+import type { Task } from '@/types';
 
 // 接收折叠状态
 const collapsed = defineModel<boolean>('collapsed', { default: false });
@@ -36,22 +37,51 @@ const searchKeyword = ref('');
 // 任务历史 Tab
 const taskTab = ref<'all' | 'favorite'>('all');
 
-// 模拟数据 - 我的 Forge 列表
+// 模拟数据 - 我的 Forge 列表（后续从 API 获取）
 const myForges = ref([
   { id: '1', name: '代码审计专家', icon: '🔍' },
   { id: '2', name: '智能评分助手', icon: '📊' },
   { id: '3', name: 'RAG 知识检索', icon: '📚' },
 ]);
 
-// 模拟数据 - 历史任务
-const taskHistory = ref({
-  today: [
-    { id: 't1', title: 'www.baidu.com 渗透测试', forgeId: '1' },
-    { id: 't2', title: 'API 安全检查', forgeId: '1' },
-  ],
-  yesterday: [{ id: 't3', title: '代码审计报告生成', forgeId: '1' }],
-  earlier: [{ id: 't4', title: '知识库文档检索', forgeId: '3' }],
+// 根据 Tab 显示的任务列表
+const displayedTasks = computed(() => {
+  if (taskTab.value === 'favorite') {
+    // 收藏模式：按时间分组收藏的任务
+    const favorites = taskStore.favoriteTasks;
+    return groupTasksByTime(favorites);
+  }
+  // 所有任务模式：使用 store 的分组
+  return taskStore.groupedTasks;
 });
+
+// 将任务列表按时间分组
+function groupTasksByTime(tasks: Task[]) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+
+  const result = {
+    today: [] as Task[],
+    yesterday: [] as Task[],
+    earlier: [] as Task[],
+  };
+
+  for (const task of tasks) {
+    const taskDate = new Date(task.updatedAt);
+    const taskDay = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+
+    if (taskDay.getTime() >= today.getTime()) {
+      result.today.push(task);
+    } else if (taskDay.getTime() >= yesterday.getTime()) {
+      result.yesterday.push(task);
+    } else {
+      result.earlier.push(task);
+    }
+  }
+
+  return result;
+}
 
 // 当前选中的菜单
 const activeKey = computed(() => {
@@ -76,9 +106,31 @@ function isActive(key: string) {
 }
 
 // 点击任务时设置当前任务
-function handleTaskClick(task: { id: string; title: string }) {
-  taskStore.setCurrentTask({ id: task.id, name: task.title });
+function handleTaskClick(task: Task) {
+  taskStore.setCurrentTask(task.uuid);
 }
+
+// 组件挂载时获取任务列表
+onMounted(async () => {
+  try {
+    await taskStore.fetchTasks();
+  } catch (error) {
+    console.error('获取任务列表失败:', error);
+  }
+});
+
+// 监听搜索关键词变化（防抖搜索）
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+watch(searchKeyword, (keyword) => {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    try {
+      await taskStore.fetchTasks(keyword || undefined);
+    } catch (error) {
+      console.error('搜索任务失败:', error);
+    }
+  }, 300);
+});
 </script>
 
 <template>
@@ -113,7 +165,7 @@ function handleTaskClick(task: { id: string; title: string }) {
 
       <!-- 搜索框 + 新建任务 -->
       <div v-if="!collapsed" class="shrink-0 space-y-3 p-3">
-        <NInput v-model:value="searchKeyword" placeholder="搜索..." size="small" round>
+        <NInput v-model:value="searchKeyword" placeholder="搜索任务..." size="small" round>
           <template #prefix>
             <NIcon :component="SearchOutline" />
           </template>
@@ -238,77 +290,96 @@ function handleTaskClick(task: { id: string; title: string }) {
 
             <!-- 任务列表 -->
             <div class="sider-section-glass space-y-3 p-2">
-              <!-- 今天 -->
-              <div v-if="taskHistory.today.length">
-                <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
-                  <NIcon :component="TimeOutline" :size="12" />
-                  今天
-                </div>
-                <div class="space-y-1">
-                  <RouterLink
-                    v-for="task in taskHistory.today"
-                    :key="task.id"
-                    :to="`/task/${task.id}`"
-                    class="block truncate px-3 py-2 text-sm transition-all duration-200"
-                    :class="
-                      isActive(`task-${task.id}`)
-                        ? 'sider-item-active sider-item-active-text'
-                        : 'sider-item-hover sider-item-text'
-                    "
-                    @click="handleTaskClick(task)"
-                  >
-                    {{ task.title }}
-                  </RouterLink>
-                </div>
+              <!-- 加载状态 -->
+              <div v-if="taskStore.loading" class="text-theme-muted py-4 text-center text-xs">
+                加载中...
               </div>
 
-              <!-- 昨天 -->
-              <div v-if="taskHistory.yesterday.length">
-                <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
-                  <NIcon :component="TimeOutline" :size="12" />
-                  昨天
-                </div>
-                <div class="space-y-1">
-                  <RouterLink
-                    v-for="task in taskHistory.yesterday"
-                    :key="task.id"
-                    :to="`/task/${task.id}`"
-                    class="block truncate px-3 py-2 text-sm transition-all duration-200"
-                    :class="
-                      isActive(`task-${task.id}`)
-                        ? 'sider-item-active sider-item-active-text'
-                        : 'sider-item-hover sider-item-text'
-                    "
-                    @click="handleTaskClick(task)"
-                  >
-                    {{ task.title }}
-                  </RouterLink>
-                </div>
+              <!-- 空状态 -->
+              <div
+                v-else-if="
+                  !displayedTasks.today.length &&
+                    !displayedTasks.yesterday.length &&
+                    !displayedTasks.earlier.length
+                "
+                class="text-theme-muted py-4 text-center text-xs"
+              >
+                {{ taskTab === 'favorite' ? '暂无收藏任务' : '暂无任务' }}
               </div>
 
-              <!-- 更早 -->
-              <div v-if="taskHistory.earlier.length">
-                <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
-                  <NIcon :component="TimeOutline" :size="12" />
-                  更早
+              <template v-else>
+                <!-- 今天 -->
+                <div v-if="displayedTasks.today.length">
+                  <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
+                    <NIcon :component="TimeOutline" :size="12" />
+                    今天
+                  </div>
+                  <div class="space-y-1">
+                    <RouterLink
+                      v-for="task in displayedTasks.today"
+                      :key="task.uuid"
+                      :to="`/task/${task.uuid}`"
+                      class="block truncate px-3 py-2 text-sm transition-all duration-200"
+                      :class="
+                        isActive(`task-${task.uuid}`)
+                          ? 'sider-item-active sider-item-active-text'
+                          : 'sider-item-hover sider-item-text'
+                      "
+                      @click="handleTaskClick(task)"
+                    >
+                      {{ task.title }}
+                    </RouterLink>
+                  </div>
                 </div>
-                <div class="space-y-1">
-                  <RouterLink
-                    v-for="task in taskHistory.earlier"
-                    :key="task.id"
-                    :to="`/task/${task.id}`"
-                    class="block truncate px-3 py-2 text-sm transition-all duration-200"
-                    :class="
-                      isActive(`task-${task.id}`)
-                        ? 'sider-item-active sider-item-active-text'
-                        : 'sider-item-hover sider-item-text'
-                    "
-                    @click="handleTaskClick(task)"
-                  >
-                    {{ task.title }}
-                  </RouterLink>
+
+                <!-- 昨天 -->
+                <div v-if="displayedTasks.yesterday.length">
+                  <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
+                    <NIcon :component="TimeOutline" :size="12" />
+                    昨天
+                  </div>
+                  <div class="space-y-1">
+                    <RouterLink
+                      v-for="task in displayedTasks.yesterday"
+                      :key="task.uuid"
+                      :to="`/task/${task.uuid}`"
+                      class="block truncate px-3 py-2 text-sm transition-all duration-200"
+                      :class="
+                        isActive(`task-${task.uuid}`)
+                          ? 'sider-item-active sider-item-active-text'
+                          : 'sider-item-hover sider-item-text'
+                      "
+                      @click="handleTaskClick(task)"
+                    >
+                      {{ task.title }}
+                    </RouterLink>
+                  </div>
                 </div>
-              </div>
+
+                <!-- 更早 -->
+                <div v-if="displayedTasks.earlier.length">
+                  <div class="text-theme-muted mb-1 flex items-center gap-1 text-xs">
+                    <NIcon :component="TimeOutline" :size="12" />
+                    更早
+                  </div>
+                  <div class="space-y-1">
+                    <RouterLink
+                      v-for="task in displayedTasks.earlier"
+                      :key="task.uuid"
+                      :to="`/task/${task.uuid}`"
+                      class="block truncate px-3 py-2 text-sm transition-all duration-200"
+                      :class="
+                        isActive(`task-${task.uuid}`)
+                          ? 'sider-item-active sider-item-active-text'
+                          : 'sider-item-hover sider-item-text'
+                      "
+                      @click="handleTaskClick(task)"
+                    >
+                      {{ task.title }}
+                    </RouterLink>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
 

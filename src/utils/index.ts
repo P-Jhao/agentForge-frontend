@@ -3,3 +3,4 @@
  */
 export { http, type ApiResponse } from './http';
 export { streamRequest, createStreamRequest, type StreamOptions } from './stream';
+export * from './taskApi';
