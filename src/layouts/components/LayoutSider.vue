@@ -139,6 +139,29 @@ function handleTaskClick(task: Task) {
   taskStore.setCurrentTask(task.uuid);
 }
 
+// 格式化更新时间（显示日期）
+function formatUpdateTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// 获取任务状态文本
+function getStatusText(status: string): string {
+  switch (status) {
+    case 'running':
+      return '任务进行中';
+    case 'completed':
+      return '任务已完成';
+    case 'cancelled':
+      return '任务已取消';
+    default:
+      return status;
+  }
+}
+
 // 组件挂载时获取任务列表
 onMounted(async () => {
   try {
@@ -360,7 +383,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.today"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="block truncate px-3 py-2 text-sm transition-all duration-200"
+                      class="block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -368,7 +391,11 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      {{ task.title }}
+                      <div class="truncate text-sm">{{ task.title }}</div>
+                      <div class="mt-1 flex items-center justify-between text-xs opacity-60">
+                        <span>{{ getStatusText(task.status) }}</span>
+                        <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                      </div>
                     </RouterLink>
                   </div>
                 </div>
@@ -384,7 +411,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.yesterday"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="block truncate px-3 py-2 text-sm transition-all duration-200"
+                      class="block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -392,7 +419,11 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      {{ task.title }}
+                      <div class="truncate text-sm">{{ task.title }}</div>
+                      <div class="mt-1 flex items-center justify-between text-xs opacity-60">
+                        <span>{{ getStatusText(task.status) }}</span>
+                        <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                      </div>
                     </RouterLink>
                   </div>
                 </div>
@@ -408,7 +439,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.earlier"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="block truncate px-3 py-2 text-sm transition-all duration-200"
+                      class="block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -416,7 +447,11 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      {{ task.title }}
+                      <div class="truncate text-sm">{{ task.title }}</div>
+                      <div class="mt-1 flex items-center justify-between text-xs opacity-60">
+                        <span>{{ getStatusText(task.status) }}</span>
+                        <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                      </div>
                     </RouterLink>
                   </div>
                 </div>
