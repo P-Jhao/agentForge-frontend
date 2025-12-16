@@ -67,11 +67,42 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 滚动到底部
+   * 滚动到底部（带 0ms 延迟确保 DOM 更新完成）
    */
   const scrollToBottom = async () => {
     await nextTick();
-    onScrollToBottom?.();
+    setTimeout(() => {
+      onScrollToBottom?.();
+    }, 0);
+  };
+
+  // 节流滚动的定时器和标志
+  let throttleTimer: ReturnType<typeof setTimeout> | null = null;
+  let pendingScroll = false;
+
+  /**
+   * 节流滚动到底部（用于 SSE 流式输出，500ms 触发一次）
+   */
+  const throttledScrollToBottom = async () => {
+    // 标记有待处理的滚动
+    pendingScroll = true;
+
+    // 如果已有定时器，等待执行
+    if (throttleTimer) return;
+
+    // 立即执行一次
+    await scrollToBottom();
+    pendingScroll = false;
+
+    // 设置节流定时器
+    throttleTimer = setTimeout(async () => {
+      throttleTimer = null;
+      // 如果有待处理的滚动，执行一次
+      if (pendingScroll) {
+        await scrollToBottom();
+        pendingScroll = false;
+      }
+    }, 500);
   };
 
   /**
@@ -177,7 +208,7 @@ export function useChat(options: UseChatOptions) {
 
           // 更新 UI
           updateLastAssistantSegments(segments);
-          await scrollToBottom();
+          await throttledScrollToBottom();
         } else if (chunk.type === 'error' && chunk.data) {
           const data = chunk.data as { message: string };
           console.error('加载历史消息失败:', data.message);
@@ -248,7 +279,7 @@ export function useChat(options: UseChatOptions) {
 
           // 更新 UI
           updateLastAssistantSegments(segments);
-          await scrollToBottom();
+          await throttledScrollToBottom();
         }
 
         // 处理错误
@@ -260,9 +291,11 @@ export function useChat(options: UseChatOptions) {
 
         // done 类型表示结束，不需要特殊处理
       },
-      onComplete: () => {
+      onComplete: async () => {
         isLoading.value = false;
         abortCurrentRequest = null;
+        // 完成时确保滚动到底部
+        await scrollToBottom();
         // 乐观更新：更新任务的 updatedAt 并移动到列表最前面
         const taskStore = useTaskStore();
         taskStore.touchTask(currentTaskId.value);
