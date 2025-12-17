@@ -6,7 +6,7 @@
 export type ForgeSource = 'builtin' | 'user';
 
 // Forge 筛选类型
-export type ForgeFilter = 'all' | 'my' | 'builtin';
+export type ForgeFilter = 'all' | 'my' | 'builtin' | 'other';
 
 // 模型类型
 export type ForgeModel = 'qwen' | 'deepseek';

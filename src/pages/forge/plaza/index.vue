@@ -80,6 +80,7 @@ onMounted(async () => {
       <NTabPane name="all" tab="全部" />
       <NTabPane name="my" tab="我的" />
       <NTabPane name="builtin" tab="内置" />
+      <NTabPane name="other" tab="其他" />
     </NTabs>
 
     <!-- 内容区域 -->
