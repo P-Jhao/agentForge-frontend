@@ -174,8 +174,10 @@ onMounted(() => {
           <!-- 基本信息 -->
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-3">
-              <h1 class="text-theme text-2xl font-bold">{{ forge.displayName }}</h1>
-              <NTag size="small" :type="sourceConfig.type" round>
+              <h1 class="text-theme max-w-md truncate text-2xl font-bold">
+                {{ forge.displayName }}
+              </h1>
+              <NTag size="small" :type="sourceConfig.type" round class="shrink-0">
                 {{ sourceConfig.text }}
               </NTag>
             </div>

@@ -9,7 +9,6 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { NTag, NIcon } from 'naive-ui';
 import { FlameOutline, CogOutline } from '@vicons/ionicons5';
-import TextFade from '@/components/TextFade.vue';
 import type { MCPAssociatedForge } from '@/types';
 
 const props = defineProps<{
@@ -99,8 +98,8 @@ function handleNewTask(e: Event) {
     </div>
 
     <!-- 描述 -->
-    <TextFade class="text-theme-secondary text-sm">
+    <p class="text-theme-secondary line-clamp-2 text-sm">
       {{ forge.description || '暂无描述' }}
-    </TextFade>
+    </p>
   </div>
 </template>
