@@ -3,7 +3,7 @@
  * Forge 表单组件
  * 用于创建和编辑 Forge
  */
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import {
   NForm,
   NFormItem,
@@ -21,7 +21,7 @@ import {
   type UploadCustomRequestOptions,
 } from 'naive-ui';
 import { SaveOutline, CloudUploadOutline } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
+import { useThemeStore, useMCPStore } from '@/stores';
 import { uploadAvatar } from '@/utils';
 import type { ForgeDetail, CreateForgeParams, UpdateForgeParams } from '@/types';
 
@@ -40,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const themeStore = useThemeStore();
+const mcpStore = useMCPStore();
 const message = useMessage();
 
 // 表单引用
@@ -47,6 +48,19 @@ const formRef = ref<FormInst | null>(null);
 
 // 头像上传状态
 const avatarUploading = ref(false);
+
+// 加载 MCP 列表
+onMounted(async () => {
+  await mcpStore.fetchMCPList();
+});
+
+// MCP 选项（从 store 获取）
+const mcpOptions = computed(() =>
+  mcpStore.mcpList.map((mcp) => ({
+    label: mcp.name,
+    value: mcp.id,
+  }))
+);
 
 // 表单数据
 const formData = ref({
@@ -68,7 +82,7 @@ watch(
         avatar: forge.avatar || '',
         description: forge.description || '',
         systemPrompt: forge.systemPrompt || '',
-        mcpIds: [], // TODO: 从 forge 中获取关联的 MCP
+        mcpIds: forge.mcpIds || [],
         isPublic: forge.isPublic,
       };
     }
@@ -88,14 +102,6 @@ const avatarUrl = computed(() => {
   }
   return formData.value.avatar;
 });
-
-// MCP 选项（Mock 数据，后续从 MCP 模块获取）
-const mcpOptions = [
-  { label: '文件系统 MCP', value: 1 },
-  { label: '数据库 MCP', value: 2 },
-  { label: 'API 调用 MCP', value: 3 },
-  { label: '代码执行 MCP', value: 4 },
-];
 
 // 表单验证规则
 const rules: FormRules = {
@@ -142,7 +148,7 @@ const handleSubmit = async () => {
       systemPrompt: formData.value.systemPrompt || undefined,
       avatar: formData.value.avatar || undefined,
       isPublic: formData.value.isPublic,
-      // TODO: mcpIds 后续实现
+      mcpIds: formData.value.mcpIds.length > 0 ? formData.value.mcpIds : undefined,
     };
 
     emit('submit', data);

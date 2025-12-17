@@ -35,10 +35,11 @@ export interface Forge {
   creator?: ForgeCreator;
 }
 
-// Forge 详情（包含权限信息）
+// Forge 详情（包含权限信息和关联的 MCP）
 export interface ForgeDetail extends Forge {
   isOwner: boolean; // 是否为创建者
   canEdit: boolean; // 是否可编辑（root 或自己创建的非内置）
+  mcpIds: number[]; // 关联的 MCP ID 列表
 }
 
 // 创建 Forge 参数
@@ -48,6 +49,7 @@ export interface CreateForgeParams {
   systemPrompt?: string;
   avatar?: string;
   isPublic?: boolean;
+  mcpIds?: number[];
 }
 
 // 更新 Forge 参数
@@ -57,6 +59,7 @@ export interface UpdateForgeParams {
   systemPrompt?: string;
   avatar?: string;
   isPublic?: boolean;
+  mcpIds?: number[];
 }
 
 // 从 Forge 创建任务的响应
