@@ -22,6 +22,18 @@ const mainRoutes: RouteRecordRaw = {
       meta: { title: 'Forge 广场' },
     },
     {
+      path: 'forge/create',
+      name: 'ForgeCreate',
+      component: () => import('@/pages/forge/create/index.vue'),
+      meta: { title: '创建 Forge' },
+    },
+    {
+      path: 'forge/:id/edit',
+      name: 'ForgeEdit',
+      component: () => import('@/pages/forge/[id]/edit.vue'),
+      meta: { title: '编辑 Forge' },
+    },
+    {
       path: 'forge/:id',
       name: 'ForgeDetail',
       component: () => import('@/pages/forge/[id]/index.vue'),
