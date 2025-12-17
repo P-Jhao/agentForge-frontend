@@ -332,32 +332,33 @@ export function useChat(options: UseChatOptions) {
     const initMessage = sessionStorage.getItem(initKey);
 
     if (initMessage) {
-      // 有初始消息，说明是新任务
-      // 1. 先创建任务
+      // 有初始消息，可能是新任务或从 Forge 创建的任务
       try {
+        // 尝试创建任务（如果任务已存在会返回 400）
         const task = await createTask({
           id: taskId,
           firstMessage: initMessage,
         });
 
-        // 2. 添加到 TaskStore 并设置为当前任务
+        // 创建成功，添加到 TaskStore
         const taskStore = useTaskStore();
         taskStore.addTask(task);
         taskStore.setCurrentTask(taskId);
-
-        // 3. 清除 sessionStorage
-        sessionStorage.removeItem(initKey);
-
-        // 4. 标记历史已加载（新任务没有历史）
-        historyLoaded.value = true;
-
-        // 5. 发送初始消息
-        await sendMessage(initMessage);
       } catch (error) {
-        console.error('创建任务失败:', error);
-        // 创建失败也清除 sessionStorage，避免重复尝试
-        sessionStorage.removeItem(initKey);
+        // 任务可能已存在（从 Forge 创建），忽略错误
+        console.log('任务可能已存在，继续发送消息');
+        const taskStore = useTaskStore();
+        taskStore.setCurrentTask(taskId);
       }
+
+      // 清除 sessionStorage
+      sessionStorage.removeItem(initKey);
+
+      // 标记历史已加载（新任务没有历史）
+      historyLoaded.value = true;
+
+      // 发送初始消息
+      await sendMessage(initMessage);
     } else {
       // 没有初始消息，说明是已有任务，加载历史
       const taskStore = useTaskStore();

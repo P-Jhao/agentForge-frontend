@@ -111,6 +111,9 @@ const handleSend = async (content: string) => {
     // 清空输入框
     inputValue.value = '';
 
+    // 将初始消息存入 sessionStorage，供 useChat.init() 使用
+    sessionStorage.setItem(`task_${taskUuid}_init`, content);
+
     // 刷新任务列表
     await taskStore.fetchTasks();
 
