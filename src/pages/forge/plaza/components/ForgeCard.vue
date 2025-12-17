@@ -58,7 +58,7 @@ const getAvatarUrl = (avatar: string | null) => {
     <div class="mb-3 flex items-start gap-3">
       <!-- 头像 -->
       <div
-        class="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
+        class="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
       >
         <img
           v-if="forge.avatar"

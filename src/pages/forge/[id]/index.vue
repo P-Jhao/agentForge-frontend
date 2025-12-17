@@ -158,7 +158,7 @@ onMounted(() => {
         <div class="mb-6 flex items-start gap-4">
           <!-- 头像 -->
           <div
-            class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
+            class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-linear-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
           >
             <img
               v-if="forge.avatar"

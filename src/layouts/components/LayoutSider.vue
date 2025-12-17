@@ -15,6 +15,8 @@ import {
   ChevronDownOutline,
   ChevronUpOutline,
   TimeOutline,
+  StarOutline,
+  CogOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useTaskStore, useForgeStore } from '@/stores';
 import type { Task } from '@/types';
@@ -257,7 +259,7 @@ watch(searchKeyword, (keyword) => {
         <!-- 我的 Forge 区域 -->
         <div :class="forgeExpanded ? 'flex max-h-[60%] min-h-[280px] flex-col' : 'shrink-0'">
           <div class="mb-2 flex shrink-0 items-center justify-between">
-            <span class="text-theme-secondary text-xs font-medium">我的 Forge</span>
+            <span class="text-theme-secondary text-xs font-medium">我收藏的 Forge</span>
             <RouterLink
               to="/forge/plaza"
               class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-xs"
@@ -268,8 +270,41 @@ watch(searchKeyword, (keyword) => {
           </div>
           <!-- Forge 列表 -->
           <div class="sider-section-glass flex min-h-0 flex-1 flex-col p-2">
-            <NScrollbar v-if="forgeExpanded" class="min-h-0 flex-1">
-              <div class="space-y-1">
+            <!-- 空状态 -->
+            <div
+              v-if="!displayedForges.length"
+              class="text-theme-muted flex flex-col items-center justify-center gap-2 py-4"
+            >
+              <NIcon :component="StarOutline" :size="24" />
+              <span class="text-xs">暂无收藏</span>
+            </div>
+            <!-- 有数据时显示列表 -->
+            <template v-else>
+              <NScrollbar v-if="forgeExpanded" class="min-h-0 flex-1">
+                <div class="space-y-1">
+                  <RouterLink
+                    v-for="forge in displayedForges"
+                    :key="forge.id"
+                    :to="`/forge/${forge.id}`"
+                    class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
+                    :class="
+                      isActive(`forge-${forge.id}`)
+                        ? 'sider-item-active sider-item-active-text'
+                        : 'sider-item-hover sider-item-text'
+                    "
+                  >
+                    <img
+                      v-if="forge.avatar"
+                      :src="forge.avatar"
+                      :alt="forge.displayName"
+                      class="h-6 w-6 rounded object-cover"
+                    />
+                    <NIcon v-else :component="CogOutline" :size="16" class="text-theme-muted" />
+                    <span class="truncate text-sm">{{ forge.displayName }}</span>
+                  </RouterLink>
+                </div>
+              </NScrollbar>
+              <div v-else class="space-y-1">
                 <RouterLink
                   v-for="forge in displayedForges"
                   :key="forge.id"
@@ -281,39 +316,29 @@ watch(searchKeyword, (keyword) => {
                       : 'sider-item-hover sider-item-text'
                   "
                 >
-                  <span class="text-base">{{ forge.avatar || '🤖' }}</span>
+                  <img
+                    v-if="forge.avatar"
+                    :src="forge.avatar"
+                    :alt="forge.displayName"
+                    class="h-6 w-6 rounded object-cover"
+                  />
+                  <NIcon v-else :component="CogOutline" :size="16" class="text-theme-muted" />
                   <span class="truncate text-sm">{{ forge.displayName }}</span>
                 </RouterLink>
               </div>
-            </NScrollbar>
-            <div v-else class="space-y-1">
-              <RouterLink
-                v-for="forge in displayedForges"
-                :key="forge.id"
-                :to="`/forge/${forge.id}`"
-                class="flex items-center gap-2 px-3 py-2 transition-all duration-200"
-                :class="
-                  isActive(`forge-${forge.id}`)
-                    ? 'sider-item-active sider-item-active-text'
-                    : 'sider-item-hover sider-item-text'
-                "
+              <!-- 更多/收起 按钮 -->
+              <button
+                v-if="showForgeToggle"
+                class="text-primary-500 hover:text-primary-600 mt-1 flex w-full shrink-0 items-center gap-1 px-3 py-2 text-xs"
+                @click="toggleForgeExpand"
               >
-                <span class="text-base">{{ forge.avatar || '🤖' }}</span>
-                <span class="truncate text-sm">{{ forge.displayName }}</span>
-              </RouterLink>
-            </div>
-            <!-- 更多/收起 按钮 -->
-            <button
-              v-if="showForgeToggle"
-              class="text-primary-500 hover:text-primary-600 mt-1 flex w-full shrink-0 items-center gap-1 px-3 py-2 text-xs"
-              @click="toggleForgeExpand"
-            >
-              <NIcon
-                :component="forgeExpanded ? ChevronUpOutline : ChevronDownOutline"
-                :size="14"
-              />
-              {{ forgeExpanded ? '收起' : '更多' }}
-            </button>
+                <NIcon
+                  :component="forgeExpanded ? ChevronUpOutline : ChevronDownOutline"
+                  :size="14"
+                />
+                {{ forgeExpanded ? '收起' : '更多' }}
+              </button>
+            </template>
           </div>
         </div>
 
