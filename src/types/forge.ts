@@ -27,6 +27,7 @@ export interface Forge {
   usageCount: number;
   isPublic: boolean;
   isFavorite: boolean;
+  isOwner: boolean; // 是否为创建者
   summary: string | null; // AI 生成的能力摘要（用于自动匹配）
   createdAt: string;
   updatedAt: string;

@@ -26,8 +26,8 @@ import type {
 export const useForgeStore = defineStore('forge', () => {
   // ========== 状态 ==========
 
-  // Forge 列表（广场页面用）
-  const forgeList = ref<Forge[]>([]);
+  // 全部 Forge 列表（原始数据，用于前端筛选）
+  const allForges = ref<Forge[]>([]);
 
   // 收藏的 Forge 列表（侧边栏用）
   const favoriteForges = ref<FavoriteForge[]>([]);
@@ -43,6 +43,23 @@ export const useForgeStore = defineStore('forge', () => {
 
   // ========== 计算属性 ==========
 
+  // 根据筛选条件过滤的 Forge 列表（广场页面用）
+  const forgeList = computed(() => {
+    if (currentFilter.value === 'all') {
+      return allForges.value;
+    }
+    if (currentFilter.value === 'my') {
+      return allForges.value.filter((f) => f.isOwner);
+    }
+    if (currentFilter.value === 'builtin') {
+      return allForges.value.filter((f) => f.source === 'builtin');
+    }
+    if (currentFilter.value === 'other') {
+      return allForges.value.filter((f) => f.source === 'user' && !f.isOwner);
+    }
+    return allForges.value;
+  });
+
   // 是否有当前 Forge
   const hasCurrentForge = computed(() => !!currentForge.value);
 
@@ -52,19 +69,25 @@ export const useForgeStore = defineStore('forge', () => {
   // ========== 方法 ==========
 
   /**
-   * 获取 Forge 列表
+   * 获取全部 Forge 列表（只在进入广场时调用一次）
    */
-  async function fetchForgeList(filter: ForgeFilter = 'all') {
+  async function fetchAllForges() {
     loading.value = true;
-    currentFilter.value = filter;
     try {
-      forgeList.value = await fetchForgeListApi(filter);
+      allForges.value = await fetchForgeListApi('all');
     } catch (error) {
       console.error('获取 Forge 列表失败:', error);
       throw error;
     } finally {
       loading.value = false;
     }
+  }
+
+  /**
+   * 设置筛选条件（前端筛选，不发请求）
+   */
+  function setFilter(filter: ForgeFilter) {
+    currentFilter.value = filter;
   }
 
   /**
@@ -102,7 +125,7 @@ export const useForgeStore = defineStore('forge', () => {
     try {
       const result = await createForgeApi(params);
       // 刷新列表
-      await fetchForgeList(currentFilter.value);
+      await fetchAllForges();
       return result.id;
     } catch (error) {
       console.error('创建 Forge 失败:', error);
@@ -121,7 +144,7 @@ export const useForgeStore = defineStore('forge', () => {
         await fetchForgeById(id);
       }
       // 刷新列表
-      await fetchForgeList(currentFilter.value);
+      await fetchAllForges();
     } catch (error) {
       console.error('更新 Forge 失败:', error);
       throw error;
@@ -139,7 +162,7 @@ export const useForgeStore = defineStore('forge', () => {
         currentForge.value = null;
       }
       // 刷新列表
-      await fetchForgeList(currentFilter.value);
+      await fetchAllForges();
       // 刷新收藏列表
       await fetchFavoriteForges();
     } catch (error) {
@@ -218,7 +241,8 @@ export const useForgeStore = defineStore('forge', () => {
     currentForgeName,
 
     // 方法
-    fetchForgeList,
+    fetchAllForges,
+    setFilter,
     fetchFavoriteForges,
     fetchForgeById,
     createForge,

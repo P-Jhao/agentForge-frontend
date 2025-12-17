@@ -24,10 +24,10 @@ const forgeList = computed(() => forgeStore.forgeList);
 // 加载状态
 const loading = computed(() => forgeStore.loading);
 
-// 切换标签
-const handleTabChange = async (tab: ForgeFilter) => {
+// 切换标签（前端筛选，不发请求）
+const handleTabChange = (tab: ForgeFilter) => {
   currentTab.value = tab;
-  await forgeStore.fetchForgeList(tab);
+  forgeStore.setFilter(tab);
 };
 
 // 点击卡片跳转到详情页
@@ -51,7 +51,8 @@ const handleCreate = () => {
 
 // 初始化
 onMounted(async () => {
-  await forgeStore.fetchForgeList(currentTab.value);
+  forgeStore.setFilter(currentTab.value);
+  await forgeStore.fetchAllForges();
 });
 </script>
 
