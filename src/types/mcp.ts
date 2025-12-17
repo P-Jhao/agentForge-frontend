@@ -45,6 +45,9 @@ export interface MCPAssociatedForge {
   id: number;
   displayName: string;
   avatar: string | null;
+  description: string | null;
+  source: 'builtin' | 'user';
+  usageCount: number;
 }
 
 // MCP 详情（含关联 Forge、工具列表）

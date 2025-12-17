@@ -31,6 +31,7 @@ import {
   ServerOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useUserStore, useMCPStore } from '@/stores';
+import ForgeCard from '../components/ForgeCard.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -167,11 +168,6 @@ function handleDelete() {
     },
   });
 }
-
-// 跳转到 Forge 详情
-function handleForgeClick(forgeId: number) {
-  router.push(`/forge/${forgeId}`);
-}
 </script>
 
 <template>
@@ -291,16 +287,11 @@ function handleForgeClick(forgeId: number) {
 
       <!-- 关联的 Forge 列表 -->
       <NCard title="使用此 MCP 的 Forge" class="mb-6">
-        <div v-if="mcp.associatedForges.length > 0" class="flex flex-wrap gap-2">
-          <NButton
-            v-for="forge in mcp.associatedForges"
-            :key="forge.id"
-            size="small"
-            @click="handleForgeClick(forge.id)"
-          >
-            <span v-if="forge.avatar" class="mr-1">{{ forge.avatar }}</span>
-            {{ forge.displayName }}
-          </NButton>
+        <div
+          v-if="mcp.associatedForges.length > 0"
+          class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+        >
+          <ForgeCard v-for="forge in mcp.associatedForges" :key="forge.id" :forge="forge" />
         </div>
         <NEmpty v-else description="暂无 Forge 使用此 MCP" />
       </NCard>
