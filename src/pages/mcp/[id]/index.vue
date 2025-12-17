@@ -241,7 +241,7 @@ function handleForgeClick(forgeId: number) {
               </template>
               编辑
             </NButton>
-            <NButton type="error" :loading="actionLoading" @click="handleDelete">
+            <NButton type="error" @click="handleDelete">
               <template #icon>
                 <NIcon :component="TrashOutline" />
               </template>
