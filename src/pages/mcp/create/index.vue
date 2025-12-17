@@ -132,7 +132,7 @@ async function handleSubmit() {
     </div>
 
     <!-- 表单 -->
-    <NCard class="max-w-2xl">
+    <NCard>
       <div class="space-y-6">
         <!-- MCP 名称（必选） -->
         <div>
