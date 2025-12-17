@@ -56,17 +56,9 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-// 获取头像完整 URL
+// 获取头像完整 URL（路径已包含 /api 前缀，直接返回即可）
 const getAvatarUrl = (avatar: string) => {
-  if (!avatar) return '';
-  // 如果是相对路径，拼接 API 基础路径
-  if (avatar.startsWith('/')) {
-    const apiBase = import.meta.env.VITE_API_BASE || '';
-    // 移除 /api 前缀
-    const baseUrl = apiBase.replace(/\/api$/, '');
-    return `${baseUrl}${avatar}`;
-  }
-  return avatar;
+  return avatar || '';
 };
 
 // 获取 Forge 详情
