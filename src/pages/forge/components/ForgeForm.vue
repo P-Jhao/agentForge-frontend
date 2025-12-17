@@ -3,7 +3,7 @@
  * Forge 表单组件
  * 用于创建和编辑 Forge
  */
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import {
   NForm,
   NFormItem,
@@ -17,7 +17,7 @@ import {
 } from 'naive-ui';
 import { SaveOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
-import type { ForgeDetail, CreateForgeParams, UpdateForgeParams, ForgeModel } from '@/types';
+import type { ForgeDetail, CreateForgeParams, UpdateForgeParams } from '@/types';
 
 const props = defineProps<{
   // 编辑模式时传入现有数据
@@ -40,12 +40,11 @@ const formRef = ref<FormInst | null>(null);
 
 // 表单数据
 const formData = ref({
-  name: '',
   displayName: '',
+  avatar: '',
   description: '',
   systemPrompt: '',
-  model: 'qwen' as ForgeModel,
-  avatar: '',
+  mcpIds: [] as number[],
   isPublic: true,
 });
 
@@ -55,12 +54,11 @@ watch(
   (forge) => {
     if (forge && props.mode === 'edit') {
       formData.value = {
-        name: forge.name,
         displayName: forge.displayName,
+        avatar: forge.avatar || '',
         description: forge.description || '',
         systemPrompt: forge.systemPrompt || '',
-        model: forge.model,
-        avatar: forge.avatar || '',
+        mcpIds: [], // TODO: 从 forge 中获取关联的 MCP
         isPublic: forge.isPublic,
       };
     }
@@ -68,34 +66,27 @@ watch(
   { immediate: true }
 );
 
-// 模型选项
-const modelOptions = [
-  { label: '通义千问', value: 'qwen' },
-  { label: 'DeepSeek', value: 'deepseek' },
+// MCP 选项（Mock 数据，后续从 MCP 模块获取）
+const mcpOptions = [
+  { label: '文件系统 MCP', value: 1 },
+  { label: '数据库 MCP', value: 2 },
+  { label: 'API 调用 MCP', value: 3 },
+  { label: '代码执行 MCP', value: 4 },
 ];
 
 // 表单验证规则
 const rules: FormRules = {
-  name: [
-    { required: true, message: '请输入标识名', trigger: 'blur' },
-    {
-      pattern: /^[a-z0-9-]+$/,
-      message: '只能包含小写字母、数字和连字符',
-      trigger: 'blur',
-    },
-    { max: 50, message: '最多 50 个字符', trigger: 'blur' },
-  ],
   displayName: [
-    { required: true, message: '请输入显示名称', trigger: 'blur' },
+    { required: true, message: '请输入名称', trigger: 'blur' },
     { max: 100, message: '最多 100 个字符', trigger: 'blur' },
   ],
-  description: [{ max: 500, message: '最多 500 个字符', trigger: 'blur' }],
+  description: [{ max: 10000, message: '最多 10000 个字符', trigger: 'blur' }],
   systemPrompt: [{ max: 10000, message: '最多 10000 个字符', trigger: 'blur' }],
   avatar: [{ max: 255, message: '最多 255 个字符', trigger: 'blur' }],
 };
 
 // 是否为编辑模式
-const isEditMode = computed(() => props.mode === 'edit');
+const isEditMode = props.mode === 'edit';
 
 // 提交表单
 const handleSubmit = async () => {
@@ -103,13 +94,12 @@ const handleSubmit = async () => {
     await formRef.value?.validate();
 
     const data: CreateForgeParams | UpdateForgeParams = {
-      name: formData.value.name,
       displayName: formData.value.displayName,
       description: formData.value.description || undefined,
       systemPrompt: formData.value.systemPrompt || undefined,
-      model: formData.value.model,
       avatar: formData.value.avatar || undefined,
       isPublic: formData.value.isPublic,
+      // TODO: mcpIds 后续实现
     };
 
     emit('submit', data);
@@ -133,17 +123,8 @@ const handleCancel = () => {
     label-width="100"
     require-mark-placement="right-hanging"
   >
-    <!-- 标识名（创建时必填，编辑时只读） -->
-    <NFormItem label="标识名" path="name">
-      <NInput
-        v-model:value="formData.name"
-        placeholder="如 code-audit（小写字母、数字、连字符）"
-        :disabled="isEditMode"
-      />
-    </NFormItem>
-
-    <!-- 显示名称 -->
-    <NFormItem label="显示名称" path="displayName">
+    <!-- 名称 -->
+    <NFormItem label="名称" path="displayName">
       <NInput v-model:value="formData.displayName" placeholder="如 代码审计专家" />
     </NFormItem>
 
@@ -157,13 +138,13 @@ const handleCancel = () => {
       </template>
     </NFormItem>
 
-    <!-- 描述 -->
-    <NFormItem label="描述" path="description">
+    <!-- Forge 介绍（Markdown） -->
+    <NFormItem label="Forge 介绍" path="description">
       <NInput
         v-model:value="formData.description"
         type="textarea"
-        placeholder="简要描述这个 Forge 的功能"
-        :autosize="{ minRows: 2, maxRows: 4 }"
+        placeholder="支持 Markdown 格式，详细介绍这个 Forge 的功能和使用场景"
+        :autosize="{ minRows: 4, maxRows: 10 }"
       />
     </NFormItem>
 
@@ -172,14 +153,20 @@ const handleCancel = () => {
       <NInput
         v-model:value="formData.systemPrompt"
         type="textarea"
-        placeholder="定义 Forge 的行为和能力"
+        placeholder="定义 Forge 的行为和能力，这将作为 AI 的系统指令"
         :autosize="{ minRows: 4, maxRows: 10 }"
       />
     </NFormItem>
 
-    <!-- 模型选择 -->
-    <NFormItem label="模型" path="model">
-      <NSelect v-model:value="formData.model" :options="modelOptions" style="width: 200px" />
+    <!-- MCP 选择 -->
+    <NFormItem label="MCP" path="mcpIds">
+      <NSelect
+        v-model:value="formData.mcpIds"
+        :options="mcpOptions"
+        multiple
+        placeholder="选择要使用的 MCP（可多选）"
+        style="width: 100%"
+      />
     </NFormItem>
 
     <!-- 是否公开 -->

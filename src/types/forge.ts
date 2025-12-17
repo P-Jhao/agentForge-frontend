@@ -8,9 +8,6 @@ export type ForgeSource = 'builtin' | 'user';
 // Forge 筛选类型
 export type ForgeFilter = 'all' | 'my' | 'builtin' | 'other';
 
-// 模型类型
-export type ForgeModel = 'qwen' | 'deepseek';
-
 // Forge 创建者信息
 export interface ForgeCreator {
   id: number;
@@ -20,11 +17,9 @@ export interface ForgeCreator {
 // Forge 类型
 export interface Forge {
   id: number;
-  name: string;
   displayName: string;
   description: string | null;
   systemPrompt: string | null;
-  model: ForgeModel;
   isActive: boolean;
   userId: number;
   source: ForgeSource;
@@ -32,6 +27,7 @@ export interface Forge {
   usageCount: number;
   isPublic: boolean;
   isFavorite: boolean;
+  summary: string | null; // AI 生成的能力摘要（用于自动匹配）
   createdAt: string;
   updatedAt: string;
   // 关联的创建者信息
@@ -46,22 +42,18 @@ export interface ForgeDetail extends Forge {
 
 // 创建 Forge 参数
 export interface CreateForgeParams {
-  name: string;
   displayName: string;
   description?: string;
   systemPrompt?: string;
-  model?: ForgeModel;
   avatar?: string;
   isPublic?: boolean;
 }
 
 // 更新 Forge 参数
 export interface UpdateForgeParams {
-  name?: string;
   displayName?: string;
   description?: string;
   systemPrompt?: string;
-  model?: ForgeModel;
   avatar?: string;
   isPublic?: boolean;
 }
@@ -72,14 +64,12 @@ export interface CreateTaskFromForgeResult {
   forge: {
     id: number;
     systemPrompt: string | null;
-    model: ForgeModel;
   };
 }
 
 // 收藏的 Forge（侧边栏用，精简版）
 export interface FavoriteForge {
   id: number;
-  name: string;
   displayName: string;
   avatar: string | null;
   description: string | null;
