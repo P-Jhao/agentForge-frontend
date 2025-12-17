@@ -56,16 +56,20 @@ const mcp = computed(() => mcpStore.currentMCP);
 
 // 连接状态颜色
 const statusColor = computed(() => {
-  return mcp.value?.status === 'connected' ? '#10b981' : '#ef4444';
+  if (mcp.value?.status === 'connected') return '#10b981'; // 绿色
+  if (mcp.value?.status === 'closed') return '#6b7280'; // 灰色
+  return '#ef4444'; // 红色
 });
 
 // 连接状态文本
 const statusText = computed(() => {
-  return mcp.value?.status === 'connected' ? '连通成功' : '连通失败';
+  if (mcp.value?.status === 'connected') return '连通成功';
+  if (mcp.value?.status === 'closed') return '已关闭';
+  return '连通失败';
 });
 
-// 是否已连接
-const isConnected = computed(() => mcp.value?.status === 'connected');
+// 是否已关闭（管理员主动关闭）
+const isClosed = computed(() => mcp.value?.status === 'closed');
 
 // 传输方式配置
 const transportConfig = computed(() => {
@@ -198,8 +202,23 @@ function handleForgeClick(forgeId: number) {
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-2">
-          <!-- 已连接状态：显示重连和关闭按钮 -->
-          <template v-if="isConnected">
+          <!-- 已关闭状态：显示开启按钮（仅管理员可见此 MCP） -->
+          <template v-if="isClosed">
+            <NButton
+              v-if="userStore.isAdmin"
+              type="success"
+              :loading="actionLoading"
+              @click="handleOpen"
+            >
+              <template #icon>
+                <NIcon :component="PlayOutline" />
+              </template>
+              开启
+            </NButton>
+          </template>
+
+          <!-- 非关闭状态（connected 或 disconnected）：显示重连和关闭按钮 -->
+          <template v-else>
             <!-- 重连（所有用户可见） -->
             <NButton :loading="actionLoading" @click="handleReconnect">
               <template #icon>
@@ -215,19 +234,6 @@ function handleForgeClick(forgeId: number) {
               关闭
             </NButton>
           </template>
-
-          <!-- 已关闭状态：显示开启按钮（仅管理员） -->
-          <NButton
-            v-else-if="userStore.isAdmin"
-            type="success"
-            :loading="actionLoading"
-            @click="handleOpen"
-          >
-            <template #icon>
-              <NIcon :component="PlayOutline" />
-            </template>
-            开启
-          </NButton>
 
           <!-- 管理员操作 -->
           <template v-if="userStore.isAdmin">

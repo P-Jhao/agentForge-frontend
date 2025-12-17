@@ -9,7 +9,10 @@ export type MCPTransportType = 'stdio' | 'sse' | 'streamableHttp';
 export type MCPSource = 'builtin';
 
 // MCP 连接状态
-export type MCPStatus = 'connected' | 'disconnected';
+// connected: 连通成功
+// disconnected: 连通失败（可重连）
+// closed: 管理员主动关闭（普通用户不可见）
+export type MCPStatus = 'connected' | 'disconnected' | 'closed';
 
 // MCP 工具接口
 export interface MCPTool {
