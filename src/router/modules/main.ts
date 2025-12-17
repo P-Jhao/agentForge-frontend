@@ -60,16 +60,22 @@ const mainRoutes: RouteRecordRaw = {
       meta: { title: 'MCP 管理' },
     },
     {
-      path: 'mcp/add',
-      name: 'McpAdd',
-      component: () => import('@/pages/mcp/add/index.vue'),
+      path: 'mcp/create',
+      name: 'McpCreate',
+      component: () => import('@/pages/mcp/create/index.vue'),
       meta: { title: '新建 MCP' },
     },
     {
-      path: 'mcp/my',
-      name: 'McpMy',
-      component: () => import('@/pages/mcp/my/index.vue'),
-      meta: { title: '我的 MCP' },
+      path: 'mcp/:id/edit',
+      name: 'McpEdit',
+      component: () => import('@/pages/mcp/[id]/edit.vue'),
+      meta: { title: '编辑 MCP' },
+    },
+    {
+      path: 'mcp/:id',
+      name: 'McpDetail',
+      component: () => import('@/pages/mcp/[id]/index.vue'),
+      meta: { title: 'MCP 详情' },
     },
 
     // 设置

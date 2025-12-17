@@ -5,11 +5,15 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { http } from '@/utils';
 
+// 用户角色类型
+export type UserRole = 'user' | 'root';
+
 // 用户信息类型
 export interface UserInfo {
   id: number;
   username: string;
   apiQuota?: number;
+  role?: UserRole; // 用户角色：user 普通用户 / root 超级管理员
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -20,6 +24,7 @@ export const useUserStore = defineStore('user', () => {
 
   // 计算属性
   const isLoggedIn = computed(() => !!token.value && !!userInfo.value);
+  const isAdmin = computed(() => userInfo.value?.role === 'root');
 
   // 初始化：检查 token 并获取用户信息
   async function init() {
@@ -60,6 +65,7 @@ export const useUserStore = defineStore('user', () => {
     userInfo,
     loading,
     isLoggedIn,
+    isAdmin,
     init,
     login,
     logout,

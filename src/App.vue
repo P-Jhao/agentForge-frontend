@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { NConfigProvider, NMessageProvider } from 'naive-ui';
+import { NConfigProvider, NMessageProvider, NDialogProvider } from 'naive-ui';
 import { useThemeStore, useUserStore } from './stores';
 import { darkTheme, lightTheme, darkThemeOverrides, lightThemeOverrides } from './styles/theme';
 
@@ -22,7 +22,9 @@ onMounted(() => {
 <template>
   <NConfigProvider :theme="currentTheme" :theme-overrides="currentOverrides">
     <NMessageProvider>
-      <RouterView />
+      <NDialogProvider>
+        <RouterView />
+      </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>
 </template>
