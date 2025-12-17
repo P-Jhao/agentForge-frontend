@@ -12,3 +12,4 @@ export * from './modules/user';
 export * from './modules/theme';
 export * from './modules/task';
 export * from './modules/forge';
+export * from './modules/mcp';
