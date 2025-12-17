@@ -41,6 +41,19 @@ const handleFavoriteClick = (e: Event) => {
   e.stopPropagation();
   emit('favorite', !props.forge.isFavorite);
 };
+
+// 获取头像完整 URL
+const getAvatarUrl = (avatar: string | null) => {
+  if (!avatar) return '';
+  // 如果是相对路径，拼接 API 基础路径
+  if (avatar.startsWith('/')) {
+    const apiBase = import.meta.env.VITE_API_BASE || '';
+    // 移除 /api 前缀
+    const baseUrl = apiBase.replace(/\/api$/, '');
+    return `${baseUrl}${avatar}`;
+  }
+  return avatar;
+};
 </script>
 
 <template>
@@ -52,9 +65,15 @@ const handleFavoriteClick = (e: Event) => {
     <div class="mb-3 flex items-start gap-3">
       <!-- 头像 -->
       <div
-        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 text-2xl dark:from-blue-900/30 dark:to-purple-900/30"
+        class="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
       >
-        {{ forge.avatar || '🤖' }}
+        <img
+          v-if="forge.avatar"
+          :src="getAvatarUrl(forge.avatar)"
+          :alt="forge.displayName"
+          class="h-full w-full object-cover"
+        />
+        <div v-else class="flex h-full w-full items-center justify-center text-2xl">🤖</div>
       </div>
       <!-- 名称和来源 -->
       <div class="min-w-0 flex-1">

@@ -3,7 +3,7 @@
  * Forge 表单组件
  * 用于创建和编辑 Forge
  */
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import {
   NForm,
   NFormItem,
@@ -12,11 +12,17 @@ import {
   NSwitch,
   NButton,
   NIcon,
+  NUpload,
+  NSpin,
+  NAvatar,
+  useMessage,
   type FormInst,
   type FormRules,
+  type UploadCustomRequestOptions,
 } from 'naive-ui';
-import { SaveOutline } from '@vicons/ionicons5';
+import { SaveOutline, CloudUploadOutline } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
+import { uploadAvatar } from '@/utils';
 import type { ForgeDetail, CreateForgeParams, UpdateForgeParams } from '@/types';
 
 const props = defineProps<{
@@ -34,9 +40,13 @@ const emit = defineEmits<{
 }>();
 
 const themeStore = useThemeStore();
+const message = useMessage();
 
 // 表单引用
 const formRef = ref<FormInst | null>(null);
+
+// 头像上传状态
+const avatarUploading = ref(false);
 
 // 表单数据
 const formData = ref({
@@ -66,6 +76,19 @@ watch(
   { immediate: true }
 );
 
+// 头像完整 URL（处理相对路径）
+const avatarUrl = computed(() => {
+  if (!formData.value.avatar) return '';
+  // 如果是相对路径，拼接 API 基础路径
+  if (formData.value.avatar.startsWith('/')) {
+    const apiBase = import.meta.env.VITE_API_BASE || '';
+    // 移除 /api 前缀
+    const baseUrl = apiBase.replace(/\/api$/, '');
+    return `${baseUrl}${formData.value.avatar}`;
+  }
+  return formData.value.avatar;
+});
+
 // MCP 选项（Mock 数据，后续从 MCP 模块获取）
 const mcpOptions = [
   { label: '文件系统 MCP', value: 1 },
@@ -82,11 +105,31 @@ const rules: FormRules = {
   ],
   description: [{ max: 10000, message: '最多 10000 个字符', trigger: 'blur' }],
   systemPrompt: [{ max: 10000, message: '最多 10000 个字符', trigger: 'blur' }],
-  avatar: [{ max: 255, message: '最多 255 个字符', trigger: 'blur' }],
 };
 
 // 是否为编辑模式
 const isEditMode = props.mode === 'edit';
+
+// 自定义上传请求
+const customUpload = async ({ file, onFinish, onError }: UploadCustomRequestOptions) => {
+  if (!file.file) {
+    onError();
+    return;
+  }
+
+  avatarUploading.value = true;
+  try {
+    const url = await uploadAvatar(file.file);
+    formData.value.avatar = url;
+    message.success('头像上传成功');
+    onFinish();
+  } catch {
+    message.error('头像上传失败');
+    onError();
+  } finally {
+    avatarUploading.value = false;
+  }
+};
 
 // 提交表单
 const handleSubmit = async () => {
@@ -128,14 +171,47 @@ const handleCancel = () => {
       <NInput v-model:value="formData.displayName" placeholder="如 代码审计专家" />
     </NFormItem>
 
-    <!-- 头像 -->
+    <!-- 头像上传 -->
     <NFormItem label="头像" path="avatar">
-      <NInput v-model:value="formData.avatar" placeholder="输入 emoji 或图片 URL" />
-      <template #feedback>
-        <span v-if="formData.avatar" class="ml-2 text-2xl">
-          {{ formData.avatar }}
-        </span>
-      </template>
+      <NUpload
+        :custom-request="customUpload"
+        :show-file-list="false"
+        accept="image/*"
+        :disabled="avatarUploading"
+      >
+        <div
+          class="flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors"
+          :class="
+            themeStore.isDark
+              ? 'hover:border-primary-500 border-gray-600'
+              : 'hover:border-primary-500 border-gray-300'
+          "
+        >
+          <!-- 上传中 -->
+          <div v-if="avatarUploading" class="flex flex-col items-center gap-1">
+            <NSpin size="small" />
+            <span class="text-theme-secondary text-xs">上传中...</span>
+          </div>
+          <!-- 已有头像 -->
+          <NAvatar
+            v-else-if="avatarUrl"
+            :src="avatarUrl"
+            :size="92"
+            object-fit="cover"
+            class="rounded-lg"
+          />
+          <!-- 无头像，显示上传提示 -->
+          <div v-else class="flex flex-col items-center gap-1">
+            <NIcon :component="CloudUploadOutline" :size="24" class="text-theme-secondary" />
+            <span class="text-theme-secondary text-xs">点击上传</span>
+          </div>
+        </div>
+      </NUpload>
+      <span class="text-theme-secondary ml-4 text-sm">
+        支持 JPG、PNG、GIF、WebP，最大 5MB
+        <br />
+        不上传则使用随机默认头像
+      </span>
     </NFormItem>
 
     <!-- Forge 介绍（Markdown） -->

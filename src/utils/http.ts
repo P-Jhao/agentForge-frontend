@@ -111,6 +111,15 @@ export const http = {
   ): Promise<ApiResponse<T>> {
     return service.patch(url, data, config);
   },
+
+  // 文件上传
+  upload<T = unknown>(url: string, formData: FormData): Promise<ApiResponse<T>> {
+    return service.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 export default http;

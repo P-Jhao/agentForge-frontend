@@ -56,6 +56,19 @@ const formatDate = (dateStr: string) => {
   });
 };
 
+// 获取头像完整 URL
+const getAvatarUrl = (avatar: string) => {
+  if (!avatar) return '';
+  // 如果是相对路径，拼接 API 基础路径
+  if (avatar.startsWith('/')) {
+    const apiBase = import.meta.env.VITE_API_BASE || '';
+    // 移除 /api 前缀
+    const baseUrl = apiBase.replace(/\/api$/, '');
+    return `${baseUrl}${avatar}`;
+  }
+  return avatar;
+};
+
 // 获取 Forge 详情
 const fetchForge = async () => {
   if (isNaN(forgeId.value)) {
@@ -152,9 +165,15 @@ onMounted(() => {
         <div class="mb-6 flex items-start gap-4">
           <!-- 头像 -->
           <div
-            class="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 text-4xl dark:from-blue-900/30 dark:to-purple-900/30"
+            class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
           >
-            {{ forge.avatar || '🤖' }}
+            <img
+              v-if="forge.avatar"
+              :src="getAvatarUrl(forge.avatar)"
+              :alt="forge.displayName"
+              class="h-full w-full object-cover"
+            />
+            <div v-else class="flex h-full w-full items-center justify-center text-4xl">🤖</div>
           </div>
 
           <!-- 基本信息 -->
@@ -226,14 +245,6 @@ onMounted(() => {
               forge.systemPrompt
             }}</pre>
           </div>
-        </div>
-
-        <!-- 模型信息 -->
-        <div class="mb-6">
-          <h2 class="text-theme mb-2 font-medium">使用模型</h2>
-          <NTag type="primary">
-            {{ forge.model === 'qwen' ? '通义千问' : 'DeepSeek' }}
-          </NTag>
         </div>
       </div>
 
