@@ -20,9 +20,12 @@ const emit = defineEmits<{
 
 // 来源标签配置
 const sourceConfig = computed(() => {
-  return props.forge.source === 'builtin'
-    ? { text: '内置', type: 'info' as const }
-    : { text: '用户', type: 'success' as const };
+  if (props.forge.source === 'builtin') {
+    return { text: '内置', type: 'info' as const };
+  }
+  // 用户创建的 Forge，显示创建者用户名
+  const creatorName = props.forge.creator?.username || '用户';
+  return { text: creatorName, type: 'success' as const };
 });
 
 // 格式化使用次数

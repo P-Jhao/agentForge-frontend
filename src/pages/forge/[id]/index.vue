@@ -42,9 +42,12 @@ const inputValue = ref('');
 // 来源标签配置
 const sourceConfig = computed(() => {
   if (!forge.value) return { text: '', type: 'default' as const };
-  return forge.value.source === 'builtin'
-    ? { text: '内置', type: 'info' as const }
-    : { text: '用户', type: 'success' as const };
+  if (forge.value.source === 'builtin') {
+    return { text: '内置', type: 'info' as const };
+  }
+  // 用户创建的 Forge，显示创建者用户名
+  const creatorName = forge.value.creator?.username || '用户';
+  return { text: creatorName, type: 'success' as const };
 });
 
 // 格式化日期
