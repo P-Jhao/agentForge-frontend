@@ -3,3 +3,4 @@
  */
 export * from './stream';
 export * from './task';
+export * from './forge';

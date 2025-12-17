@@ -16,7 +16,7 @@ import {
   ChevronUpOutline,
   TimeOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore, useTaskStore } from '@/stores';
+import { useThemeStore, useTaskStore, useForgeStore } from '@/stores';
 import type { Task } from '@/types';
 
 // 接收折叠状态
@@ -26,6 +26,7 @@ const route = useRoute();
 const router = useRouter();
 const themeStore = useThemeStore();
 const taskStore = useTaskStore();
+const forgeStore = useForgeStore();
 
 // 新建任务 - 跳转到首页
 function handleNewTask() {
@@ -41,33 +42,23 @@ const taskTab = ref<'all' | 'favorite'>('all');
 // Forge 展开状态
 const forgeExpanded = ref(false);
 
-// 模拟数据 - 我的 Forge 列表（后续从 API 获取）
-const myForges = ref([
-  { id: '1', name: '代码审计专家', icon: '🔍' },
-  { id: '2', name: '智能评分助手', icon: '📊' },
-  { id: '3', name: 'RAG 知识检索', icon: '📚' },
-  { id: '4', name: 'API 文档生成', icon: '📝' },
-  { id: '5', name: '单元测试助手', icon: '🧪' },
-  { id: '6', name: '代码重构顾问', icon: '🔧' },
-  { id: '7', name: 'SQL 优化专家', icon: '🗄️' },
-  { id: '8', name: '安全漏洞扫描', icon: '🛡️' },
-  { id: '9', name: '性能分析工具', icon: '⚡' },
-]);
+// 收藏的 Forge 列表（从 ForgeStore 获取）
+const favoriteForges = computed(() => forgeStore.favoriteForges);
 
 // 显示的 Forge 数量限制
 const FORGE_COLLAPSED_COUNT = 3;
 
 // 是否需要显示「更多/收起」按钮
-const showForgeToggle = computed(() => myForges.value.length > FORGE_COLLAPSED_COUNT);
+const showForgeToggle = computed(() => favoriteForges.value.length > FORGE_COLLAPSED_COUNT);
 
 // 当前显示的 Forge 列表
 const displayedForges = computed(() => {
   if (!showForgeToggle.value || forgeExpanded.value) {
     // 不需要折叠或已展开：显示全部
-    return myForges.value;
+    return favoriteForges.value;
   }
   // 收起状态：只显示前 3 个
-  return myForges.value.slice(0, FORGE_COLLAPSED_COUNT);
+  return favoriteForges.value.slice(0, FORGE_COLLAPSED_COUNT);
 });
 
 // 切换 Forge 展开/收起
@@ -174,12 +165,12 @@ function getStatusText(status: string): string {
   }
 }
 
-// 组件挂载时获取任务列表
+// 组件挂载时获取任务列表和收藏的 Forge 列表
 onMounted(async () => {
   try {
-    await taskStore.fetchTasks();
+    await Promise.all([taskStore.fetchTasks(), forgeStore.fetchFavoriteForges()]);
   } catch (error) {
-    console.error('获取任务列表失败:', error);
+    console.error('获取数据失败:', error);
   }
 });
 
@@ -290,8 +281,8 @@ watch(searchKeyword, (keyword) => {
                       : 'sider-item-hover sider-item-text'
                   "
                 >
-                  <span class="text-base">{{ forge.icon }}</span>
-                  <span class="truncate text-sm">{{ forge.name }}</span>
+                  <span class="text-base">{{ forge.avatar || '🤖' }}</span>
+                  <span class="truncate text-sm">{{ forge.displayName }}</span>
                 </RouterLink>
               </div>
             </NScrollbar>
@@ -307,8 +298,8 @@ watch(searchKeyword, (keyword) => {
                     : 'sider-item-hover sider-item-text'
                 "
               >
-                <span class="text-base">{{ forge.icon }}</span>
-                <span class="truncate text-sm">{{ forge.name }}</span>
+                <span class="text-base">{{ forge.avatar || '🤖' }}</span>
+                <span class="truncate text-sm">{{ forge.displayName }}</span>
               </RouterLink>
             </div>
             <!-- 更多/收起 按钮 -->
@@ -502,10 +493,10 @@ watch(searchKeyword, (keyword) => {
                   : 'hover:bg-gray-100 dark:hover:bg-white/5'
               "
             >
-              <span class="text-lg">{{ forge.icon }}</span>
+              <span class="text-lg">{{ forge.avatar || '🤖' }}</span>
             </RouterLink>
           </template>
-          {{ forge.name }}
+          {{ forge.displayName }}
         </NTooltip>
 
         <!-- 任务图标 -->
