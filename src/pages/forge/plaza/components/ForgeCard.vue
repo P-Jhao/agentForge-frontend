@@ -5,7 +5,8 @@
  */
 import { computed } from 'vue';
 import { NTag, NIcon, NButton } from 'naive-ui';
-import { StarOutline, Star, FlameOutline } from '@vicons/ionicons5';
+import { StarOutline, Star, FlameOutline, CogOutline } from '@vicons/ionicons5';
+import TextFade from '@/components/TextFade.vue';
 import type { Forge } from '@/types';
 
 const props = defineProps<{
@@ -65,7 +66,9 @@ const getAvatarUrl = (avatar: string | null) => {
           :alt="forge.displayName"
           class="h-full w-full object-cover"
         />
-        <div v-else class="flex h-full w-full items-center justify-center text-2xl">🤖</div>
+        <div v-else class="text-theme-muted flex h-full w-full items-center justify-center">
+          <NIcon :component="CogOutline" :size="24" />
+        </div>
       </div>
       <!-- 名称和来源 -->
       <div class="min-w-0 flex-1">
@@ -95,8 +98,8 @@ const getAvatarUrl = (avatar: string | null) => {
     </div>
 
     <!-- 描述 -->
-    <p class="text-theme-secondary line-clamp-2 text-sm">
+    <TextFade class="text-theme-secondary text-sm">
       {{ forge.description || '暂无描述' }}
-    </p>
+    </TextFade>
   </div>
 </template>

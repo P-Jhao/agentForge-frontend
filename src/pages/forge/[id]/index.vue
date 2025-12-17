@@ -13,6 +13,7 @@ import {
   Star,
   FlameOutline,
   TimeOutline,
+  CogOutline,
 } from '@vicons/ionicons5';
 import { useForgeStore, useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
@@ -165,7 +166,9 @@ onMounted(() => {
               :alt="forge.displayName"
               class="h-full w-full object-cover"
             />
-            <div v-else class="flex h-full w-full items-center justify-center text-4xl">🤖</div>
+            <div v-else class="text-theme-muted flex h-full w-full items-center justify-center">
+              <NIcon :component="CogOutline" :size="40" />
+            </div>
           </div>
 
           <!-- 基本信息 -->
