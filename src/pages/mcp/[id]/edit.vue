@@ -23,11 +23,14 @@ const mcpId = computed(() => Number(route.params.id));
 // 表单数据
 const formData = ref<UpdateMCPParams>({
   name: '',
-  transportType: 'sse',
-  connectionUrl: '',
+  transportType: 'stdio',
+  command: '',
+  args: '',
+  env: '',
+  url: '',
+  headers: '',
   description: '',
   timeout: 30,
-  headers: '',
   remarks: '',
   example: '',
 });
@@ -41,6 +44,9 @@ const transportOptions = [
   { value: 'sse', label: 'SSE（Server-Sent Events）' },
   { value: 'streamableHttp', label: 'StreamableHTTP' },
 ];
+
+// 是否为 stdio 类型
+const isStdio = computed(() => formData.value.transportType === 'stdio');
 
 // 初始化
 onMounted(async () => {
@@ -58,10 +64,13 @@ onMounted(async () => {
     formData.value = {
       name: mcp.name,
       transportType: mcp.transportType,
-      connectionUrl: mcp.connectionUrl,
+      command: mcp.command || '',
+      args: mcp.args || '',
+      env: mcp.env || '',
+      url: mcp.url || '',
+      headers: mcp.headers || '',
       description: mcp.description || '',
       timeout: mcp.timeout || 30,
-      headers: mcp.headers || '',
       remarks: mcp.remarks || '',
       example: mcp.example || '',
     };
@@ -86,21 +95,61 @@ function validateForm(): boolean {
     message.warning('名称长度不能超过 100 字符');
     return false;
   }
-  if (!formData.value.connectionUrl?.trim()) {
-    message.warning('请输入连接地址');
-    return false;
+  // stdio 类型验证
+  if (isStdio.value) {
+    if (!formData.value.command?.trim()) {
+      message.warning('请输入启动命令');
+      return false;
+    }
+    // 验证 args 是否为有效 JSON 数组
+    if (formData.value.args?.trim()) {
+      try {
+        const parsed = JSON.parse(formData.value.args);
+        if (!Array.isArray(parsed)) {
+          message.warning('命令参数必须为 JSON 数组格式');
+          return false;
+        }
+      } catch {
+        message.warning('命令参数必须为有效的 JSON 数组格式');
+        return false;
+      }
+    }
+    // 验证 env 是否为有效 JSON 对象
+    if (formData.value.env?.trim()) {
+      try {
+        const parsed = JSON.parse(formData.value.env);
+        if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) {
+          message.warning('环境变量必须为 JSON 对象格式');
+          return false;
+        }
+      } catch {
+        message.warning('环境变量必须为有效的 JSON 对象格式');
+        return false;
+      }
+    }
+  } else {
+    // sse/http 类型验证
+    if (!formData.value.url?.trim()) {
+      message.warning('请输入连接地址');
+      return false;
+    }
+    // 验证 headers 是否为有效 JSON 对象
+    if (formData.value.headers?.trim()) {
+      try {
+        const parsed = JSON.parse(formData.value.headers);
+        if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) {
+          message.warning('请求头必须为 JSON 对象格式');
+          return false;
+        }
+      } catch {
+        message.warning('请求头必须为有效的 JSON 对象格式');
+        return false;
+      }
+    }
   }
   if (formData.value.timeout && formData.value.timeout <= 0) {
     message.warning('超时时间必须为正整数');
     return false;
-  }
-  if (formData.value.headers) {
-    try {
-      JSON.parse(formData.value.headers);
-    } catch {
-      message.warning('请求头必须为有效的 JSON 格式');
-      return false;
-    }
   }
   return true;
 }
@@ -115,13 +164,28 @@ async function handleSubmit() {
     const submitData: UpdateMCPParams = {
       name: formData.value.name?.trim(),
       transportType: formData.value.transportType,
-      connectionUrl: formData.value.connectionUrl?.trim(),
-      description: formData.value.description?.trim() || undefined,
-      timeout: formData.value.timeout || undefined,
-      headers: formData.value.headers?.trim() || undefined,
-      remarks: formData.value.remarks?.trim() || undefined,
-      example: formData.value.example?.trim() || undefined,
     };
+    // stdio 类型
+    if (isStdio.value) {
+      submitData.command = formData.value.command?.trim();
+      submitData.args = formData.value.args?.trim() || undefined;
+      submitData.env = formData.value.env?.trim() || undefined;
+      // 清空 sse/http 字段
+      submitData.url = undefined;
+      submitData.headers = undefined;
+    } else {
+      // sse/http 类型
+      submitData.url = formData.value.url?.trim();
+      submitData.headers = formData.value.headers?.trim() || undefined;
+      // 清空 stdio 字段
+      submitData.command = undefined;
+      submitData.args = undefined;
+      submitData.env = undefined;
+    }
+    submitData.description = formData.value.description?.trim() || undefined;
+    submitData.timeout = formData.value.timeout || undefined;
+    submitData.remarks = formData.value.remarks?.trim() || undefined;
+    submitData.example = formData.value.example?.trim() || undefined;
 
     await mcpStore.updateMCP(mcpId.value, submitData);
     message.success('更新成功');
@@ -180,20 +244,59 @@ async function handleSubmit() {
             />
           </div>
 
-          <!-- 连接地址（必选） -->
-          <div>
-            <label class="text-theme mb-2 block text-sm font-medium">
-              连接地址
-              <span class="text-red-500">*</span>
-            </label>
-            <NInput
-              v-model:value="formData.connectionUrl"
-              placeholder="请输入连接地址（URL 或本地命令）"
-            />
-            <p class="text-theme-muted mt-1 text-xs">
-              SSE/HTTP: http://localhost:3000/sse | Stdio: npx mcp-server
-            </p>
-          </div>
+          <!-- stdio 类型：命令 + 参数 + 环境变量 -->
+          <template v-if="isStdio">
+            <div>
+              <label class="text-theme mb-2 block text-sm font-medium">
+                启动命令
+                <span class="text-red-500">*</span>
+              </label>
+              <NInput v-model:value="formData.command" placeholder="如: npx, node, python" />
+              <p class="text-theme-muted mt-1 text-xs">可执行文件或命令名称</p>
+            </div>
+            <div>
+              <label class="text-theme mb-2 block text-sm font-medium">命令参数</label>
+              <NInput
+                v-model:value="formData.args"
+                type="textarea"
+                placeholder="[&quot;@modelcontextprotocol/server-filesystem&quot;, &quot;C:/path&quot;]"
+                :rows="2"
+              />
+              <p class="text-theme-muted mt-1 text-xs">JSON 数组格式，如: ["arg1", "arg2"]</p>
+            </div>
+            <div>
+              <label class="text-theme mb-2 block text-sm font-medium">环境变量</label>
+              <NInput
+                v-model:value="formData.env"
+                type="textarea"
+                placeholder="{&quot;API_KEY&quot;: &quot;xxx&quot;}"
+                :rows="3"
+              />
+              <p class="text-theme-muted mt-1 text-xs">JSON 对象格式，如: {"KEY": "value"}</p>
+            </div>
+          </template>
+
+          <!-- sse/http 类型：URL + 请求头 -->
+          <template v-else>
+            <div>
+              <label class="text-theme mb-2 block text-sm font-medium">
+                连接地址
+                <span class="text-red-500">*</span>
+              </label>
+              <NInput v-model:value="formData.url" placeholder="http://localhost:3000/sse" />
+              <p class="text-theme-muted mt-1 text-xs">SSE 或 HTTP 端点地址</p>
+            </div>
+            <div>
+              <label class="text-theme mb-2 block text-sm font-medium">请求头</label>
+              <NInput
+                v-model:value="formData.headers"
+                type="textarea"
+                placeholder="{&quot;Authorization&quot;: &quot;Bearer xxx&quot;}"
+                :rows="3"
+              />
+              <p class="text-theme-muted mt-1 text-xs">JSON 对象格式</p>
+            </div>
+          </template>
 
           <!-- 描述（可选） -->
           <div>
@@ -215,17 +318,6 @@ async function handleSubmit() {
               :max="300"
               placeholder="默认 30 秒"
               style="width: 200px"
-            />
-          </div>
-
-          <!-- 请求头（可选） -->
-          <div>
-            <label class="text-theme mb-2 block text-sm font-medium">请求头（JSON 格式）</label>
-            <NInput
-              v-model:value="formData.headers"
-              type="textarea"
-              placeholder="{'Authorization': 'Bearer xxx'}"
-              :rows="3"
             />
           </div>
 

@@ -27,12 +27,17 @@ export interface MCP {
   name: string;
   description: string | null;
   transportType: MCPTransportType;
-  connectionUrl: string;
+  // stdio 类型使用
+  command: string | null;
+  args: string | null; // JSON 数组格式
+  env: string | null; // JSON 对象格式
+  // sse/streamableHttp 类型使用
+  url: string | null;
+  headers: string | null; // JSON 对象格式
   userId: number;
   source: MCPSource;
   isPublic: boolean;
   timeout: number | null;
-  headers: string | null;
   remarks: string | null;
   example: string | null;
   status: MCPStatus;
@@ -60,10 +65,15 @@ export interface MCPDetail extends MCP {
 export interface CreateMCPParams {
   name: string;
   transportType: MCPTransportType;
-  connectionUrl: string;
+  // stdio 类型使用
+  command?: string;
+  args?: string; // JSON 数组格式
+  env?: string; // JSON 对象格式
+  // sse/streamableHttp 类型使用
+  url?: string;
+  headers?: string; // JSON 对象格式
   description?: string;
   timeout?: number;
-  headers?: string;
   remarks?: string;
   example?: string;
 }
@@ -72,10 +82,15 @@ export interface CreateMCPParams {
 export interface UpdateMCPParams {
   name?: string;
   transportType?: MCPTransportType;
-  connectionUrl?: string;
+  // stdio 类型使用
+  command?: string;
+  args?: string; // JSON 数组格式
+  env?: string; // JSON 对象格式
+  // sse/streamableHttp 类型使用
+  url?: string;
+  headers?: string; // JSON 对象格式
   description?: string;
   timeout?: number;
-  headers?: string;
   remarks?: string;
   example?: string;
 }
