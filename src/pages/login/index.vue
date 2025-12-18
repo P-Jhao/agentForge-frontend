@@ -39,7 +39,9 @@ async function handleLogin() {
   try {
     await userStore.login(formData.value.username, formData.value.password);
     message.success('登录成功');
-    router.push('/');
+    // 获取重定向路径，默认跳转首页
+    const redirect = (router.currentRoute.value.query.redirect as string) || '/';
+    router.push(redirect);
   } catch (error: unknown) {
     const err = error as { message?: string };
     message.error(err.message || '登录失败');
