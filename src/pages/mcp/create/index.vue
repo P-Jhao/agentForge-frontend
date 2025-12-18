@@ -73,19 +73,7 @@ function validateForm(): boolean {
       message.warning('请输入启动命令');
       return false;
     }
-    // 验证 args 是否为有效 JSON 数组
-    if (formData.value.args?.trim()) {
-      try {
-        const parsed = JSON.parse(formData.value.args);
-        if (!Array.isArray(parsed)) {
-          message.warning('命令参数必须为 JSON 数组格式');
-          return false;
-        }
-      } catch {
-        message.warning('命令参数必须为有效的 JSON 数组格式');
-        return false;
-      }
-    }
+    // args 不需要验证，每行一个参数
     // 验证 env 是否为有效 JSON 对象
     if (formData.value.env?.trim()) {
       try {
@@ -140,8 +128,13 @@ async function handleSubmit() {
     // stdio 类型
     if (isStdio.value) {
       submitData.command = formData.value.command?.trim();
+      // 将多行文本转为 JSON 数组
       if (formData.value.args?.trim()) {
-        submitData.args = formData.value.args.trim();
+        const argsArray = formData.value.args
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
+        submitData.args = JSON.stringify(argsArray);
       }
       if (formData.value.env?.trim()) {
         submitData.env = formData.value.env.trim();
@@ -166,8 +159,13 @@ async function handleSubmit() {
       submitData.example = formData.value.example.trim();
     }
 
-    await mcpStore.createMCP(submitData);
-    message.success('创建成功');
+    const mcp = await mcpStore.createMCP(submitData);
+    // 根据连接状态显示不同提示
+    if (mcp.status === 'connected') {
+      message.success('创建成功，MCP 已连接');
+    } else {
+      message.warning('创建成功，但 MCP 连接失败');
+    }
     router.push('/mcp');
   } catch {
     message.error('创建失败');
@@ -234,10 +232,10 @@ async function handleSubmit() {
             <NInput
               v-model:value="formData.args"
               type="textarea"
-              placeholder="[&quot;@modelcontextprotocol/server-filesystem&quot;, &quot;C:/path&quot;]"
-              :rows="2"
+              placeholder="@modelcontextprotocol/server-filesystem&#10;C:/Users/path"
+              :rows="3"
             />
-            <p class="text-theme-muted mt-1 text-xs">JSON 数组格式，如: ["arg1", "arg2"]</p>
+            <p class="text-theme-muted mt-1 text-xs">每行一个参数</p>
           </div>
           <div>
             <label class="text-theme mb-2 block text-sm font-medium">环境变量</label>

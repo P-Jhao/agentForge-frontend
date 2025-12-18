@@ -90,6 +90,20 @@ const formattedTime = computed(() => {
   return date.toLocaleString('zh-CN');
 });
 
+// 格式化命令参数（JSON 数组转多行显示）
+const formattedArgs = computed(() => {
+  if (!mcp.value?.args) return '';
+  try {
+    const argsArray = JSON.parse(mcp.value.args);
+    if (Array.isArray(argsArray)) {
+      return argsArray.join('\n');
+    }
+  } catch {
+    // 解析失败，直接返回原值
+  }
+  return mcp.value.args;
+});
+
 // 返回上一页
 function handleBack() {
   router.back();
@@ -279,7 +293,9 @@ function handleDelete() {
               <code class="text-theme-secondary text-sm">{{ mcp.command }}</code>
             </NDescriptionsItem>
             <NDescriptionsItem v-if="mcp.args" label="命令参数" :span="2">
-              <code class="text-theme-secondary text-sm">{{ mcp.args }}</code>
+              <code class="text-theme-secondary text-sm whitespace-pre-wrap">
+                {{ formattedArgs }}
+              </code>
             </NDescriptionsItem>
             <NDescriptionsItem v-if="mcp.env" label="环境变量" :span="2">
               <code class="text-theme-secondary text-sm">{{ mcp.env }}</code>
