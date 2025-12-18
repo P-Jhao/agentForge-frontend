@@ -102,6 +102,8 @@ async function handleReconnect() {
     const result = await mcpStore.reconnectMCP(mcpId.value);
     if (result.status === 'connected') {
       message.success('重连成功');
+      // 重新获取详情（包含工具列表）
+      await mcpStore.fetchMCPDetail(mcpId.value);
     } else {
       message.warning('重连失败，请检查连接配置');
     }
@@ -118,6 +120,8 @@ async function handleClose() {
   try {
     await mcpStore.closeMCP(mcpId.value);
     message.success('已关闭 MCP');
+    // 重新获取详情更新状态
+    await mcpStore.fetchMCPDetail(mcpId.value);
   } catch {
     message.error('关闭失败');
   } finally {
@@ -132,8 +136,12 @@ async function handleOpen() {
     const result = await mcpStore.reconnectMCP(mcpId.value);
     if (result.status === 'connected') {
       message.success('开启成功');
+      // 重新获取详情（包含工具列表）
+      await mcpStore.fetchMCPDetail(mcpId.value);
     } else {
       message.warning('开启失败，请检查连接配置');
+      // 失败也要更新状态
+      await mcpStore.fetchMCPDetail(mcpId.value);
     }
   } catch {
     message.error('开启失败');
