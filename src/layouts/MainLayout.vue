@@ -36,7 +36,7 @@ onMounted(() => {
         content-style="height: calc(100vh - 64px); overflow: hidden;"
       >
         <div
-          class="h-full overflow-y-auto px-6 pb-6"
+          class="h-full overflow-y-auto p-6"
           :class="themeStore.isDark ? 'bg-dark-900 bg-grid' : 'bg-light-100 bg-grid-light'"
         >
           <RouterView />
