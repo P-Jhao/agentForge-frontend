@@ -27,6 +27,7 @@ import {
 import { useThemeStore, useMCPStore } from '@/stores';
 import { uploadAvatar } from '@/utils';
 import MCPToolSelector from '@/components/MCPToolSelector.vue';
+import EMarkdown from '@/components/EMarkdown.vue';
 import type { ForgeDetail, CreateForgeParams, UpdateForgeParams, MCPToolSelection } from '@/types';
 
 const props = defineProps<{
@@ -181,8 +182,8 @@ const handleCancel = () => {
         class="absolute top-0 left-0 h-1 w-full"
         :class="
           themeStore.isDark
-            ? 'from-primary-500 via-accent-purple bg-gradient-to-r to-transparent'
-            : 'from-primary-500 to-primary-300 bg-gradient-to-r'
+            ? 'from-primary-500 via-accent-purple bg-linear-to-r to-transparent'
+            : 'from-primary-500 to-primary-300 bg-linear-to-r'
         "
       ></div>
 
@@ -287,7 +288,7 @@ const handleCancel = () => {
       <div
         class="absolute top-0 left-0 h-1 w-24"
         :class="
-          themeStore.isDark ? 'from-accent-cyan bg-gradient-to-r to-transparent' : 'bg-accent-cyan'
+          themeStore.isDark ? 'from-accent-cyan bg-linear-to-r to-transparent' : 'bg-accent-cyan'
         "
       ></div>
 
@@ -301,17 +302,13 @@ const handleCancel = () => {
         <h3 class="text-theme font-semibold">Forge 介绍</h3>
       </div>
 
-      <NInput
-        v-model:value="formData.description"
-        type="textarea"
+      <EMarkdown
+        v-model="formData.description"
+        height="450px"
         placeholder="支持 Markdown 格式，详细介绍这个 Forge 的功能和使用场景"
-        :autosize="false"
-        :rows="6"
-        class="resizable-textarea"
-        :status="errors.description ? 'error' : undefined"
+        editor-id="forge-description-editor"
       />
       <p v-if="errors.description" class="mt-1 text-xs text-red-500">{{ errors.description }}</p>
-      <p class="text-theme-muted mt-2 text-xs">支持 Markdown 格式</p>
     </div>
 
     <!-- 系统提示词卡片 -->
@@ -328,7 +325,7 @@ const handleCancel = () => {
         class="absolute top-0 left-0 h-1 w-24"
         :class="
           themeStore.isDark
-            ? 'from-accent-purple bg-gradient-to-r to-transparent'
+            ? 'from-accent-purple bg-linear-to-r to-transparent'
             : 'bg-accent-purple'
         "
       ></div>
@@ -343,19 +340,15 @@ const handleCancel = () => {
         <h3 class="text-theme font-semibold">系统提示词</h3>
       </div>
 
-      <NInput
-        v-model:value="formData.systemPrompt"
-        type="textarea"
+      <EMarkdown
+        v-model="formData.systemPrompt"
+        height="450px"
         placeholder="定义 Forge 的行为和能力，这将作为 AI 的系统指令"
-        :autosize="false"
-        :rows="6"
-        class="resizable-textarea"
-        :status="errors.systemPrompt ? 'error' : undefined"
+        editor-id="forge-system-prompt-editor"
       />
       <p v-if="errors.systemPrompt" class="mt-1 text-xs text-red-500">
         {{ errors.systemPrompt }}
       </p>
-      <p class="text-theme-muted mt-2 text-xs">定义 AI 的角色和行为规范</p>
     </div>
 
     <!-- MCP 工具卡片 -->
@@ -371,7 +364,7 @@ const handleCancel = () => {
       <div
         class="absolute top-0 left-0 h-1 w-24"
         :class="
-          themeStore.isDark ? 'bg-gradient-to-r from-emerald-500 to-transparent' : 'bg-emerald-500'
+          themeStore.isDark ? 'bg-linear-to-r from-emerald-500 to-transparent' : 'bg-emerald-500'
         "
       ></div>
 
@@ -414,11 +407,3 @@ const handleCancel = () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* 让 textarea 可以手动拖拽调整高度 */
-.resizable-textarea :deep(textarea) {
-  resize: vertical;
-  min-height: 120px;
-}
-</style>
