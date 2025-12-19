@@ -10,12 +10,14 @@ const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 // SSE 事件类型
 interface TaskSSEEvent {
-  type: 'connected' | 'status_change' | 'task_update';
+  type: 'connected' | 'status_change' | 'task_update' | 'mcp:status_change';
   taskUuid?: string;
+  mcpId?: number;
   data?: {
     status?: string;
     updatedAt?: string;
     title?: string;
+    name?: string;
   };
 }
 
@@ -168,6 +170,22 @@ export function useTaskSubscription() {
             updateData.status = event.data.status as 'running' | 'completed' | 'cancelled';
           }
           taskStore.updateLocalTask(event.taskUuid, updateData);
+        }
+        break;
+
+      case 'mcp:status_change':
+        if (event.mcpId && event.data) {
+          console.log(`[TaskSubscription] MCP ${event.mcpId} 状态变化:`, event.data);
+          // 触发自定义事件，让 MCP 相关组件监听
+          window.dispatchEvent(
+            new CustomEvent('mcp:status_change', {
+              detail: {
+                mcpId: event.mcpId,
+                status: event.data.status,
+                name: event.data.name,
+              },
+            })
+          );
         }
         break;
     }

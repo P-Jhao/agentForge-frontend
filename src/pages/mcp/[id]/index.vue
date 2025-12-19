@@ -5,7 +5,7 @@
  * 管理员可以关闭、编辑、删除 MCP
  * 所有用户可以重连 MCP
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NButton,
@@ -47,9 +47,39 @@ const mcpId = computed(() => Number(route.params.id));
 // 操作加载状态
 const actionLoading = ref(false);
 
-// 初始化加载 MCP 详情
+// MCP 状态变化事件详情
+interface MCPStatusChangeDetail {
+  mcpId: number;
+  status: 'connected' | 'disconnected' | 'closed';
+  name?: string;
+}
+
+function handleMCPStatusChange(event: Event) {
+  const customEvent = event as unknown as { detail: MCPStatusChangeDetail };
+  const { mcpId: eventMcpId, status } = customEvent.detail;
+  // 只处理当前 MCP 的状态变化
+  if (eventMcpId === mcpId.value) {
+    console.log(`[MCP详情] 收到状态变化: ${status}`);
+    // 刷新详情数据
+    mcpStore.fetchMCPDetail(mcpId.value);
+    // 显示提示
+    if (status === 'disconnected') {
+      message.warning('MCP 连接已断开');
+    }
+  }
+}
+
+// 初始化
 onMounted(async () => {
+  // 加载 MCP 详情
   await mcpStore.fetchMCPDetail(mcpId.value);
+  // 监听 MCP 状态变化事件
+  window.addEventListener('mcp:status_change', handleMCPStatusChange);
+});
+
+// 清理
+onUnmounted(() => {
+  window.removeEventListener('mcp:status_change', handleMCPStatusChange);
 });
 
 // 当前 MCP
