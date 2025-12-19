@@ -54,6 +54,13 @@ export interface Message {
   createdAt: string;
 }
 
+// 任务关联的 Forge 信息（简化版）
+export interface TaskForge {
+  id: number;
+  displayName: string;
+  avatar: string | null;
+}
+
 // 任务类型
 export interface Task {
   id: number;
@@ -65,6 +72,8 @@ export interface Task {
   status: TaskStatus;
   createdAt: string;
   updatedAt: string;
+  // 关联的 Forge 信息（从 Forge 创建的任务才有）
+  agent?: TaskForge | null;
 }
 
 // 分组任务类型（侧边栏使用）

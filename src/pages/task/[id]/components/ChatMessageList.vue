@@ -7,7 +7,7 @@ import { ref, computed, nextTick } from 'vue';
 import { useThemeStore } from '@/stores';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
-import type { MessageSegment } from '@/types';
+import type { MessageSegment, TaskForge } from '@/types';
 import type { ToolCallStatus } from './ToolCallItem.vue';
 
 // 消息类型（与 useChat 中的 ChatMessage 一致）
@@ -22,10 +22,13 @@ interface Props {
   isLoading: boolean;
   // 正在进行的工具调用状态（callId -> status）
   toolCallStates?: Map<string, ToolCallStatus>;
+  // 关联的 Forge 信息（用于显示 AI 头像）
+  forge?: TaskForge | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   toolCallStates: () => new Map(),
+  forge: null,
 });
 
 const themeStore = useThemeStore();
@@ -75,9 +78,10 @@ const showLoadingState = computed(() => {
       :key="msg.id"
       :message="msg"
       :tool-call-states="toolCallStates"
+      :forge="forge"
     />
 
     <!-- 加载状态（仅在没有空的 assistant 消息时显示） -->
-    <ChatLoadingState v-if="showLoadingState" />
+    <ChatLoadingState v-if="showLoadingState" :forge="forge" />
   </div>
 </template>

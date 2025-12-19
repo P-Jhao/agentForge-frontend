@@ -5,10 +5,9 @@
  * 支持 assistant 消息的多段落显示（thinking/chat/tool/error/tool_call）
  */
 import { computed } from 'vue';
-import { NIcon, NSpin } from 'naive-ui';
-import { PersonOutline } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
-import type { MessageSegment, ToolCallSegment } from '@/types';
+import { NSpin, NAvatar } from 'naive-ui';
+import { useThemeStore, useUserStore } from '@/stores';
+import type { MessageSegment, ToolCallSegment, TaskForge } from '@/types';
 import ToolCallItem from './ToolCallItem.vue';
 import type { ToolCallStatus } from './ToolCallItem.vue';
 
@@ -22,13 +21,33 @@ interface Props {
   message: Message;
   // 正在进行的工具调用状态（callId -> status）
   toolCallStates?: Map<string, ToolCallStatus>;
+  // 关联的 Forge 信息（用于显示 AI 头像）
+  forge?: TaskForge | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   toolCallStates: () => new Map(),
+  forge: null,
 });
 
 const themeStore = useThemeStore();
+const userStore = useUserStore();
+
+// 获取 Forge 头像完整 URL
+const forgeAvatarUrl = computed(() => {
+  if (!props.forge?.avatar) return '';
+  if (props.forge.avatar.startsWith('/')) {
+    const apiBase = import.meta.env.VITE_API_BASE || '';
+    const baseUrl = apiBase.replace(/\/api$/, '');
+    return `${baseUrl}${props.forge.avatar}`;
+  }
+  return props.forge.avatar;
+});
+
+// 获取用户名首字母（大写）
+const userInitial = computed(() => {
+  return userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U';
+});
 
 const isUserMessage = computed(() => props.message.role === 'user');
 
@@ -118,12 +137,25 @@ const getToolCallStatus = (segment: ToolCallSegment): ToolCallStatus => {
 <template>
   <div class="flex gap-3" :class="containerClass">
     <!-- 头像 -->
-    <div
-      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-      :class="avatarClass"
-    >
-      <NIcon v-if="isUserMessage" :component="PersonOutline" :size="16" />
-      <span v-else class="text-sm">🤖</span>
+    <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
+      <!-- 用户头像：显示用户名首字母 -->
+      <NAvatar
+        v-if="isUserMessage"
+        round
+        :size="32"
+        class="from-primary-500 to-accent-purple bg-linear-to-br text-white"
+      >
+        {{ userInitial }}
+      </NAvatar>
+      <!-- AI 头像：优先显示 Forge 头像，否则显示默认头像 -->
+      <NAvatar
+        v-else
+        :src="forgeAvatarUrl || '/favicon660x660nobackground.png'"
+        :size="32"
+        round
+        object-fit="cover"
+        :class="avatarClass"
+      />
     </div>
 
     <!-- 消息内容 -->

@@ -6,14 +6,19 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import { useChat } from '@/composable/task';
+import { useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
 import TaskHeader from './components/TaskHeader.vue';
 import ChatMessageList from './components/ChatMessageList.vue';
 
 const route = useRoute();
+const taskStore = useTaskStore();
 
 // 任务 UUID
 const taskId = computed(() => route.params.id as string);
+
+// 当前任务关联的 Forge 信息
+const currentForge = computed(() => taskStore.currentTask?.agent || null);
 
 // 消息列表组件引用
 const messageListRef = ref<InstanceType<typeof ChatMessageList> | null>(null);
@@ -73,6 +78,7 @@ onBeforeUnmount(() => {
       :messages="messages"
       :is-loading="isLoading"
       :tool-call-states="toolCallStates"
+      :forge="currentForge"
     />
 
     <!-- 输入区域（固定在底部） -->
