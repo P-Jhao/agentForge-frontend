@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex h-full flex-col overflow-hidden">
     <!-- 头部（固定不滚动） -->
-    <TaskHeader :task-id="taskId" />
+    <TaskHeader />
 
     <!-- 消息列表（可滚动区域） -->
     <ChatMessageList

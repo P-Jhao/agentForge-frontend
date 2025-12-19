@@ -16,6 +16,7 @@ import {
   ChevronUpOutline,
   TimeOutline,
   StarOutline,
+  Star,
   CogOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useTaskStore, useForgeStore } from '@/stores';
@@ -130,6 +131,13 @@ function isActive(key: string) {
 // 点击任务时设置当前任务
 function handleTaskClick(task: Task) {
   taskStore.setCurrentTask(task.uuid);
+}
+
+// 切换任务收藏状态
+async function handleToggleFavorite(event: Event, task: Task) {
+  event.preventDefault();
+  event.stopPropagation();
+  await taskStore.toggleFavorite(task.uuid);
 }
 
 // 格式化更新时间（显示日期）
@@ -411,7 +419,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.today"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="block rounded-lg px-3 py-2 transition-all duration-200"
+                      class="group relative block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -419,7 +427,22 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      <div class="truncate text-sm">{{ task.title }}</div>
+                      <!-- 收藏星标 -->
+                      <button
+                        class="absolute top-1 right-1 cursor-pointer p-1"
+                        @click="handleToggleFavorite($event, task)"
+                      >
+                        <NIcon
+                          :component="task.favorite ? Star : StarOutline"
+                          :size="14"
+                          :class="
+                            task.favorite
+                              ? 'text-yellow-500'
+                              : 'text-theme-muted hover:text-yellow-500'
+                          "
+                        />
+                      </button>
+                      <div class="truncate pr-5 text-sm">{{ task.title }}</div>
                       <div class="mt-1 flex items-center justify-between text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
                         <NTooltip>
@@ -444,7 +467,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.yesterday"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="block rounded-lg px-3 py-2 transition-all duration-200"
+                      class="group relative block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -452,7 +475,22 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      <div class="truncate text-sm">{{ task.title }}</div>
+                      <!-- 收藏星标 -->
+                      <button
+                        class="absolute top-1 right-1 cursor-pointer p-1"
+                        @click="handleToggleFavorite($event, task)"
+                      >
+                        <NIcon
+                          :component="task.favorite ? Star : StarOutline"
+                          :size="14"
+                          :class="
+                            task.favorite
+                              ? 'text-yellow-500'
+                              : 'text-theme-muted hover:text-yellow-500'
+                          "
+                        />
+                      </button>
+                      <div class="truncate pr-5 text-sm">{{ task.title }}</div>
                       <div class="mt-1 flex items-center justify-between text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
                         <NTooltip>
@@ -477,7 +515,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.earlier"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="block rounded-lg px-3 py-2 transition-all duration-200"
+                      class="group relative block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -485,7 +523,22 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      <div class="truncate text-sm">{{ task.title }}</div>
+                      <!-- 收藏星标 -->
+                      <button
+                        class="absolute top-1 right-1 cursor-pointer p-1"
+                        @click="handleToggleFavorite($event, task)"
+                      >
+                        <NIcon
+                          :component="task.favorite ? Star : StarOutline"
+                          :size="14"
+                          :class="
+                            task.favorite
+                              ? 'text-yellow-500'
+                              : 'text-theme-muted hover:text-yellow-500'
+                          "
+                        />
+                      </button>
+                      <div class="truncate pr-5 text-sm">{{ task.title }}</div>
                       <div class="mt-1 flex items-center justify-between text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
                         <NTooltip>
