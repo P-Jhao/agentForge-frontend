@@ -4,7 +4,7 @@
  * 显示工具调用的状态和结果
  */
 import { ref, computed } from 'vue';
-import { NIcon, NSpin, NCollapse, NCollapseItem } from 'naive-ui';
+import { NIcon, NSpin } from 'naive-ui';
 import { CheckmarkCircle, CloseCircle, ChevronDown, ChevronUp } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
 

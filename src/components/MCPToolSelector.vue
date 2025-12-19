@@ -3,7 +3,7 @@
  * MCP 工具选择器组件
  * 支持选择 MCP 及其下的具体工具
  */
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { NCollapse, NCollapseItem, NCheckbox, NCheckboxGroup, NSpin, NEmpty } from 'naive-ui';
 import { useThemeStore, useMCPStore } from '@/stores';
 import { getMCPDetail } from '@/utils';
@@ -26,9 +26,6 @@ const mcpStore = useMCPStore();
 
 // MCP 详情缓存（mcpId -> MCPDetail）
 const mcpDetails = ref<Map<number, MCPDetail>>(new Map());
-
-// 加载状态
-const loading = ref(false);
 
 // 展开的 MCP ID 列表
 const expandedNames = ref<string[]>([]);
@@ -162,7 +159,7 @@ const isIndeterminate = (mcpId: number): boolean => {
         <div class="pl-6">
           <!-- 加载工具中 -->
           <div v-if="!mcpDetails.has(mcp.id)" class="flex items-center gap-2 py-2">
-            <NSpin size="tiny" />
+            <NSpin size="small" />
             <span class="text-theme-secondary text-sm">加载工具列表...</span>
           </div>
 

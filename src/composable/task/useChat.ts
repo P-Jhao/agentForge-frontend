@@ -454,7 +454,7 @@ export function useChat(options: UseChatOptions) {
         const taskStore = useTaskStore();
         taskStore.addTask(task);
         taskStore.setCurrentTask(taskId);
-      } catch (error) {
+      } catch {
         // 任务可能已存在（从 Forge 创建），忽略错误
         console.log('任务可能已存在，继续发送消息');
         const taskStore = useTaskStore();
