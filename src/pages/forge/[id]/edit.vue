@@ -4,7 +4,8 @@
  */
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NSpin, useMessage } from 'naive-ui';
+import { NSpin, NButton, NIcon, useMessage } from 'naive-ui';
+import { ArrowBackOutline } from '@vicons/ionicons5';
 import { useForgeStore } from '@/stores';
 import type { UpdateForgeParams } from '@/types';
 import ForgeForm from '../components/ForgeForm.vue';
@@ -80,9 +81,16 @@ onMounted(() => {
 
     <template v-else-if="forge">
       <!-- 头部 -->
-      <div class="mb-6">
-        <h1 class="text-theme text-2xl font-bold">编辑 Forge</h1>
-        <p class="text-theme-secondary mt-1">修改 {{ forge.displayName }} 的配置</p>
+      <div class="mb-6 flex items-start gap-4">
+        <NButton quaternary circle size="small" @click="handleCancel">
+          <template #icon>
+            <NIcon :component="ArrowBackOutline" />
+          </template>
+        </NButton>
+        <div>
+          <h1 class="text-theme text-2xl font-bold">编辑 Forge</h1>
+          <p class="text-theme-secondary mt-1">修改 {{ forge.displayName }} 的配置</p>
+        </div>
       </div>
 
       <!-- 表单 -->

@@ -17,7 +17,7 @@ import {
   NScrollbar,
 } from 'naive-ui';
 import { AddOutline, TrashOutline, ChevronForward, CloseOutline } from '@vicons/ionicons5';
-import { useMCPStore } from '@/stores';
+import { useMCPStore, useThemeStore } from '@/stores';
 import { getMCPDetail } from '@/utils';
 import type { MCPToolSelection } from '@/types';
 import type { MCPTool, MCPDetail, MCP } from '@/types';
@@ -33,6 +33,7 @@ const emit = defineEmits<{
 }>();
 
 const mcpStore = useMCPStore();
+const themeStore = useThemeStore();
 
 // 弹窗显示状态
 const showModal = ref(false);
@@ -180,7 +181,12 @@ const isIndeterminate = computed(() => {
       <div
         v-for="selection in modelValue"
         :key="selection.mcpId"
-        class="group relative rounded-lg border border-gray-700/50 bg-gray-800/30 p-4 transition-all hover:border-gray-600/50 hover:bg-gray-800/50"
+        class="group relative rounded-lg border p-4 transition-all"
+        :class="
+          themeStore.isDark
+            ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50 hover:bg-gray-800/50'
+            : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
+        "
         style="backdrop-filter: blur(8px)"
       >
         <!-- MCP 标题行 -->
@@ -188,12 +194,17 @@ const isIndeterminate = computed(() => {
           <div class="flex items-center gap-2">
             <div
               class="h-2 w-2 rounded-full bg-emerald-500"
-              style="box-shadow: 0 0 8px rgba(16, 185, 129, 0.6)"
+              :style="themeStore.isDark ? 'box-shadow: 0 0 8px rgba(16, 185, 129, 0.6)' : ''"
             ></div>
-            <span class="font-medium">{{ getMcpName(selection.mcpId) }}</span>
+            <span class="text-theme font-medium">{{ getMcpName(selection.mcpId) }}</span>
           </div>
           <button
-            class="flex h-7 w-7 items-center justify-center rounded-md text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400"
+            class="flex h-7 w-7 items-center justify-center rounded-md opacity-0 transition-all group-hover:opacity-100"
+            :class="
+              themeStore.isDark
+                ? 'text-gray-500 hover:bg-red-500/20 hover:text-red-400'
+                : 'text-gray-400 hover:bg-red-100 hover:text-red-500'
+            "
             @click="handleRemoveMcp(selection.mcpId)"
           >
             <NIcon :component="TrashOutline" :size="16" />
@@ -208,7 +219,9 @@ const isIndeterminate = computed(() => {
             closable
             size="small"
             :bordered="false"
-            class="bg-gray-700/50 text-gray-300"
+            :class="
+              themeStore.isDark ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200 text-gray-700'
+            "
             @close="handleRemoveTool(selection.mcpId, tool.name)"
           >
             {{ tool.name }}
@@ -219,7 +232,8 @@ const isIndeterminate = computed(() => {
 
     <!-- 添加 MCP 按钮 -->
     <button
-      class="hover:border-primary-500/50 hover:bg-primary-500/10 hover:text-primary-400 mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-600 py-3 text-sm text-gray-400 transition-all"
+      class="hover:border-primary-500/50 hover:bg-primary-500/10 hover:text-primary-500 mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed py-3 text-sm transition-all"
+      :class="themeStore.isDark ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-500'"
       @click="handleOpenModal"
     >
       <NIcon :component="AddOutline" :size="16" />
@@ -229,18 +243,27 @@ const isIndeterminate = computed(() => {
     <!-- 添加 MCP 弹窗 -->
     <NModal v-model:show="showModal" :mask-closable="false" transform-origin="center">
       <div
-        class="w-[720px] max-w-[90vw] overflow-hidden rounded-xl border border-gray-700/50 bg-gray-900"
-        style="
-          box-shadow:
-            0 25px 50px -12px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(255, 255, 255, 0.05);
+        class="w-[720px] max-w-[90vw] overflow-hidden rounded-xl border"
+        :class="themeStore.isDark ? 'border-gray-700/50 bg-gray-900' : 'border-gray-200 bg-white'"
+        :style="
+          themeStore.isDark
+            ? 'box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+            : 'box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15)'
         "
       >
         <!-- 弹窗头部 -->
-        <div class="flex items-center justify-between border-b border-gray-700/50 px-6 py-4">
-          <h3 class="text-lg font-semibold text-white">选择 MCP 工具</h3>
+        <div
+          class="flex items-center justify-between border-b px-6 py-4"
+          :class="themeStore.isDark ? 'border-gray-700/50' : 'border-gray-200'"
+        >
+          <h3 class="text-theme text-lg font-semibold">选择 MCP 工具</h3>
           <button
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+            class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+            :class="
+              themeStore.isDark
+                ? 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+            "
             @click="showModal = false"
           >
             <NIcon :component="CloseOutline" :size="20" />
@@ -250,8 +273,14 @@ const isIndeterminate = computed(() => {
         <!-- 弹窗内容 -->
         <div class="flex h-[400px]">
           <!-- 左侧：MCP 列表 -->
-          <div class="w-56 shrink-0 border-r border-gray-700/50">
-            <div class="border-b border-gray-700/50 p-3">
+          <div
+            class="w-56 shrink-0 border-r"
+            :class="themeStore.isDark ? 'border-gray-700/50' : 'border-gray-200'"
+          >
+            <div
+              class="border-b p-3"
+              :class="themeStore.isDark ? 'border-gray-700/50' : 'border-gray-200'"
+            >
               <NInput
                 v-model:value="searchKeyword"
                 placeholder="搜索 MCP..."
@@ -274,18 +303,26 @@ const isIndeterminate = computed(() => {
                 <div
                   v-for="mcp in filteredMcpList"
                   :key="mcp.id"
-                  class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 transition-all hover:bg-gray-800"
-                  :class="selectedMcpId === mcp.id ? 'bg-primary-500/20 text-primary-400' : ''"
+                  class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 transition-all"
+                  :class="
+                    selectedMcpId === mcp.id
+                      ? 'bg-primary-500/20 text-primary-500'
+                      : themeStore.isDark
+                        ? 'hover:bg-gray-800'
+                        : 'hover:bg-gray-100'
+                  "
                   @click="handleSelectMcp(mcp)"
                 >
                   <div
                     class="h-1.5 w-1.5 rounded-full"
-                    :class="selectedMcpId === mcp.id ? 'bg-primary-500' : 'bg-gray-600'"
+                    :class="selectedMcpId === mcp.id ? 'bg-primary-500' : 'bg-gray-400'"
                     :style="
-                      selectedMcpId === mcp.id ? 'box-shadow: 0 0 6px rgba(99, 102, 241, 0.6)' : ''
+                      selectedMcpId === mcp.id && themeStore.isDark
+                        ? 'box-shadow: 0 0 6px rgba(99, 102, 241, 0.6)'
+                        : ''
                     "
                   ></div>
-                  <span class="flex-1 truncate text-sm">{{ mcp.name }}</span>
+                  <span class="text-theme flex-1 truncate text-sm">{{ mcp.name }}</span>
                   <NIcon
                     :component="ChevronForward"
                     :size="14"
@@ -315,7 +352,10 @@ const isIndeterminate = computed(() => {
 
             <!-- 工具列表 -->
             <template v-else>
-              <div class="flex items-center justify-between border-b border-gray-700/50 px-3 py-2">
+              <div
+                class="flex items-center justify-between border-b px-3 py-2"
+                :class="themeStore.isDark ? 'border-gray-700/50' : 'border-gray-200'"
+              >
                 <NCheckbox
                   :checked="isAllSelected"
                   :indeterminate="isIndeterminate"
@@ -334,16 +374,22 @@ const isIndeterminate = computed(() => {
                     <div
                       v-for="tool in getMCPTools(selectedMcpId)"
                       :key="tool.name"
-                      class="rounded-lg p-3 transition-all hover:bg-gray-800/50"
-                      :class="
+                      class="rounded-lg p-3 transition-all"
+                      :class="[
                         tempSelectedTools.includes(tool.name)
                           ? 'bg-primary-500/10 ring-primary-500/30 ring-1'
-                          : ''
-                      "
+                          : '',
+                        themeStore.isDark ? 'hover:bg-gray-800/50' : 'hover:bg-gray-50',
+                      ]"
                     >
                       <NCheckbox :value="tool.name" class="w-full">
                         <div class="ml-1">
-                          <div class="text-sm font-medium text-gray-200">{{ tool.name }}</div>
+                          <div
+                            class="text-sm font-medium"
+                            :class="themeStore.isDark ? 'text-gray-200' : 'text-gray-800'"
+                          >
+                            {{ tool.name }}
+                          </div>
                           <div class="mt-0.5 text-xs text-gray-500">
                             {{ tool.description || '暂无描述' }}
                           </div>
@@ -358,7 +404,10 @@ const isIndeterminate = computed(() => {
         </div>
 
         <!-- 弹窗底部 -->
-        <div class="flex justify-end gap-3 border-t border-gray-700/50 px-6 py-4">
+        <div
+          class="flex justify-end gap-3 border-t px-6 py-4"
+          :class="themeStore.isDark ? 'border-gray-700/50' : 'border-gray-200'"
+        >
           <NButton @click="showModal = false">取消</NButton>
           <NButton
             type="primary"

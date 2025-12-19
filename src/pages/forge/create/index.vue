@@ -4,7 +4,8 @@
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMessage } from 'naive-ui';
+import { NButton, NIcon, useMessage } from 'naive-ui';
+import { ArrowBackOutline } from '@vicons/ionicons5';
 import { useForgeStore } from '@/stores';
 import type { CreateForgeParams, UpdateForgeParams } from '@/types';
 import ForgeForm from '../components/ForgeForm.vue';
@@ -39,9 +40,16 @@ const handleCancel = () => {
 <template>
   <div class="forge-create h-full overflow-auto p-6">
     <!-- 头部 -->
-    <div class="mb-6">
-      <h1 class="text-theme text-2xl font-bold">新建 Forge</h1>
-      <p class="text-theme-secondary mt-1">创建你的专属 AI 助手</p>
+    <div class="mb-6 flex items-start gap-4">
+      <NButton quaternary circle size="small" @click="handleCancel">
+        <template #icon>
+          <NIcon :component="ArrowBackOutline" />
+        </template>
+      </NButton>
+      <div>
+        <h1 class="text-theme text-2xl font-bold">新建 Forge</h1>
+        <p class="text-theme-secondary mt-1">创建你的专属 AI 助手</p>
+      </div>
     </div>
 
     <!-- 表单 -->
