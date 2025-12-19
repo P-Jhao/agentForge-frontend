@@ -52,27 +52,22 @@ const titleClass = computed(() => ({
 </script>
 
 <template>
-  <div class="flex items-center border-b px-6 py-3" :class="headerClass">
-    <!-- 头像 -->
-    <NAvatar
-      :src="forgeAvatarUrl || '/favicon660x660nobackground.png'"
-      :size="36"
-      round
-      object-fit="cover"
-    />
-    <!-- 名称 -->
-    <span class="ml-3 font-medium" :class="titleClass">{{ displayName }}</span>
-    <!-- 收藏按钮（紧跟名称，稍有间隔） -->
-    <NButton
-      v-if="currentTask"
-      quaternary
-      circle
-      size="small"
-      class="ml-2"
-      @click="handleToggleFavorite"
-    >
+  <div class="flex items-center justify-between border-b px-6 py-3" :class="headerClass">
+    <!-- 左侧：头像和名称 -->
+    <div class="flex items-center gap-3">
+      <NAvatar
+        :src="forgeAvatarUrl || '/favicon660x660nobackground.png'"
+        :size="36"
+        round
+        object-fit="cover"
+      />
+      <span class="font-medium" :class="titleClass">{{ displayName }}</span>
+    </div>
+
+    <!-- 右侧：收藏按钮 -->
+    <NButton v-if="currentTask" quaternary circle @click="handleToggleFavorite">
       <template #icon>
-        <NIcon :size="18" :class="isFavorite ? 'text-yellow-500' : ''">
+        <NIcon :size="20" :class="isFavorite ? 'text-yellow-500' : ''">
           <Star v-if="isFavorite" />
           <StarOutline v-else />
         </NIcon>
