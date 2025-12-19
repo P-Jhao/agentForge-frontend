@@ -86,15 +86,13 @@ onMounted(() => {
       </div>
 
       <!-- 表单 -->
-      <div class="max-w-2xl">
-        <ForgeForm
-          mode="edit"
-          :forge="forge"
-          :loading="submitLoading"
-          @submit="handleSubmit"
-          @cancel="handleCancel"
-        />
-      </div>
+      <ForgeForm
+        mode="edit"
+        :forge="forge"
+        :loading="submitLoading"
+        @submit="handleSubmit"
+        @cancel="handleCancel"
+      />
     </template>
   </div>
 </template>

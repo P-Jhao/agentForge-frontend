@@ -45,8 +45,6 @@ const handleCancel = () => {
     </div>
 
     <!-- 表单 -->
-    <div class="max-w-2xl">
-      <ForgeForm mode="create" :loading="loading" @submit="handleSubmit" @cancel="handleCancel" />
-    </div>
+    <ForgeForm mode="create" :loading="loading" @submit="handleSubmit" @cancel="handleCancel" />
   </div>
 </template>

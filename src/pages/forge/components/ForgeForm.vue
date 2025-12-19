@@ -1,12 +1,10 @@
 <script setup lang="ts">
 /**
  * Forge 表单组件
- * 用于创建和编辑 Forge
+ * 科技感卡片式布局设计
  */
 import { ref, watch, computed, onMounted } from 'vue';
 import {
-  NForm,
-  NFormItem,
   NInput,
   NSwitch,
   NButton,
@@ -15,22 +13,25 @@ import {
   NSpin,
   NAvatar,
   useMessage,
-  type FormInst,
-  type FormRules,
   type UploadCustomRequestOptions,
 } from 'naive-ui';
-import { SaveOutline, CloudUploadOutline } from '@vicons/ionicons5';
+import {
+  SaveOutline,
+  CloudUploadOutline,
+  SparklesOutline,
+  DocumentTextOutline,
+  ConstructOutline,
+  EyeOutline,
+  EyeOffOutline,
+} from '@vicons/ionicons5';
 import { useThemeStore, useMCPStore } from '@/stores';
 import { uploadAvatar } from '@/utils';
 import MCPToolSelector from '@/components/MCPToolSelector.vue';
 import type { ForgeDetail, CreateForgeParams, UpdateForgeParams, MCPToolSelection } from '@/types';
 
 const props = defineProps<{
-  // 编辑模式时传入现有数据
   forge?: ForgeDetail;
-  // 模式：create 创建 / edit 编辑
   mode: 'create' | 'edit';
-  // 提交中
   loading?: boolean;
 }>();
 
@@ -43,11 +44,11 @@ const themeStore = useThemeStore();
 const mcpStore = useMCPStore();
 const message = useMessage();
 
-// 表单引用
-const formRef = ref<FormInst | null>(null);
-
 // 头像上传状态
 const avatarUploading = ref(false);
+
+// 表单验证错误
+const errors = ref<Record<string, string>>({});
 
 // 加载 MCP 列表
 onMounted(async () => {
@@ -60,7 +61,7 @@ const formData = ref({
   avatar: '',
   description: '',
   systemPrompt: '',
-  mcpTools: [] as MCPToolSelection[], // 使用新的工具选择格式
+  mcpTools: [] as MCPToolSelection[],
   isPublic: true,
 });
 
@@ -82,28 +83,16 @@ watch(
   { immediate: true }
 );
 
-// 头像完整 URL（处理相对路径）
+// 头像完整 URL
 const avatarUrl = computed(() => {
   if (!formData.value.avatar) return '';
-  // 如果是相对路径，拼接 API 基础路径
   if (formData.value.avatar.startsWith('/')) {
     const apiBase = import.meta.env.VITE_API_BASE || '';
-    // 移除 /api 前缀
     const baseUrl = apiBase.replace(/\/api$/, '');
     return `${baseUrl}${formData.value.avatar}`;
   }
   return formData.value.avatar;
 });
-
-// 表单验证规则
-const rules: FormRules = {
-  displayName: [
-    { required: true, message: '请输入名称', trigger: 'blur' },
-    { max: 100, message: '最多 100 个字符', trigger: 'blur' },
-  ],
-  description: [{ max: 10000, message: '最多 10000 个字符', trigger: 'blur' }],
-  systemPrompt: [{ max: 10000, message: '最多 10000 个字符', trigger: 'blur' }],
-};
 
 // 是否为编辑模式
 const isEditMode = props.mode === 'edit';
@@ -129,28 +118,44 @@ const customUpload = async ({ file, onFinish, onError }: UploadCustomRequestOpti
   }
 };
 
+// 验证表单
+const validate = (): boolean => {
+  errors.value = {};
+
+  if (!formData.value.displayName.trim()) {
+    errors.value.displayName = '请输入名称';
+  } else if (formData.value.displayName.length > 100) {
+    errors.value.displayName = '最多 100 个字符';
+  }
+
+  if (formData.value.description.length > 10000) {
+    errors.value.description = '最多 10000 个字符';
+  }
+
+  if (formData.value.systemPrompt.length > 10000) {
+    errors.value.systemPrompt = '最多 10000 个字符';
+  }
+
+  return Object.keys(errors.value).length === 0;
+};
+
 // 提交表单
 const handleSubmit = async () => {
-  try {
-    await formRef.value?.validate();
+  if (!validate()) return;
 
-    // 从 mcpTools 提取 mcpIds（兼容后端）
-    const mcpIds = formData.value.mcpTools.map((t) => t.mcpId);
+  const mcpIds = formData.value.mcpTools.map((t) => t.mcpId);
 
-    const data: CreateForgeParams | UpdateForgeParams = {
-      displayName: formData.value.displayName,
-      description: formData.value.description || undefined,
-      systemPrompt: formData.value.systemPrompt || undefined,
-      avatar: formData.value.avatar || undefined,
-      isPublic: formData.value.isPublic,
-      mcpIds: mcpIds.length > 0 ? mcpIds : undefined,
-      mcpTools: formData.value.mcpTools.length > 0 ? formData.value.mcpTools : undefined,
-    };
+  const data: CreateForgeParams | UpdateForgeParams = {
+    displayName: formData.value.displayName,
+    description: formData.value.description || undefined,
+    systemPrompt: formData.value.systemPrompt || undefined,
+    avatar: formData.value.avatar || undefined,
+    isPublic: formData.value.isPublic,
+    mcpIds: mcpIds.length > 0 ? mcpIds : undefined,
+    mcpTools: formData.value.mcpTools.length > 0 ? formData.value.mcpTools : undefined,
+  };
 
-    emit('submit', data);
-  } catch {
-    // 验证失败
-  }
+  emit('submit', data);
 };
 
 // 取消
@@ -160,116 +165,260 @@ const handleCancel = () => {
 </script>
 
 <template>
-  <NForm
-    ref="formRef"
-    :model="formData"
-    :rules="rules"
-    label-placement="left"
-    label-width="100"
-    require-mark-placement="right-hanging"
-  >
-    <!-- 名称 -->
-    <NFormItem label="名称" path="displayName">
-      <NInput v-model:value="formData.displayName" placeholder="如 代码审计专家" />
-    </NFormItem>
+  <div class="forge-form space-y-6">
+    <!-- 基础信息卡片 -->
+    <div
+      class="relative overflow-hidden rounded-xl border p-6 transition-all"
+      :class="
+        themeStore.isDark
+          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+          : 'border-gray-200 bg-white hover:border-gray-300'
+      "
+      style="backdrop-filter: blur(8px)"
+    >
+      <!-- 卡片装饰线 -->
+      <div
+        class="absolute top-0 left-0 h-1 w-full"
+        :class="
+          themeStore.isDark
+            ? 'from-primary-500 via-accent-purple bg-gradient-to-r to-transparent'
+            : 'from-primary-500 to-primary-300 bg-gradient-to-r'
+        "
+      ></div>
 
-    <!-- 头像上传 -->
-    <NFormItem label="头像" path="avatar">
-      <NUpload
-        :custom-request="customUpload"
-        :show-file-list="false"
-        accept="image/*"
-        :disabled="avatarUploading"
-      >
-        <div
-          class="flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition-colors"
-          :class="
-            themeStore.isDark
-              ? 'hover:border-primary-500 border-gray-600'
-              : 'hover:border-primary-500 border-gray-300'
-          "
-        >
-          <!-- 上传中 -->
-          <div v-if="avatarUploading" class="flex flex-col items-center gap-1">
-            <NSpin size="small" />
-            <span class="text-theme-secondary text-xs">上传中...</span>
+      <!-- 标题行：基础信息 + 公开设置 -->
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div
+            class="flex h-8 w-8 items-center justify-center rounded-lg"
+            :class="themeStore.isDark ? 'bg-primary-500/20' : 'bg-primary-50'"
+          >
+            <NIcon :component="SparklesOutline" :size="18" class="text-primary-500" />
           </div>
-          <!-- 已有头像 -->
-          <NAvatar
-            v-else-if="avatarUrl"
-            :src="avatarUrl"
-            :size="92"
-            object-fit="cover"
-            class="rounded-lg"
-          />
-          <!-- 无头像，显示上传提示 -->
-          <div v-else class="flex flex-col items-center gap-1">
-            <NIcon :component="CloudUploadOutline" :size="24" class="text-theme-secondary" />
-            <span class="text-theme-secondary text-xs">点击上传</span>
-          </div>
+          <h3 class="text-theme font-semibold">基础信息</h3>
         </div>
-      </NUpload>
-      <span class="text-theme-secondary ml-4 text-sm">
-        支持 JPG、PNG、GIF、WebP，最大 5MB
-        <br />
-        不上传则使用随机默认头像
-      </span>
-    </NFormItem>
 
-    <!-- Forge 介绍（Markdown） -->
-    <NFormItem label="Forge 介绍" path="description">
+        <!-- 公开设置移到右上角 -->
+        <div class="flex items-center gap-2">
+          <NIcon
+            :component="formData.isPublic ? EyeOutline : EyeOffOutline"
+            :size="16"
+            :class="formData.isPublic ? 'text-emerald-500' : 'text-theme-secondary'"
+          />
+          <span class="text-theme-secondary text-sm">
+            {{ formData.isPublic ? '公开' : '私有' }}
+          </span>
+          <NSwitch v-model:value="formData.isPublic" size="small" />
+        </div>
+      </div>
+
+      <div class="flex items-start gap-6">
+        <!-- 头像上传 -->
+        <div class="h-24 w-24 shrink-0">
+          <NUpload
+            :custom-request="customUpload"
+            :show-file-list="false"
+            accept="image/*"
+            :disabled="avatarUploading"
+          >
+            <div
+              class="group relative h-24 w-24 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed transition-all"
+              :class="
+                themeStore.isDark
+                  ? 'hover:border-primary-500/50 border-gray-600'
+                  : 'hover:border-primary-500 border-gray-300'
+              "
+            >
+              <!-- 上传中 -->
+              <div
+                v-if="avatarUploading"
+                class="flex h-full flex-col items-center justify-center gap-1"
+              >
+                <NSpin size="small" />
+                <span class="text-theme-secondary text-xs">上传中...</span>
+              </div>
+              <!-- 已有头像 -->
+              <template v-else-if="avatarUrl">
+                <NAvatar :src="avatarUrl" :size="92" object-fit="cover" class="rounded-xl" />
+                <div
+                  class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <NIcon :component="CloudUploadOutline" :size="24" class="text-white" />
+                </div>
+              </template>
+              <!-- 无头像 -->
+              <div v-else class="flex h-full flex-col items-center justify-center gap-1">
+                <NIcon :component="CloudUploadOutline" :size="24" class="text-theme-secondary" />
+                <span class="text-theme-secondary text-xs">上传头像</span>
+              </div>
+            </div>
+          </NUpload>
+        </div>
+
+        <!-- 名称输入 -->
+        <div class="min-w-0 flex-1">
+          <label class="text-theme-secondary mb-1.5 block text-sm">
+            名称
+            <span class="text-red-500">*</span>
+          </label>
+          <NInput
+            v-model:value="formData.displayName"
+            placeholder="如 代码审计专家"
+            size="large"
+            :status="errors.displayName ? 'error' : undefined"
+          />
+          <p v-if="errors.displayName" class="mt-1 text-xs text-red-500">
+            {{ errors.displayName }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forge 介绍卡片 -->
+    <div
+      class="relative overflow-hidden rounded-xl border p-6 transition-all"
+      :class="
+        themeStore.isDark
+          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+          : 'border-gray-200 bg-white hover:border-gray-300'
+      "
+      style="backdrop-filter: blur(8px)"
+    >
+      <div
+        class="absolute top-0 left-0 h-1 w-24"
+        :class="
+          themeStore.isDark ? 'from-accent-cyan bg-gradient-to-r to-transparent' : 'bg-accent-cyan'
+        "
+      ></div>
+
+      <div class="mb-4 flex items-center gap-2">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-lg"
+          :class="themeStore.isDark ? 'bg-accent-cyan/20' : 'bg-cyan-50'"
+        >
+          <NIcon :component="DocumentTextOutline" :size="18" class="text-accent-cyan" />
+        </div>
+        <h3 class="text-theme font-semibold">Forge 介绍</h3>
+      </div>
+
       <NInput
         v-model:value="formData.description"
         type="textarea"
         placeholder="支持 Markdown 格式，详细介绍这个 Forge 的功能和使用场景"
-        :autosize="{ minRows: 4, maxRows: 10 }"
+        :autosize="false"
+        :rows="6"
+        class="resizable-textarea"
+        :status="errors.description ? 'error' : undefined"
       />
-    </NFormItem>
+      <p v-if="errors.description" class="mt-1 text-xs text-red-500">{{ errors.description }}</p>
+      <p class="text-theme-muted mt-2 text-xs">支持 Markdown 格式</p>
+    </div>
 
-    <!-- 系统提示词 -->
-    <NFormItem label="系统提示词" path="systemPrompt">
+    <!-- 系统提示词卡片 -->
+    <div
+      class="relative overflow-hidden rounded-xl border p-6 transition-all"
+      :class="
+        themeStore.isDark
+          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+          : 'border-gray-200 bg-white hover:border-gray-300'
+      "
+      style="backdrop-filter: blur(8px)"
+    >
+      <div
+        class="absolute top-0 left-0 h-1 w-24"
+        :class="
+          themeStore.isDark
+            ? 'from-accent-purple bg-gradient-to-r to-transparent'
+            : 'bg-accent-purple'
+        "
+      ></div>
+
+      <div class="mb-4 flex items-center gap-2">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-lg"
+          :class="themeStore.isDark ? 'bg-accent-purple/20' : 'bg-purple-50'"
+        >
+          <NIcon :component="SparklesOutline" :size="18" class="text-accent-purple" />
+        </div>
+        <h3 class="text-theme font-semibold">系统提示词</h3>
+      </div>
+
       <NInput
         v-model:value="formData.systemPrompt"
         type="textarea"
         placeholder="定义 Forge 的行为和能力，这将作为 AI 的系统指令"
-        :autosize="{ minRows: 4, maxRows: 10 }"
+        :autosize="false"
+        :rows="6"
+        class="resizable-textarea"
+        :status="errors.systemPrompt ? 'error' : undefined"
       />
-    </NFormItem>
+      <p v-if="errors.systemPrompt" class="mt-1 text-xs text-red-500">
+        {{ errors.systemPrompt }}
+      </p>
+      <p class="text-theme-muted mt-2 text-xs">定义 AI 的角色和行为规范</p>
+    </div>
 
-    <!-- MCP 工具选择 -->
-    <NFormItem label="MCP 工具" path="mcpTools">
-      <div class="w-full">
-        <MCPToolSelector v-model="formData.mcpTools" />
-        <p class="text-theme-secondary mt-2 text-xs">
-          选择 Forge 可以使用的 MCP 工具，未选择则不使用任何工具
-        </p>
+    <!-- MCP 工具卡片 -->
+    <div
+      class="relative overflow-hidden rounded-xl border p-6 transition-all"
+      :class="
+        themeStore.isDark
+          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
+          : 'border-gray-200 bg-white hover:border-gray-300'
+      "
+      style="backdrop-filter: blur(8px)"
+    >
+      <div
+        class="absolute top-0 left-0 h-1 w-24"
+        :class="
+          themeStore.isDark ? 'bg-gradient-to-r from-emerald-500 to-transparent' : 'bg-emerald-500'
+        "
+      ></div>
+
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div
+            class="flex h-8 w-8 items-center justify-center rounded-lg"
+            :class="themeStore.isDark ? 'bg-emerald-500/20' : 'bg-emerald-50'"
+          >
+            <NIcon :component="ConstructOutline" :size="18" class="text-emerald-500" />
+          </div>
+          <h3 class="text-theme font-semibold">MCP 工具</h3>
+        </div>
+        <span class="text-theme-muted text-xs">
+          已选择 {{ formData.mcpTools.reduce((sum, m) => sum + m.tools.length, 0) }} 个工具
+        </span>
       </div>
-    </NFormItem>
 
-    <!-- 是否公开 -->
-    <NFormItem label="公开" path="isPublic">
-      <NSwitch v-model:value="formData.isPublic" />
-      <span class="text-theme-secondary ml-2 text-sm">
-        {{ formData.isPublic ? '所有人可见' : '仅自己可见' }}
-      </span>
-    </NFormItem>
+      <MCPToolSelector v-model="formData.mcpTools" />
+      <p class="text-theme-muted mt-3 text-xs">
+        选择 Forge 可以使用的 MCP 工具，赋予 AI 更强大的能力
+      </p>
+    </div>
 
     <!-- 操作按钮 -->
-    <NFormItem :show-label="false">
-      <div class="flex gap-3">
-        <NButton
-          type="primary"
-          :loading="loading"
-          :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-          @click="handleSubmit"
-        >
-          <template #icon>
-            <NIcon :component="SaveOutline" />
-          </template>
-          {{ isEditMode ? '保存修改' : '创建 Forge' }}
-        </NButton>
-        <NButton @click="handleCancel">取消</NButton>
-      </div>
-    </NFormItem>
-  </NForm>
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <NButton size="large" @click="handleCancel">取消</NButton>
+      <NButton
+        type="primary"
+        size="large"
+        :loading="loading"
+        :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
+        @click="handleSubmit"
+      >
+        <template #icon>
+          <NIcon :component="SaveOutline" />
+        </template>
+        {{ isEditMode ? '保存修改' : '创建 Forge' }}
+      </NButton>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+/* 让 textarea 可以手动拖拽调整高度 */
+.resizable-textarea :deep(textarea) {
+  resize: vertical;
+  min-height: 120px;
+}
+</style>
