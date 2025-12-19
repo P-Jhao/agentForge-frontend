@@ -8,6 +8,7 @@ import { useThemeStore } from '@/stores';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
 import type { MessageSegment } from '@/types';
+import type { ToolCallStatus } from './ToolCallItem.vue';
 
 // 消息类型（与 useChat 中的 ChatMessage 一致）
 interface Message {
@@ -19,9 +20,13 @@ interface Message {
 interface Props {
   messages: Message[];
   isLoading: boolean;
+  // 正在进行的工具调用状态（callId -> status）
+  toolCallStates?: Map<string, ToolCallStatus>;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  toolCallStates: () => new Map(),
+});
 
 const themeStore = useThemeStore();
 
@@ -65,7 +70,12 @@ const showLoadingState = computed(() => {
     </div>
 
     <!-- 消息列表 -->
-    <ChatMessage v-for="msg in messages" :key="msg.id" :message="msg" />
+    <ChatMessage
+      v-for="msg in messages"
+      :key="msg.id"
+      :message="msg"
+      :tool-call-states="toolCallStates"
+    />
 
     <!-- 加载状态（仅在没有空的 assistant 消息时显示） -->
     <ChatLoadingState v-if="showLoadingState" />

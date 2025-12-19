@@ -6,7 +6,17 @@
 import { ref, nextTick } from 'vue';
 import { createStreamRequest, createTask } from '@/utils';
 import { useTaskStore } from '@/stores';
-import type { Message, MessageSegment, TaskSSEChunk } from '@/types';
+import type {
+  Message,
+  MessageSegment,
+  TaskSSEChunk,
+  ToolCallStartData,
+  ToolCallResultData,
+  ToolCallSegment,
+} from '@/types';
+
+// 工具调用状态类型
+export type ToolCallStatus = 'running' | 'success' | 'failed';
 
 // 前端展示用的消息类型
 export interface ChatMessage {
@@ -57,6 +67,12 @@ export function useChat(options: UseChatOptions) {
 
   // 当前流式请求的取消函数
   let abortCurrentRequest: (() => void) | null = null;
+
+  // 工具调用状态（callId -> status）
+  const toolCallStates = ref<Map<string, ToolCallStatus>>(new Map());
+
+  // 工具调用详情（callId -> ToolCallSegment，用于构建最终段落）
+  const toolCallDetails = ref<Map<string, ToolCallSegment>>(new Map());
 
   /**
    * 设置任务 ID（切换任务时调用）
@@ -165,10 +181,23 @@ export function useChat(options: UseChatOptions) {
 
     isLoading.value = true;
 
+    // 清空工具调用状态
+    toolCallStates.value.clear();
+    toolCallDetails.value.clear();
+
     // 用于收集正在进行的 LLM 回复段落
     const segments: MessageSegment[] = [];
     let currentType: string | null = null;
     let isReceivingStream = false;
+
+    // 合并段落和工具调用，更新 UI
+    const updateUI = () => {
+      const allSegments: MessageSegment[] = [...segments];
+      for (const toolCall of toolCallDetails.value.values()) {
+        allSegments.push(toolCall);
+      }
+      updateLastAssistantSegments(allSegments);
+    };
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
@@ -180,6 +209,38 @@ export function useChat(options: UseChatOptions) {
           const historyMessages = chunk.data as Message[];
           messages.value = historyMessages.map(convertMessage);
           await scrollToBottom();
+        } else if (chunk.type === 'tool_call_start' && chunk.data) {
+          // 工具调用开始（任务正在运行）
+          const data = chunk.data as ToolCallStartData;
+
+          if (!isReceivingStream) {
+            isReceivingStream = true;
+            addAssistantMessage();
+          }
+
+          toolCallStates.value.set(data.callId, 'running');
+          toolCallDetails.value.set(data.callId, {
+            type: 'tool_call',
+            callId: data.callId,
+            toolName: data.toolName,
+            arguments: {},
+            success: false,
+          });
+          updateUI();
+          await throttledScrollToBottom();
+        } else if (chunk.type === 'tool_call_result' && chunk.data) {
+          // 工具调用结果（任务正在运行）
+          const data = chunk.data as ToolCallResultData;
+
+          toolCallStates.value.set(data.callId, data.success ? 'success' : 'failed');
+          const toolCall = toolCallDetails.value.get(data.callId);
+          if (toolCall) {
+            toolCall.success = data.success;
+            toolCall.result = data.result;
+            toolCall.error = data.error;
+          }
+          updateUI();
+          await throttledScrollToBottom();
         } else if (
           ['thinking', 'chat', 'tool'].includes(chunk.type) &&
           typeof chunk.data === 'string'
@@ -201,20 +262,19 @@ export function useChat(options: UseChatOptions) {
           } else {
             // 拼接到当前段落
             const lastSegment = segments[segments.length - 1];
-            if (lastSegment) {
-              lastSegment.content += chunkContent;
+            if (lastSegment && lastSegment.type !== 'tool_call') {
+              (lastSegment as { content: string }).content += chunkContent;
             }
           }
 
-          // 更新 UI
-          updateLastAssistantSegments(segments);
+          updateUI();
           await throttledScrollToBottom();
         } else if (chunk.type === 'error' && chunk.data) {
           const data = chunk.data as { message: string };
           console.error('加载历史消息失败:', data.message);
           if (isReceivingStream) {
             segments.push({ type: 'error', content: data.message });
-            updateLastAssistantSegments(segments);
+            updateUI();
           }
         }
         // done 类型表示结束
@@ -248,18 +308,68 @@ export function useChat(options: UseChatOptions) {
     // 开始加载
     isLoading.value = true;
 
+    // 清空工具调用状态
+    toolCallStates.value.clear();
+    toolCallDetails.value.clear();
+
     // 添加空的 AI 消息，用于流式填充
     addAssistantMessage();
 
-    // 用于收集 LLM 回复的段落
+    // 用于收集 LLM 回复的段落（不包含工具调用，工具调用单独处理）
     const segments: MessageSegment[] = [];
     let currentType: string | null = null;
+
+    // 合并段落和工具调用，更新 UI
+    const updateUI = () => {
+      // 将工具调用段落插入到合适的位置
+      const allSegments: MessageSegment[] = [...segments];
+      // 工具调用段落添加到末尾（实际顺序由后端保存时决定）
+      for (const toolCall of toolCallDetails.value.values()) {
+        allSegments.push(toolCall);
+      }
+      updateLastAssistantSegments(allSegments);
+    };
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
       body: { content },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
+        // 处理工具调用开始
+        if (chunk.type === 'tool_call_start' && chunk.data) {
+          const data = chunk.data as ToolCallStartData;
+          // 更新工具调用状态
+          toolCallStates.value.set(data.callId, 'running');
+          // 创建工具调用段落
+          toolCallDetails.value.set(data.callId, {
+            type: 'tool_call',
+            callId: data.callId,
+            toolName: data.toolName,
+            arguments: {},
+            success: false,
+          });
+          updateUI();
+          await throttledScrollToBottom();
+          return;
+        }
+
+        // 处理工具调用结果
+        if (chunk.type === 'tool_call_result' && chunk.data) {
+          const data = chunk.data as ToolCallResultData;
+          // 更新工具调用状态
+          toolCallStates.value.set(data.callId, data.success ? 'success' : 'failed');
+          // 更新工具调用详情
+          const toolCall = toolCallDetails.value.get(data.callId);
+          if (toolCall) {
+            toolCall.success = data.success;
+            toolCall.result = data.result;
+            toolCall.error = data.error;
+          }
+          updateUI();
+          await throttledScrollToBottom();
+          return;
+        }
+
         // 处理流式内容（thinking/chat/tool）
         if (['thinking', 'chat', 'tool'].includes(chunk.type) && typeof chunk.data === 'string') {
           const chunkType = chunk.type as 'thinking' | 'chat' | 'tool';
@@ -272,21 +382,21 @@ export function useChat(options: UseChatOptions) {
           } else {
             // 拼接到当前段落
             const lastSegment = segments[segments.length - 1];
-            if (lastSegment) {
-              lastSegment.content += chunkContent;
+            if (lastSegment && lastSegment.type !== 'tool_call') {
+              (lastSegment as { content: string }).content += chunkContent;
             }
           }
 
-          // 更新 UI
-          updateLastAssistantSegments(segments);
+          updateUI();
           await throttledScrollToBottom();
+          return;
         }
 
         // 处理错误
         if (chunk.type === 'error' && chunk.data) {
           const data = chunk.data as { message: string };
           segments.push({ type: 'error', content: data.message });
-          updateLastAssistantSegments(segments);
+          updateUI();
         }
 
         // done 类型表示结束，不需要特殊处理
@@ -302,7 +412,7 @@ export function useChat(options: UseChatOptions) {
       },
       onError: (error) => {
         segments.push({ type: 'error', content: `请求失败：${error.message}` });
-        updateLastAssistantSegments(segments);
+        updateUI();
         isLoading.value = false;
         abortCurrentRequest = null;
       },
@@ -393,8 +503,14 @@ export function useChat(options: UseChatOptions) {
     if (typeof msg.content === 'string') {
       return msg.content;
     }
-    // assistant 消息：合并所有段落
-    return msg.content.map((seg) => seg.content).join('\n');
+    // assistant 消息：合并所有段落（排除 tool_call 类型）
+    return msg.content
+      .filter(
+        (seg): seg is { type: 'thinking' | 'chat' | 'tool' | 'error'; content: string } =>
+          seg.type !== 'tool_call'
+      )
+      .map((seg) => seg.content)
+      .join('\n');
   };
 
   return {
@@ -403,6 +519,7 @@ export function useChat(options: UseChatOptions) {
     inputValue,
     isLoading,
     historyLoaded,
+    toolCallStates,
 
     // 方法
     init,

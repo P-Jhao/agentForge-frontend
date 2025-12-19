@@ -40,6 +40,17 @@ export interface ForgeDetail extends Forge {
   isOwner: boolean; // 是否为创建者
   canEdit: boolean; // 是否可编辑（root 或自己创建的非内置）
   mcpIds: number[]; // 关联的 MCP ID 列表
+  mcpTools?: MCPToolSelection[]; // 关联的 MCP 工具选择
+}
+
+// MCP 工具选择项（用于 Forge 关联）
+export interface MCPToolSelection {
+  mcpId: number;
+  tools: Array<{
+    name: string;
+    description: string;
+    inputSchema?: Record<string, unknown>;
+  }>;
 }
 
 // 创建 Forge 参数
@@ -50,6 +61,7 @@ export interface CreateForgeParams {
   avatar?: string;
   isPublic?: boolean;
   mcpIds?: number[];
+  mcpTools?: MCPToolSelection[]; // 新增：MCP 工具选择
 }
 
 // 更新 Forge 参数
@@ -60,6 +72,7 @@ export interface UpdateForgeParams {
   avatar?: string;
   isPublic?: boolean;
   mcpIds?: number[];
+  mcpTools?: MCPToolSelection[]; // 新增：MCP 工具选择
 }
 
 // 从 Forge 创建任务的响应

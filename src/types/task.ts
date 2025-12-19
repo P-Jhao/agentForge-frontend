@@ -6,12 +6,41 @@
 export type TaskStatus = 'running' | 'completed' | 'cancelled';
 
 // 消息类型枚举（LLM 输出的不同阶段）
-export type MessageType = 'thinking' | 'chat' | 'tool' | 'error';
+export type MessageType = 'thinking' | 'chat' | 'tool' | 'error' | 'tool_call';
+
+// 基础消息段落（thinking/chat/tool/error）
+export interface BaseMessageSegment {
+  type: 'thinking' | 'chat' | 'tool' | 'error';
+  content: string;
+}
+
+// 工具调用段落
+export interface ToolCallSegment {
+  type: 'tool_call';
+  callId: string;
+  toolName: string;
+  arguments: Record<string, unknown>;
+  result?: unknown;
+  error?: string;
+  success: boolean;
+}
 
 // 消息段落（assistant 消息的数组元素）
-export interface MessageSegment {
-  type: MessageType;
-  content: string;
+export type MessageSegment = BaseMessageSegment | ToolCallSegment;
+
+// 工具调用开始数据（SSE 推送）
+export interface ToolCallStartData {
+  callId: string;
+  toolName: string;
+}
+
+// 工具调用结果数据（SSE 推送）
+export interface ToolCallResultData {
+  callId: string;
+  toolName: string;
+  success: boolean;
+  result?: unknown;
+  error?: string;
 }
 
 // 消息角色
@@ -66,12 +95,20 @@ export interface GetTasksParams {
 }
 
 // SSE 消息类型
-export type TaskSSEChunkType = 'history' | MessageType | 'done' | 'error';
+export type TaskSSEChunkType =
+  | 'history'
+  | 'thinking'
+  | 'chat'
+  | 'tool'
+  | 'tool_call_start'
+  | 'tool_call_result'
+  | 'error'
+  | 'done';
 
 // SSE 消息结构
 export interface TaskSSEChunk {
   type: TaskSSEChunkType;
-  data?: Message[] | string | { message: string };
+  data?: Message[] | string | { message: string } | ToolCallStartData | ToolCallResultData;
 }
 
 // 类型守卫函数

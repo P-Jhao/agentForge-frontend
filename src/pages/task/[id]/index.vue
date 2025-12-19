@@ -28,6 +28,7 @@ const {
   messages,
   inputValue,
   isLoading,
+  toolCallStates,
   handleSend,
   init,
   clearMessages,
@@ -71,6 +72,7 @@ onBeforeUnmount(() => {
       class="min-h-0 flex-1"
       :messages="messages"
       :is-loading="isLoading"
+      :tool-call-states="toolCallStates"
     />
 
     <!-- 输入区域（固定在底部） -->

@@ -8,7 +8,6 @@ import {
   NForm,
   NFormItem,
   NInput,
-  NSelect,
   NSwitch,
   NButton,
   NIcon,
@@ -23,7 +22,8 @@ import {
 import { SaveOutline, CloudUploadOutline } from '@vicons/ionicons5';
 import { useThemeStore, useMCPStore } from '@/stores';
 import { uploadAvatar } from '@/utils';
-import type { ForgeDetail, CreateForgeParams, UpdateForgeParams } from '@/types';
+import MCPToolSelector from '@/components/MCPToolSelector.vue';
+import type { ForgeDetail, CreateForgeParams, UpdateForgeParams, MCPToolSelection } from '@/types';
 
 const props = defineProps<{
   // 编辑模式时传入现有数据
@@ -54,21 +54,13 @@ onMounted(async () => {
   await mcpStore.fetchMCPList();
 });
 
-// MCP 选项（从 store 获取）
-const mcpOptions = computed(() =>
-  mcpStore.mcpList.map((mcp) => ({
-    label: mcp.name,
-    value: mcp.id,
-  }))
-);
-
 // 表单数据
 const formData = ref({
   displayName: '',
   avatar: '',
   description: '',
   systemPrompt: '',
-  mcpIds: [] as number[],
+  mcpTools: [] as MCPToolSelection[], // 使用新的工具选择格式
   isPublic: true,
 });
 
@@ -82,7 +74,7 @@ watch(
         avatar: forge.avatar || '',
         description: forge.description || '',
         systemPrompt: forge.systemPrompt || '',
-        mcpIds: forge.mcpIds || [],
+        mcpTools: forge.mcpTools || [],
         isPublic: forge.isPublic,
       };
     }
@@ -142,13 +134,17 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate();
 
+    // 从 mcpTools 提取 mcpIds（兼容后端）
+    const mcpIds = formData.value.mcpTools.map((t) => t.mcpId);
+
     const data: CreateForgeParams | UpdateForgeParams = {
       displayName: formData.value.displayName,
       description: formData.value.description || undefined,
       systemPrompt: formData.value.systemPrompt || undefined,
       avatar: formData.value.avatar || undefined,
       isPublic: formData.value.isPublic,
-      mcpIds: formData.value.mcpIds.length > 0 ? formData.value.mcpIds : undefined,
+      mcpIds: mcpIds.length > 0 ? mcpIds : undefined,
+      mcpTools: formData.value.mcpTools.length > 0 ? formData.value.mcpTools : undefined,
     };
 
     emit('submit', data);
@@ -240,15 +236,14 @@ const handleCancel = () => {
       />
     </NFormItem>
 
-    <!-- MCP 选择 -->
-    <NFormItem label="MCP" path="mcpIds">
-      <NSelect
-        v-model:value="formData.mcpIds"
-        :options="mcpOptions"
-        multiple
-        placeholder="选择要使用的 MCP（可多选）"
-        style="width: 100%"
-      />
+    <!-- MCP 工具选择 -->
+    <NFormItem label="MCP 工具" path="mcpTools">
+      <div class="w-full">
+        <MCPToolSelector v-model="formData.mcpTools" />
+        <p class="text-theme-secondary mt-2 text-xs">
+          选择 Forge 可以使用的 MCP 工具，未选择则不使用任何工具
+        </p>
+      </div>
     </NFormItem>
 
     <!-- 是否公开 -->
