@@ -154,9 +154,35 @@ const handleHtmlChanged = (html: string) => {
   border-radius: 0 0 8px 8px;
 }
 
-/* 预览区域样式 */
-:deep(.md-preview) {
-  padding: 16px;
+/* 预览模式 - 透明背景，无边框 */
+.e-markdown.preview-only :deep(.md-editor) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.e-markdown.preview-only :deep(.md-editor-preview),
+.e-markdown.preview-only :deep(.md-editor-preview-wrapper) {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.e-markdown.preview-only :deep(.md-preview) {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.e-markdown.preview-only :deep(.md-preview-wrapper) {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* 移除所有边框线 */
+.e-markdown.preview-only :deep(*) {
+  border-color: transparent !important;
 }
 
 /* 表格样式 */

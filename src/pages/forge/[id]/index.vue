@@ -14,15 +14,18 @@ import {
   FlameOutline,
   TimeOutline,
   CogOutline,
+  DocumentTextOutline,
 } from '@vicons/ionicons5';
-import { useForgeStore, useTaskStore } from '@/stores';
+import { useForgeStore, useTaskStore, useThemeStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
+import EMarkdown from '@/components/EMarkdown.vue';
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 const forgeStore = useForgeStore();
 const taskStore = useTaskStore();
+const themeStore = useThemeStore();
 
 // Forge ID
 const forgeId = computed(() => parseInt(route.params.id as string, 10));
@@ -231,20 +234,25 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- 描述 -->
-        <div class="mb-6">
-          <h2 class="text-theme mb-2 font-medium">描述</h2>
-          <p class="text-theme-secondary">{{ forge.description || '暂无描述' }}</p>
-        </div>
-
-        <!-- 系统提示词（仅创建者可见） -->
-        <div v-if="forge.isOwner && forge.systemPrompt" class="mb-6">
-          <h2 class="text-theme mb-2 font-medium">系统提示词</h2>
-          <div class="rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
-            <pre class="text-theme-secondary text-sm whitespace-pre-wrap">{{
-              forge.systemPrompt
-            }}</pre>
+        <!-- Forge 介绍 -->
+        <div v-if="forge.description" class="mt-2">
+          <!-- 标题 -->
+          <div class="mb-3 flex items-center gap-2">
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-lg"
+              :class="themeStore.isDark ? 'bg-accent-cyan/20' : 'bg-cyan-50'"
+            >
+              <NIcon :component="DocumentTextOutline" :size="18" class="text-accent-cyan" />
+            </div>
+            <h3 class="text-theme font-semibold">Forge 介绍</h3>
           </div>
+
+          <!-- Markdown 内容 -->
+          <EMarkdown
+            :model-value="forge.description"
+            mode="preview"
+            editor-id="forge-description-preview"
+          />
         </div>
       </div>
 
