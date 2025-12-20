@@ -329,9 +329,12 @@ export function useChat(options: UseChatOptions) {
     isLoading.value = true;
     currentStreamItem = null;
 
+    // 从 localStorage 获取深度思考设置
+    const enableThinking = localStorage.getItem('enableThinking') !== 'false';
+
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
-      body: { content },
+      body: { content, enableThinking },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
         console.log('[SSE sendMessage]', chunk.type, chunk.data);

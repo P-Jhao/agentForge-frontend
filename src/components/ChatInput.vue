@@ -4,8 +4,9 @@
  * 统一的卡片式输入框，发送按钮在右下角
  * 使用 CSS 类自动适配深浅主题
  */
-import { NInput, NButton, NIcon } from 'naive-ui';
-import { SendOutline } from '@vicons/ionicons5';
+import { NInput, NButton, NIcon, NSwitch, NTooltip } from 'naive-ui';
+import { SendOutline, SparklesOutline } from '@vicons/ionicons5';
+import { ref, onMounted } from 'vue';
 
 // Props
 interface Props {
@@ -26,16 +27,26 @@ const props = withDefaults(defineProps<Props>(), {
 // v-model
 const modelValue = defineModel<string>({ default: '' });
 
+// 深度思考开关状态
+const enableThinking = ref(true);
+
 // Emits
 const emit = defineEmits<{
   send: [value: string];
 }>();
 
-// 输入框主题覆盖（背景透明）
-const inputThemeOverrides = {
-  color: 'transparent',
-  colorFocus: 'transparent',
-  colorDisabled: 'transparent',
+// 初始化深度思考状态
+onMounted(() => {
+  const stored = localStorage.getItem('enableThinking');
+  if (stored !== null) {
+    enableThinking.value = stored === 'true';
+  }
+});
+
+// 监听深度思考状态变化，保存到 localStorage
+const handleThinkingChange = (value: boolean) => {
+  enableThinking.value = value;
+  localStorage.setItem('enableThinking', String(value));
 };
 
 /**
@@ -56,6 +67,13 @@ const handleKeydown = (e: KeyboardEvent) => {
     handleSend();
   }
 };
+
+// 输入框主题覆盖（背景透明）
+const inputThemeOverrides = {
+  color: 'transparent',
+  colorFocus: 'transparent',
+  colorDisabled: 'transparent',
+};
 </script>
 
 <template>
@@ -74,8 +92,20 @@ const handleKeydown = (e: KeyboardEvent) => {
     />
     <!-- 底部功能区 -->
     <div class="mt-3 flex items-center justify-between">
-      <!-- 左侧功能按钮插槽 -->
+      <!-- 左侧功能按钮 -->
       <div class="flex items-center gap-2">
+        <NTooltip>
+          <template #trigger>
+            <div
+              class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <NIcon :component="SparklesOutline" :size="18" />
+              <span class="text-sm">深度思考</span>
+              <NSwitch :value="enableThinking" size="small" @update:value="handleThinkingChange" />
+            </div>
+          </template>
+          {{ enableThinking ? '已启用深度思考' : '已禁用深度思考' }}
+        </NTooltip>
         <slot name="actions"></slot>
       </div>
       <!-- 右侧发送按钮 -->
