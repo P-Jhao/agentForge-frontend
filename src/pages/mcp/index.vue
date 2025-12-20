@@ -8,11 +8,10 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NIcon, NInput, NEmpty, NSpin } from 'naive-ui';
 import { AddOutline, SearchOutline } from '@vicons/ionicons5';
-import { useThemeStore, useUserStore, useMCPStore } from '@/stores';
+import { useUserStore, useMCPStore } from '@/stores';
 import McpCard from './components/McpCard.vue';
 
 const router = useRouter();
-const themeStore = useThemeStore();
 const userStore = useUserStore();
 const mcpStore = useMCPStore();
 
@@ -59,12 +58,7 @@ function handleMcpClick(id: number) {
         </p>
       </div>
       <!-- 新建按钮（仅管理员可见） -->
-      <NButton
-        v-if="userStore.isAdmin"
-        type="primary"
-        :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-        @click="handleAddMcp"
-      >
+      <NButton v-if="userStore.isAdmin" type="primary" class="btn-theme" @click="handleAddMcp">
         <template #icon>
           <NIcon :component="AddOutline" />
         </template>

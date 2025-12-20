@@ -2,15 +2,14 @@
 /**
  * 新建 MCP 页面
  * 支持 SSE 云端、SSE 客户端、Stdio 本地三种模式
+ * 使用 CSS 类自动适配深浅主题
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NInput, NIcon, NRadioGroup, NRadio, NCard } from 'naive-ui';
 import { ArrowBackOutline } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
 
 const router = useRouter();
-const themeStore = useThemeStore();
 
 // 表单数据
 const formData = ref({
@@ -104,13 +103,7 @@ function handleSubmit() {
         <!-- 操作按钮 -->
         <div class="flex justify-end gap-3 pt-4">
           <NButton @click="handleBack">取消</NButton>
-          <NButton
-            type="primary"
-            :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-            @click="handleSubmit"
-          >
-            创建
-          </NButton>
+          <NButton type="primary" class="btn-theme" @click="handleSubmit">创建</NButton>
         </div>
       </div>
     </NCard>

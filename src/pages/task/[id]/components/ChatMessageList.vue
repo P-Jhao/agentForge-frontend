@@ -2,9 +2,9 @@
 /**
  * 聊天消息列表组件
  * 展示所有消息和加载状态
+ * 使用 CSS 类自动适配深浅主题
  */
 import { ref, computed, nextTick } from 'vue';
-import { useThemeStore } from '@/stores';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
 import type { TaskForge } from '@/types';
@@ -20,8 +20,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   forge: null,
 });
-
-const themeStore = useThemeStore();
 
 // 滚动容器引用
 const containerRef = ref<HTMLElement | null>(null);
@@ -42,8 +40,6 @@ defineExpose({
   scrollToBottom,
 });
 
-const emptyStateClass = computed(() => (themeStore.isDark ? 'text-gray-500' : 'text-gray-400'));
-
 // 判断是否需要显示独立的加载状态
 const showLoadingState = computed(() => {
   if (!props.isLoading) return false;
@@ -61,7 +57,7 @@ const showLoadingState = computed(() => {
       v-if="renderItems.length === 0 && !isLoading"
       class="flex h-full items-center justify-center"
     >
-      <p :class="emptyStateClass">开始你的对话吧</p>
+      <p class="text-empty">开始你的对话吧</p>
     </div>
 
     <!-- 消息列表 -->

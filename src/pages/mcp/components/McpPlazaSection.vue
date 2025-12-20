@@ -10,7 +10,7 @@ import { plazaMcpList } from '@/mocks/mcp';
 import McpCard from './McpCard.vue';
 
 // 当前选中的 Tab
-type TabType = 'all' | 'official' | 'community';
+type TabType = 'all' | 'builtin';
 const activeTab = ref<TabType>('all');
 
 // 搜索关键词
@@ -19,8 +19,7 @@ const searchKeyword = ref('');
 // Tab 配置
 const tabs: { key: TabType; label: string; icon: string }[] = [
   { key: 'all', label: '全部', icon: '📦' },
-  { key: 'official', label: '官方', icon: '✨' },
-  { key: 'community', label: '用户上传', icon: '👤' },
+  { key: 'builtin', label: '官方', icon: '✨' },
 ];
 
 // 筛选后的 MCP 列表
@@ -38,8 +37,7 @@ const filteredMcpList = computed(() => {
     list = list.filter(
       (mcp) =>
         mcp.name.toLowerCase().includes(keyword) ||
-        mcp.author.toLowerCase().includes(keyword) ||
-        mcp.description.toLowerCase().includes(keyword)
+        (mcp.description && mcp.description.toLowerCase().includes(keyword))
     );
   }
 

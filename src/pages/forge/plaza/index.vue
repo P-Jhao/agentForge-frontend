@@ -7,13 +7,12 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NIcon, NTabs, NTabPane, NSpin, NEmpty } from 'naive-ui';
 import { AddOutline } from '@vicons/ionicons5';
-import { useForgeStore, useThemeStore } from '@/stores';
+import { useForgeStore } from '@/stores';
 import type { ForgeFilter } from '@/types';
 import ForgeCard from './components/ForgeCard.vue';
 
 const router = useRouter();
 const forgeStore = useForgeStore();
-const themeStore = useThemeStore();
 
 // 当前标签
 const currentTab = ref<ForgeFilter>('all');
@@ -64,11 +63,7 @@ onMounted(async () => {
         <h1 class="text-theme text-2xl font-bold">Forge 广场</h1>
         <p class="text-theme-secondary mt-1">浏览或创建你的专属 Forge</p>
       </div>
-      <NButton
-        type="primary"
-        :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-        @click="handleCreate"
-      >
+      <NButton type="primary" class="btn-theme" @click="handleCreate">
         <template #icon>
           <NIcon :component="AddOutline" />
         </template>

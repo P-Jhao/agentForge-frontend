@@ -2,6 +2,8 @@
  * 流式消息类型定义
  */
 
+import type { TaskStatus } from './task';
+
 // 消息类型枚举
 export type ChunkType =
   | 'chatStream' // AI 回复流式输出
@@ -16,8 +18,7 @@ export type ChunkType =
 // 流式事件类型
 export type StreamEvent = 'start' | 'data' | 'end';
 
-// 任务状态
-export type TaskStatus = 'running' | 'success' | 'failed';
+// 注：TaskStatus 定义在 task.ts 中，此处不再重复定义
 
 // 流式文本数据（chatStream / thinking）
 export interface StreamTextData {

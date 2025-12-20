@@ -1,11 +1,11 @@
 <script setup lang="ts">
 /**
  * 单条聊天消息组件
- * 根据消息类型渲染不同内容
+ * iMessage 风格设计，使用 CSS 类自动适配深浅主题
  */
 import { computed } from 'vue';
 import { NSpin, NAvatar } from 'naive-ui';
-import { useThemeStore, useUserStore } from '@/stores';
+import { useUserStore } from '@/stores';
 import type { TaskForge } from '@/types';
 import type {
   MessageData,
@@ -25,7 +25,6 @@ const props = withDefaults(defineProps<Props>(), {
   forge: null,
 });
 
-const themeStore = useThemeStore();
 const userStore = useUserStore();
 
 // 获取 Forge 头像完整 URL
@@ -68,29 +67,16 @@ const showLoading = computed(() => {
   return !(props.data as TextMessageData).content;
 });
 
+// 容器布局类
 const containerClass = computed(() => ({
   'flex-row-reverse': isUserMessage.value,
 }));
-
-const avatarClass = computed(() => {
-  if (isUserMessage.value) {
-    return 'bg-primary-500 text-white';
-  }
-  return themeStore.isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600';
-});
-
-const messageClass = computed(() => {
-  if (isUserMessage.value) {
-    return 'bg-primary-500 text-white';
-  }
-  return themeStore.isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800';
-});
 
 // 获取文本消息的样式类
 const textContentClass = computed(() => {
   switch (props.data.type) {
     case 'thinking':
-      return themeStore.isDark ? 'text-gray-400 italic' : 'text-gray-500 italic';
+      return 'text-thinking';
     case 'error':
       return 'text-red-500';
     default:
@@ -131,12 +117,15 @@ const textContentLabel = computed(() => {
         :size="32"
         round
         object-fit="cover"
-        :class="avatarClass"
+        class="avatar-ai"
       />
     </div>
 
     <!-- 消息内容 -->
-    <div class="max-w-[70%] rounded-2xl px-4 py-3" :class="messageClass">
+    <div
+      class="max-w-[70%] rounded-2xl px-4 py-3"
+      :class="isUserMessage ? 'bubble-user' : 'bubble-ai'"
+    >
       <!-- 加载状态 -->
       <NSpin v-if="showLoading" size="small" />
 

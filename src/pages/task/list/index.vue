@@ -2,6 +2,7 @@
 /**
  * 任务列表页面
  * 任务列表 + 筛选 + 批量操作
+ * 使用 CSS 类自动适配深浅主题
  */
 import { ref, computed, onMounted, h } from 'vue';
 import { useRouter } from 'vue-router';
@@ -17,13 +18,12 @@ import {
   type DataTableColumns,
 } from 'naive-ui';
 import { SearchOutline, StarOutline, Star, TrashOutline, TimeOutline } from '@vicons/ionicons5';
-import { useTaskStore, useThemeStore } from '@/stores';
+import { useTaskStore } from '@/stores';
 import type { Task } from '@/types';
 
 const router = useRouter();
 const message = useMessage();
 const taskStore = useTaskStore();
-const themeStore = useThemeStore();
 
 // 搜索关键词
 const searchKeyword = ref('');
@@ -196,12 +196,8 @@ onMounted(async () => {
   <div class="space-y-6">
     <!-- 页面标题 -->
     <div>
-      <h1 class="text-2xl font-bold" :class="themeStore.isDark ? 'text-white' : 'text-gray-900'">
-        任务管理
-      </h1>
-      <p class="mt-1 text-sm" :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
-        管理所有对话任务
-      </p>
+      <h1 class="text-theme text-2xl font-bold">任务管理</h1>
+      <p class="text-theme-secondary mt-1 text-sm">管理所有对话任务</p>
     </div>
 
     <!-- 筛选栏 -->
@@ -249,11 +245,7 @@ onMounted(async () => {
     />
 
     <!-- 空状态 -->
-    <div
-      v-if="!loading && filteredTasks.length === 0"
-      class="py-12 text-center"
-      :class="themeStore.isDark ? 'text-gray-500' : 'text-gray-400'"
-    >
+    <div v-if="!loading && filteredTasks.length === 0" class="text-empty py-12 text-center">
       {{ filterMode === 'favorite' ? '暂无收藏任务' : '暂无任务' }}
     </div>
   </div>

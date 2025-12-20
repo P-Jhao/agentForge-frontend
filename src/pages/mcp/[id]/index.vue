@@ -30,14 +30,13 @@ import {
   TerminalOutline,
   ServerOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore, useUserStore, useMCPStore } from '@/stores';
+import { useUserStore, useMCPStore } from '@/stores';
 import ForgeCard from '../components/ForgeCard.vue';
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 const dialog = useDialog();
-const themeStore = useThemeStore();
 const userStore = useUserStore();
 const mcpStore = useMCPStore();
 
@@ -285,11 +284,7 @@ function handleDelete() {
 
           <!-- 管理员操作 -->
           <template v-if="userStore.isAdmin">
-            <NButton
-              type="primary"
-              :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-              @click="handleEdit"
-            >
+            <NButton type="primary" class="btn-theme" @click="handleEdit">
               <template #icon>
                 <NIcon :component="CreateOutline" />
               </template>

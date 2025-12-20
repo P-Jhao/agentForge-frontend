@@ -1,11 +1,9 @@
 <script setup lang="ts">
 /**
  * 个人中心页面
+ * 使用 CSS 类自动适配深浅主题
  */
 import { NCard, NAvatar, NButton, NDescriptions, NDescriptionsItem } from 'naive-ui';
-import { useThemeStore } from '@/stores';
-
-const themeStore = useThemeStore();
 
 // 模拟用户数据
 const userInfo = {
@@ -21,17 +19,13 @@ const userInfo = {
   <div class="p-6">
     <!-- 页面标题 -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold" :class="themeStore.isDark ? 'text-white' : 'text-gray-800'">
-        个人中心
-      </h1>
-      <p class="mt-1 text-sm" :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
-        管理您的账户信息和偏好设置
-      </p>
+      <h1 class="text-theme text-2xl font-bold">个人中心</h1>
+      <p class="text-theme-secondary mt-1 text-sm">管理您的账户信息和偏好设置</p>
     </div>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- 用户头像卡片 -->
-      <NCard :class="themeStore.isDark ? 'card-gradient' : ''">
+      <NCard class="card-theme-gradient">
         <div class="flex flex-col items-center py-4">
           <NAvatar
             :size="80"
@@ -40,31 +34,18 @@ const userInfo = {
           >
             U
           </NAvatar>
-          <h2
-            class="mt-4 text-xl font-semibold"
-            :class="themeStore.isDark ? 'text-white' : 'text-gray-800'"
-          >
+          <h2 class="text-theme mt-4 text-xl font-semibold">
             {{ userInfo.username }}
           </h2>
-          <p class="text-sm" :class="themeStore.isDark ? 'text-gray-400' : 'text-gray-500'">
+          <p class="text-theme-secondary text-sm">
             {{ userInfo.email }}
           </p>
-          <NButton
-            type="primary"
-            class="mt-4"
-            :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-          >
-            编辑资料
-          </NButton>
+          <NButton type="primary" class="btn-theme mt-4">编辑资料</NButton>
         </div>
       </NCard>
 
       <!-- 账户信息卡片 -->
-      <NCard
-        title="账户信息"
-        :class="themeStore.isDark ? 'card-gradient' : ''"
-        class="lg:col-span-2"
-      >
+      <NCard title="账户信息" class="card-theme-gradient lg:col-span-2">
         <NDescriptions label-placement="left" :column="1">
           <NDescriptionsItem label="用户名">
             {{ userInfo.username }}

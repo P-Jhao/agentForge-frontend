@@ -2,17 +2,16 @@
 /**
  * 我的 MCP 页面
  * 展示用户自定义的所有 MCP
+ * 使用 CSS 类自动适配深浅主题
  */
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NIcon, NInput, NEmpty } from 'naive-ui';
 import { ArrowBackOutline, SearchOutline, AddOutline } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
 import { customMcpList } from '@/mocks/mcp';
 import McpCard from '../components/McpCard.vue';
 
 const router = useRouter();
-const themeStore = useThemeStore();
 
 // 搜索关键词
 const searchKeyword = ref('');
@@ -25,7 +24,8 @@ const filteredList = computed(() => {
   const keyword = searchKeyword.value.toLowerCase();
   return customMcpList.filter(
     (mcp) =>
-      mcp.name.toLowerCase().includes(keyword) || mcp.description.toLowerCase().includes(keyword)
+      mcp.name.toLowerCase().includes(keyword) ||
+      (mcp.description && mcp.description.toLowerCase().includes(keyword))
   );
 });
 
@@ -52,11 +52,7 @@ function handleAdd() {
         </NButton>
         <h1 class="text-theme text-2xl font-bold">我的 MCP</h1>
       </div>
-      <NButton
-        type="primary"
-        :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-        @click="handleAdd"
-      >
+      <NButton type="primary" class="btn-theme" @click="handleAdd">
         <template #icon>
           <NIcon :component="AddOutline" />
         </template>

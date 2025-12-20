@@ -2,10 +2,10 @@
 /**
  * 聊天输入框组件
  * 统一的卡片式输入框，发送按钮在右下角
+ * 使用 CSS 类自动适配深浅主题
  */
 import { NInput, NButton, NIcon } from 'naive-ui';
 import { SendOutline } from '@vicons/ionicons5';
-import { useThemeStore } from '@/stores';
 
 // Props
 interface Props {
@@ -30,8 +30,6 @@ const modelValue = defineModel<string>({ default: '' });
 const emit = defineEmits<{
   send: [value: string];
 }>();
-
-const themeStore = useThemeStore();
 
 // 输入框主题覆盖（背景透明）
 const inputThemeOverrides = {
@@ -61,10 +59,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 </script>
 
 <template>
-  <div
-    class="chat-input-container rounded-2xl border p-4"
-    :class="themeStore.isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'"
-  >
+  <div class="chat-input-container input-container rounded-2xl border p-4">
     <!-- 输入区域 -->
     <NInput
       v-model:value="modelValue"
@@ -90,7 +85,7 @@ const handleKeydown = (e: KeyboardEvent) => {
         round
         :disabled="!modelValue.trim() || disabled"
         :loading="loading"
-        :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
+        class="btn-theme"
         @click="handleSend"
       >
         <template #icon>

@@ -76,17 +76,10 @@ function goLogin() {
 </script>
 
 <template>
-  <NLayoutHeader
-    class="flex h-16 items-center justify-between border-b px-6"
-    :class="
-      themeStore.isDark
-        ? 'bg-dark-800/80 border-white/5 backdrop-blur-xl'
-        : 'border-gray-200 bg-white'
-    "
-  >
+  <NLayoutHeader class="header-container flex h-16 items-center justify-between border-b px-6">
     <!-- 左侧标题 -->
     <div class="flex items-center gap-3">
-      <span class="text-lg font-medium" :class="themeStore.isDark ? 'text-white' : 'text-gray-900'">
+      <span class="text-theme text-lg font-medium">
         {{ taskStore.hasCurrentTask ? taskStore.currentTaskName : 'AgentForge' }}
       </span>
       <span
@@ -123,17 +116,12 @@ function goLogin() {
       <!-- 用户（已登录） -->
       <NDropdown v-if="userStore.isLoggedIn" :options="userOptions" @select="handleUserSelect">
         <div
-          class="flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
-          :class="
-            themeStore.isDark
-              ? 'border-white/10 bg-white/5 hover:bg-white/10'
-              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
-          "
+          class="user-capsule flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
         >
           <NAvatar round size="small" class="from-primary-500 to-accent-purple bg-linear-to-br">
             {{ userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U' }}
           </NAvatar>
-          <span class="text-sm" :class="themeStore.isDark ? 'text-gray-300' : 'text-gray-700'">
+          <span class="sider-item-text text-sm">
             {{ userStore.userInfo?.username || '用户' }}
           </span>
         </div>
@@ -142,18 +130,11 @@ function goLogin() {
       <!-- 未登录 -->
       <div
         v-else
-        class="flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
-        :class="
-          themeStore.isDark
-            ? 'border-white/10 bg-white/5 hover:bg-white/10'
-            : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
-        "
+        class="user-capsule flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 transition-colors"
         @click="goLogin"
       >
         <NAvatar round size="small" class="bg-gray-400">?</NAvatar>
-        <span class="text-sm" :class="themeStore.isDark ? 'text-gray-300' : 'text-gray-700'">
-          未登录
-        </span>
+        <span class="sider-item-text text-sm">未登录</span>
       </div>
     </NSpace>
   </NLayoutHeader>

@@ -24,7 +24,7 @@ import {
   EyeOutline,
   EyeOffOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore, useMCPStore } from '@/stores';
+import { useMCPStore } from '@/stores';
 import { uploadAvatar } from '@/utils';
 import MCPToolSelector from '@/components/MCPToolSelector.vue';
 import EMarkdown from '@/components/EMarkdown.vue';
@@ -41,7 +41,6 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
-const themeStore = useThemeStore();
 const mcpStore = useMCPStore();
 const message = useMessage();
 
@@ -169,31 +168,16 @@ const handleCancel = () => {
   <div class="forge-form space-y-6">
     <!-- 基础信息卡片 -->
     <div
-      class="relative overflow-hidden rounded-xl border p-6 transition-all"
-      :class="
-        themeStore.isDark
-          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
-          : 'border-gray-200 bg-white hover:border-gray-300'
-      "
+      class="form-card relative overflow-hidden rounded-xl border p-6 transition-all"
       style="backdrop-filter: blur(8px)"
     >
       <!-- 卡片装饰线 -->
-      <div
-        class="absolute top-0 left-0 h-1 w-full"
-        :class="
-          themeStore.isDark
-            ? 'from-primary-500 via-accent-purple bg-linear-to-r to-transparent'
-            : 'from-primary-500 to-primary-300 bg-linear-to-r'
-        "
-      ></div>
+      <div class="decor-line-primary-full absolute top-0 left-0 h-1 w-full"></div>
 
       <!-- 标题行：基础信息 + 公开设置 -->
       <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-lg"
-            :class="themeStore.isDark ? 'bg-primary-500/20' : 'bg-primary-50'"
-          >
+          <div class="icon-bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
             <NIcon :component="SparklesOutline" :size="18" class="text-primary-500" />
           </div>
           <h3 class="text-theme font-semibold">基础信息</h3>
@@ -223,12 +207,7 @@ const handleCancel = () => {
             :disabled="avatarUploading"
           >
             <div
-              class="group relative h-24 w-24 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed transition-all"
-              :class="
-                themeStore.isDark
-                  ? 'hover:border-primary-500/50 border-gray-600'
-                  : 'hover:border-primary-500 border-gray-300'
-              "
+              class="upload-border group relative h-24 w-24 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed transition-all"
             >
               <!-- 上传中 -->
               <div
@@ -277,26 +256,13 @@ const handleCancel = () => {
 
     <!-- Forge 介绍卡片 -->
     <div
-      class="relative overflow-hidden rounded-xl border p-6 transition-all"
-      :class="
-        themeStore.isDark
-          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
-          : 'border-gray-200 bg-white hover:border-gray-300'
-      "
+      class="form-card relative overflow-hidden rounded-xl border p-6 transition-all"
       style="backdrop-filter: blur(8px)"
     >
-      <div
-        class="absolute top-0 left-0 h-1 w-24"
-        :class="
-          themeStore.isDark ? 'from-accent-cyan bg-linear-to-r to-transparent' : 'bg-accent-cyan'
-        "
-      ></div>
+      <div class="decor-line-cyan absolute top-0 left-0 h-1 w-24"></div>
 
       <div class="mb-4 flex items-center gap-2">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg"
-          :class="themeStore.isDark ? 'bg-accent-cyan/20' : 'bg-cyan-50'"
-        >
+        <div class="icon-bg-cyan flex h-8 w-8 items-center justify-center rounded-lg">
           <NIcon :component="DocumentTextOutline" :size="18" class="text-accent-cyan" />
         </div>
         <h3 class="text-theme font-semibold">Forge 介绍</h3>
@@ -313,28 +279,13 @@ const handleCancel = () => {
 
     <!-- 系统提示词卡片 -->
     <div
-      class="relative overflow-hidden rounded-xl border p-6 transition-all"
-      :class="
-        themeStore.isDark
-          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
-          : 'border-gray-200 bg-white hover:border-gray-300'
-      "
+      class="form-card relative overflow-hidden rounded-xl border p-6 transition-all"
       style="backdrop-filter: blur(8px)"
     >
-      <div
-        class="absolute top-0 left-0 h-1 w-24"
-        :class="
-          themeStore.isDark
-            ? 'from-accent-purple bg-linear-to-r to-transparent'
-            : 'bg-accent-purple'
-        "
-      ></div>
+      <div class="decor-line-purple absolute top-0 left-0 h-1 w-24"></div>
 
       <div class="mb-4 flex items-center gap-2">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg"
-          :class="themeStore.isDark ? 'bg-accent-purple/20' : 'bg-purple-50'"
-        >
+        <div class="icon-bg-purple flex h-8 w-8 items-center justify-center rounded-lg">
           <NIcon :component="SparklesOutline" :size="18" class="text-accent-purple" />
         </div>
         <h3 class="text-theme font-semibold">系统提示词</h3>
@@ -353,27 +304,14 @@ const handleCancel = () => {
 
     <!-- MCP 工具卡片 -->
     <div
-      class="relative overflow-hidden rounded-xl border p-6 transition-all"
-      :class="
-        themeStore.isDark
-          ? 'border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50'
-          : 'border-gray-200 bg-white hover:border-gray-300'
-      "
+      class="form-card relative overflow-hidden rounded-xl border p-6 transition-all"
       style="backdrop-filter: blur(8px)"
     >
-      <div
-        class="absolute top-0 left-0 h-1 w-24"
-        :class="
-          themeStore.isDark ? 'bg-linear-to-r from-emerald-500 to-transparent' : 'bg-emerald-500'
-        "
-      ></div>
+      <div class="decor-line-emerald absolute top-0 left-0 h-1 w-24"></div>
 
       <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-lg"
-            :class="themeStore.isDark ? 'bg-emerald-500/20' : 'bg-emerald-50'"
-          >
+          <div class="icon-bg-emerald flex h-8 w-8 items-center justify-center rounded-lg">
             <NIcon :component="ConstructOutline" :size="18" class="text-emerald-500" />
           </div>
           <h3 class="text-theme font-semibold">MCP 工具</h3>
@@ -396,7 +334,7 @@ const handleCancel = () => {
         type="primary"
         size="large"
         :loading="loading"
-        :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
+        class="btn-theme"
         @click="handleSubmit"
       >
         <template #icon>

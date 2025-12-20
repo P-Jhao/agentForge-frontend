@@ -19,7 +19,7 @@ import {
   Star,
   CogOutline,
 } from '@vicons/ionicons5';
-import { useThemeStore, useTaskStore, useForgeStore } from '@/stores';
+import { useTaskStore, useForgeStore } from '@/stores';
 import type { Task } from '@/types';
 
 // 接收折叠状态
@@ -27,7 +27,6 @@ const collapsed = defineModel<boolean>('collapsed', { default: false });
 
 const route = useRoute();
 const router = useRouter();
-const themeStore = useThemeStore();
 const taskStore = useTaskStore();
 const forgeStore = useForgeStore();
 
@@ -235,12 +234,7 @@ watch(searchKeyword, (keyword) => {
             <NIcon :component="SearchOutline" />
           </template>
         </NInput>
-        <NButton
-          type="primary"
-          block
-          :class="themeStore.isDark ? 'btn-glow' : 'btn-gradient'"
-          @click="handleNewTask"
-        >
+        <NButton type="primary" block class="btn-theme" @click="handleNewTask">
           <template #icon>
             <NIcon :component="AddOutline" />
           </template>

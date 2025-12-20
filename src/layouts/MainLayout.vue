@@ -1,13 +1,15 @@
 <script setup lang="ts">
+/**
+ * 主布局组件
+ * 使用 CSS 类自动适配深浅主题
+ */
 import { ref, onMounted } from 'vue';
 import { NLayout, NLayoutContent } from 'naive-ui';
 import { LayoutSider, LayoutHeader } from './components';
-import { useThemeStore } from '@/stores';
 import { useTaskSubscription } from '@/composable/task';
 
 // 侧边栏折叠状态
 const collapsed = ref(false);
-const themeStore = useThemeStore();
 
 // 初始化任务状态订阅（全局 SSE 连接）
 const { connect: connectTaskSubscription } = useTaskSubscription();
@@ -35,10 +37,7 @@ onMounted(() => {
         content-class="flex-1"
         content-style="height: calc(100vh - 64px); overflow: hidden;"
       >
-        <div
-          class="h-full overflow-y-auto p-6"
-          :class="themeStore.isDark ? 'bg-dark-900 bg-grid' : 'bg-light-100 bg-grid-light'"
-        >
+        <div class="main-content-bg h-full overflow-y-auto p-6">
           <RouterView />
         </div>
       </NLayoutContent>

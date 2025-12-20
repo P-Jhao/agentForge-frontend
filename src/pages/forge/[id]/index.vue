@@ -16,7 +16,7 @@ import {
   CogOutline,
   DocumentTextOutline,
 } from '@vicons/ionicons5';
-import { useForgeStore, useTaskStore, useThemeStore } from '@/stores';
+import { useForgeStore, useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
 import EMarkdown from '@/components/EMarkdown.vue';
 
@@ -25,7 +25,6 @@ const router = useRouter();
 const message = useMessage();
 const forgeStore = useForgeStore();
 const taskStore = useTaskStore();
-const themeStore = useThemeStore();
 
 // Forge ID
 const forgeId = computed(() => parseInt(route.params.id as string, 10));
@@ -238,10 +237,7 @@ onMounted(() => {
         <div v-if="forge.description" class="mt-2">
           <!-- 标题 -->
           <div class="mb-3 flex items-center gap-2">
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-lg"
-              :class="themeStore.isDark ? 'bg-accent-cyan/20' : 'bg-cyan-50'"
-            >
+            <div class="icon-bg-cyan flex h-8 w-8 items-center justify-center rounded-lg">
               <NIcon :component="DocumentTextOutline" :size="18" class="text-accent-cyan" />
             </div>
             <h3 class="text-theme font-semibold">Forge 介绍</h3>

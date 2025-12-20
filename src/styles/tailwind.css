@@ -136,7 +136,10 @@
 
   /* 玻璃态效果 */
   .glass {
-    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl;
+    border-radius: theme('borderRadius.2xl');
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background-color: rgb(255 255 255 / 0.05);
+    backdrop-filter: blur(24px);
   }
 
   /* 发光文字 */
@@ -382,6 +385,288 @@
       opacity: 0.6;
       transform: translateY(-50%) scale(1.2);
     }
+  }
+
+  /* ===== iMessage 风格消息气泡 ===== */
+
+  /* 用户消息气泡 - 蓝色 */
+  .bubble-user {
+    @apply bg-primary-500 text-white;
+    border-bottom-right-radius: 4px;
+  }
+
+  /* AI 消息气泡 - 灰色（自适应深浅模式） */
+  .bubble-ai {
+    @apply bg-gray-100 text-gray-800;
+  }
+
+  .dark .bubble-ai {
+    @apply bg-gray-800 text-gray-200;
+  }
+
+  /* AI 头像背景（自适应深浅模式） */
+  .avatar-ai {
+    @apply bg-gray-200 text-gray-600;
+  }
+
+  .dark .avatar-ai {
+    @apply bg-gray-700 text-gray-300;
+  }
+
+  /* 思考中文字样式 */
+  .text-thinking {
+    @apply text-gray-500 italic;
+  }
+
+  .dark .text-thinking {
+    @apply text-gray-400;
+  }
+
+  /* 空状态文字 */
+  .text-empty {
+    @apply text-gray-400;
+  }
+
+  .dark .text-empty {
+    @apply text-gray-500;
+  }
+
+  /* ===== 更多主题自适应工具类 ===== */
+
+  /* 卡片背景（浅色：白色带边框，深色：玻璃态） */
+  .card-theme {
+    @apply border border-gray-200 bg-white shadow-sm;
+  }
+
+  .dark .card-theme {
+    border-radius: theme('borderRadius.2xl');
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background-color: rgb(255 255 255 / 0.05);
+    backdrop-filter: blur(24px);
+  }
+
+  /* 渐变卡片（浅色：白色带边框，深色：渐变边框） */
+  .card-theme-gradient {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+  }
+
+  .dark .card-theme-gradient {
+    @apply bg-dark-800 relative rounded-2xl border-0 p-6;
+    background: linear-gradient(135deg, rgba(97, 114, 243, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+    border: none;
+  }
+
+  /* 按钮样式（浅色：渐变，深色：发光） */
+  .btn-theme {
+    @apply relative rounded-xl px-6 py-3 font-medium transition-all duration-300;
+    background: linear-gradient(135deg, #6172f3 0%, #3538cd 100%);
+    box-shadow: 0 4px 14px rgba(80, 70, 229, 0.25);
+    color: #ffffff;
+  }
+
+  .btn-theme:hover {
+    color: #a5f3fc;
+  }
+
+  .dark .btn-theme {
+    @apply from-primary-600 to-accent-purple relative rounded-xl bg-linear-to-r px-6 py-3 font-medium text-white transition-all;
+    box-shadow: 0 0 20px rgba(97, 114, 243, 0.4);
+  }
+
+  .dark .btn-theme:hover {
+    box-shadow: 0 0 30px rgba(97, 114, 243, 0.6);
+  }
+
+  /* 背景光晕 - 蓝色 */
+  .bg-glow-blue {
+    @apply bg-primary-400/30;
+  }
+
+  .dark .bg-glow-blue {
+    @apply bg-primary-600/20;
+  }
+
+  /* 背景光晕 - 紫色 */
+  .bg-glow-purple {
+    @apply bg-purple-300/30;
+  }
+
+  .dark .bg-glow-purple {
+    @apply bg-accent-purple/20;
+  }
+
+  /* 背景光晕 - 青色 */
+  .bg-glow-cyan {
+    @apply bg-cyan-300/30;
+  }
+
+  .dark .bg-glow-cyan {
+    @apply bg-accent-cyan/15;
+  }
+
+  /* 标签文字颜色 */
+  .text-tag {
+    @apply text-primary-600;
+  }
+
+  .dark .text-tag {
+    @apply text-primary-300;
+  }
+
+  /* 标题发光效果（仅深色模式） */
+  .title-glow {
+    /* 浅色模式无效果 */
+  }
+
+  .dark .title-glow {
+    text-shadow:
+      0 0 10px rgba(97, 114, 243, 0.6),
+      0 0 30px rgba(97, 114, 243, 0.4),
+      0 0 60px rgba(168, 85, 247, 0.3);
+  }
+
+  /* 图标背景 - 主色 */
+  .icon-bg-primary {
+    @apply bg-primary-50;
+  }
+
+  .dark .icon-bg-primary {
+    @apply bg-primary-500/20;
+  }
+
+  /* 图标背景 - 青色 */
+  .icon-bg-cyan {
+    @apply bg-cyan-50;
+  }
+
+  .dark .icon-bg-cyan {
+    @apply bg-accent-cyan/20;
+  }
+
+  /* 图标背景 - 紫色 */
+  .icon-bg-purple {
+    @apply bg-purple-50;
+  }
+
+  .dark .icon-bg-purple {
+    @apply bg-accent-purple/20;
+  }
+
+  /* 图标背景 - 绿色 */
+  .icon-bg-emerald {
+    @apply bg-emerald-50;
+  }
+
+  .dark .icon-bg-emerald {
+    @apply bg-emerald-500/20;
+  }
+
+  /* 装饰线条 - 青色 */
+  .decor-line-cyan {
+    @apply bg-accent-cyan;
+  }
+
+  .dark .decor-line-cyan {
+    @apply from-accent-cyan bg-linear-to-r to-transparent;
+  }
+
+  /* 装饰线条 - 绿色 */
+  .decor-line-emerald {
+    @apply bg-emerald-500;
+  }
+
+  .dark .decor-line-emerald {
+    @apply bg-linear-to-r from-emerald-500 to-transparent;
+  }
+
+  /* 装饰线条 - 紫色 */
+  .decor-line-purple {
+    @apply bg-accent-purple;
+  }
+
+  .dark .decor-line-purple {
+    @apply from-accent-purple bg-linear-to-r to-transparent;
+  }
+
+  /* 装饰线条 - 主色（全宽） */
+  .decor-line-primary-full {
+    @apply from-primary-500 to-primary-300 bg-linear-to-r;
+  }
+
+  .dark .decor-line-primary-full {
+    @apply from-primary-500 via-accent-purple bg-linear-to-r to-transparent;
+  }
+
+  /* 表单卡片样式 */
+  .form-card {
+    @apply border border-gray-200 bg-white hover:border-gray-300;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .form-card {
+    @apply border-gray-700/50 bg-gray-800/30 hover:border-gray-600/50;
+  }
+
+  /* 上传区域边框 */
+  .upload-border {
+    @apply hover:border-primary-500 border-gray-300;
+  }
+
+  .dark .upload-border {
+    @apply hover:border-primary-500/50 border-gray-600;
+  }
+
+  /* 输入容器 */
+  .input-container {
+    @apply border-gray-200 bg-gray-50;
+  }
+
+  .dark .input-container {
+    @apply border-gray-700 bg-gray-800;
+  }
+
+  /* 头部容器 */
+  .header-container {
+    @apply border-gray-200 bg-white;
+  }
+
+  .dark .header-container {
+    @apply bg-dark-800/80 border-white/5 backdrop-blur-xl;
+  }
+
+  /* 用户胶囊按钮 */
+  .user-capsule {
+    @apply border-gray-200 bg-gray-50 hover:bg-gray-100;
+  }
+
+  .dark .user-capsule {
+    @apply border-white/10 bg-white/5 hover:bg-white/10;
+  }
+
+  /* 主内容区域背景 */
+  .main-content-bg {
+    background-image:
+      linear-gradient(rgba(80, 70, 229, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80, 70, 229, 0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    @apply bg-light-100;
+  }
+
+  .dark .main-content-bg {
+    background-image:
+      linear-gradient(rgba(97, 114, 243, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(97, 114, 243, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    @apply bg-dark-900;
+  }
+
+  /* 工具调用容器 */
+  .tool-call-container {
+    @apply bg-gray-100 hover:bg-gray-200;
+  }
+
+  .dark .tool-call-container {
+    @apply bg-gray-700/50 hover:bg-gray-700;
   }
 }
 
