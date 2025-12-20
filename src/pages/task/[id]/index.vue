@@ -30,10 +30,9 @@ const scrollToBottom = () => {
 
 // 使用 chat composable
 const {
-  messages,
+  renderItems,
   inputValue,
   isLoading,
-  toolCallStates,
   handleSend,
   init,
   clearMessages,
@@ -75,9 +74,8 @@ onBeforeUnmount(() => {
     <ChatMessageList
       ref="messageListRef"
       class="min-h-0 flex-1"
-      :messages="messages"
+      :render-items="renderItems"
       :is-loading="isLoading"
-      :tool-call-states="toolCallStates"
       :forge="currentForge"
     />
 

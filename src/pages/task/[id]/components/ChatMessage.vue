@@ -1,39 +1,27 @@
 <script setup lang="ts">
 /**
  * 单条聊天消息组件
- * 扁平格式：每条消息独立渲染，不再嵌套段落数组
+ * 根据消息类型渲染不同内容
  */
 import { computed } from 'vue';
 import { NSpin, NAvatar } from 'naive-ui';
 import { useThemeStore, useUserStore } from '@/stores';
 import type { TaskForge } from '@/types';
+import type {
+  MessageData,
+  UserMessageData,
+  TextMessageData,
+  ToolCallMessageData,
+} from '@/composable/task/useChat';
 import ToolCallItem from './ToolCallItem.vue';
-import type { ToolCallStatus } from './ToolCallItem.vue';
-
-// 扁平消息类型
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  type: 'chat' | 'thinking' | 'tool_call' | 'error';
-  content: string;
-  // 工具调用专用字段
-  callId?: string;
-  toolName?: string;
-  arguments?: Record<string, unknown>;
-  result?: unknown;
-  success?: boolean;
-}
 
 interface Props {
-  message: Message;
-  // 正在进行的工具调用状态（callId -> status）
-  toolCallStates?: Map<string, ToolCallStatus>;
+  data: MessageData;
   // 关联的 Forge 信息（用于显示 AI 头像）
   forge?: TaskForge | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  toolCallStates: () => new Map(),
   forge: null,
 });
 
@@ -56,14 +44,28 @@ const userInitial = computed(() => {
   return userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U';
 });
 
-const isUserMessage = computed(() => props.message.role === 'user');
-const isToolCall = computed(() => props.message.type === 'tool_call');
+// 是否为用户消息
+const isUserMessage = computed(() => props.data.type === 'user');
+
+// 是否为工具调用
+const isToolCall = computed(() => props.data.type === 'tool_call');
+
+// 是否为文本消息（chat/thinking/error）
+const isTextMessage = computed(() => ['chat', 'thinking', 'error'].includes(props.data.type));
+
+// 文本消息数据
+const textData = computed(() => props.data as TextMessageData);
+
+// 工具调用数据
+const toolCallData = computed(() => props.data as ToolCallMessageData);
+
+// 用户消息数据
+const userData = computed(() => props.data as UserMessageData);
 
 // 是否显示加载状态（assistant chat 消息内容为空时）
 const showLoading = computed(() => {
-  if (props.message.role !== 'assistant') return false;
-  if (props.message.type !== 'chat') return false;
-  return !props.message.content;
+  if (props.data.type !== 'chat') return false;
+  return !(props.data as TextMessageData).content;
 });
 
 const containerClass = computed(() => ({
@@ -84,9 +86,9 @@ const messageClass = computed(() => {
   return themeStore.isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800';
 });
 
-// 获取消息的样式类（根据类型）
-const contentClass = computed(() => {
-  switch (props.message.type) {
+// 获取文本消息的样式类
+const textContentClass = computed(() => {
+  switch (props.data.type) {
     case 'thinking':
       return themeStore.isDark ? 'text-gray-400 italic' : 'text-gray-500 italic';
     case 'error':
@@ -96,9 +98,9 @@ const contentClass = computed(() => {
   }
 });
 
-// 获取消息的前缀标签
-const contentLabel = computed(() => {
-  switch (props.message.type) {
+// 获取文本消息的前缀标签
+const textContentLabel = computed(() => {
+  switch (props.data.type) {
     case 'thinking':
       return '💭 ';
     case 'error':
@@ -106,18 +108,6 @@ const contentLabel = computed(() => {
     default:
       return '';
   }
-});
-
-// 获取工具调用的状态
-const toolCallStatus = computed((): ToolCallStatus => {
-  if (!props.message.callId) return 'failed';
-  // 优先使用实时状态（流式输出时）
-  const realtimeStatus = props.toolCallStates.get(props.message.callId);
-  if (realtimeStatus) {
-    return realtimeStatus;
-  }
-  // 否则使用保存的状态（历史消息）
-  return props.message.success ? 'success' : 'failed';
 });
 </script>
 
@@ -150,20 +140,25 @@ const toolCallStatus = computed((): ToolCallStatus => {
       <!-- 加载状态 -->
       <NSpin v-if="showLoading" size="small" />
 
+      <!-- 用户消息 -->
+      <p v-else-if="isUserMessage" class="text-sm whitespace-pre-wrap">
+        {{ userData.content }}
+      </p>
+
       <!-- 工具调用消息 -->
       <ToolCallItem
         v-else-if="isToolCall"
-        :call-id="message.callId || ''"
-        :tool-name="message.toolName || ''"
-        :status="toolCallStatus"
-        :arguments="message.arguments || {}"
-        :result="message.result"
+        :call-id="toolCallData.callId"
+        :tool-name="toolCallData.toolName"
+        :status="toolCallData.status"
+        :arguments="toolCallData.arguments"
+        :result="toolCallData.result"
       />
 
-      <!-- 普通文本消息 -->
-      <p v-else class="text-sm whitespace-pre-wrap" :class="contentClass">
-        <span v-if="contentLabel">{{ contentLabel }}</span>
-        {{ message.content }}
+      <!-- 文本消息（chat/thinking/error） -->
+      <p v-else-if="isTextMessage" class="text-sm whitespace-pre-wrap" :class="textContentClass">
+        <span v-if="textContentLabel">{{ textContentLabel }}</span>
+        {{ textData.content }}
       </p>
     </div>
   </div>

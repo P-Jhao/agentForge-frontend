@@ -7,27 +7,17 @@ import { ref, computed, nextTick } from 'vue';
 import { useThemeStore } from '@/stores';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
-import type { MessageSegment, TaskForge } from '@/types';
-import type { ToolCallStatus } from './ToolCallItem.vue';
-
-// 消息类型（与 useChat 中的 ChatMessage 一致）
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string | MessageSegment[];
-}
+import type { TaskForge } from '@/types';
+import type { RenderItem } from '@/composable/task/useChat';
 
 interface Props {
-  messages: Message[];
+  renderItems: RenderItem[];
   isLoading: boolean;
-  // 正在进行的工具调用状态（callId -> status）
-  toolCallStates?: Map<string, ToolCallStatus>;
   // 关联的 Forge 信息（用于显示 AI 头像）
   forge?: TaskForge | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  toolCallStates: () => new Map(),
   forge: null,
 });
 
@@ -55,12 +45,11 @@ defineExpose({
 const emptyStateClass = computed(() => (themeStore.isDark ? 'text-gray-500' : 'text-gray-400'));
 
 // 判断是否需要显示独立的加载状态
-// 如果最后一条消息是空的 assistant 消息，则不显示（因为该消息会显示加载动画）
 const showLoadingState = computed(() => {
   if (!props.isLoading) return false;
-  const lastMsg = props.messages[props.messages.length - 1];
-  // 如果最后一条是 assistant 消息，不显示独立的加载状态
-  if (lastMsg && lastMsg.role === 'assistant') return false;
+  const lastItem = props.renderItems[props.renderItems.length - 1];
+  // 如果最后一条是 assistant 消息（非 user），不显示独立的加载状态
+  if (lastItem && lastItem.type !== 'user') return false;
   return true;
 });
 </script>
@@ -68,20 +57,17 @@ const showLoadingState = computed(() => {
 <template>
   <div ref="containerRef" class="flex-1 space-y-4 overflow-y-auto p-6">
     <!-- 空状态 -->
-    <div v-if="messages.length === 0 && !isLoading" class="flex h-full items-center justify-center">
+    <div
+      v-if="renderItems.length === 0 && !isLoading"
+      class="flex h-full items-center justify-center"
+    >
       <p :class="emptyStateClass">开始你的对话吧</p>
     </div>
 
     <!-- 消息列表 -->
-    <ChatMessage
-      v-for="msg in messages"
-      :key="msg.id"
-      :message="msg"
-      :tool-call-states="toolCallStates"
-      :forge="forge"
-    />
+    <ChatMessage v-for="item in renderItems" :key="item.id" :data="item.data" :forge="forge" />
 
-    <!-- 加载状态（仅在没有空的 assistant 消息时显示） -->
+    <!-- 加载状态（仅在没有 assistant 消息时显示） -->
     <ChatLoadingState v-if="showLoadingState" :forge="forge" />
   </div>
 </template>
