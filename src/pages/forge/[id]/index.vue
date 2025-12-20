@@ -19,6 +19,7 @@ import {
 import { useForgeStore, useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
 import EMarkdown from '@/components/EMarkdown.vue';
+import MCPToolsPanel from '../components/MCPToolsPanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -157,98 +158,108 @@ onMounted(() => {
 
     <!-- 内容 -->
     <template v-else-if="forge">
-      <!-- 详情区域（可滚动） -->
-      <div class="min-h-0 flex-1 overflow-auto p-6">
-        <!-- 头部信息 -->
-        <div class="mb-6 flex items-start gap-4">
-          <!-- 头像 -->
-          <div
-            class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-linear-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
-          >
-            <img
-              v-if="forge.avatar"
-              :src="getAvatarUrl(forge.avatar)"
-              :alt="forge.displayName"
-              class="h-full w-full object-cover"
-            />
-            <div v-else class="text-theme-muted flex h-full w-full items-center justify-center">
-              <NIcon :component="CogOutline" :size="40" />
-            </div>
-          </div>
-
-          <!-- 基本信息 -->
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-3">
-              <h1 class="text-theme max-w-md truncate text-2xl font-bold">
-                {{ forge.displayName }}
-              </h1>
-              <NTag size="small" :type="sourceConfig.type" round class="shrink-0">
-                {{ sourceConfig.text }}
-              </NTag>
-            </div>
-
-            <div class="text-theme-secondary mt-2 flex flex-wrap items-center gap-4 text-sm">
-              <span class="flex items-center gap-1">
-                <NIcon :component="FlameOutline" />
-                {{ forge.usageCount }} 次使用
-              </span>
-              <span class="flex items-center gap-1">
-                <NIcon :component="TimeOutline" />
-                {{ formatDate(forge.createdAt) }}
-              </span>
-            </div>
-
-            <!-- 操作按钮 -->
-            <div class="mt-4 flex flex-wrap gap-2">
-              <NButton
-                :type="forge.isFavorite ? 'warning' : 'default'"
-                secondary
-                @click="handleFavorite"
+      <!-- 主内容区域（两列布局） -->
+      <div class="min-h-0 flex-1 overflow-hidden">
+        <div class="flex h-full gap-4 p-6">
+          <!-- 左侧：Forge 详情（可滚动） -->
+          <div class="min-h-0 flex-1 overflow-auto">
+            <!-- 头部信息 -->
+            <div class="mb-6 flex items-start gap-4">
+              <!-- 头像 -->
+              <div
+                class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-linear-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30"
               >
-                <template #icon>
-                  <NIcon :component="forge.isFavorite ? Star : StarOutline" />
-                </template>
-                {{ forge.isFavorite ? '已收藏' : '收藏' }}
-              </NButton>
+                <img
+                  v-if="forge.avatar"
+                  :src="getAvatarUrl(forge.avatar)"
+                  :alt="forge.displayName"
+                  class="h-full w-full object-cover"
+                />
+                <div v-else class="text-theme-muted flex h-full w-full items-center justify-center">
+                  <NIcon :component="CogOutline" :size="40" />
+                </div>
+              </div>
 
-              <NButton v-if="forge.canEdit" secondary @click="handleEdit">
-                <template #icon>
-                  <NIcon :component="CreateOutline" />
-                </template>
-                编辑
-              </NButton>
+              <!-- 基本信息 -->
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-3">
+                  <h1 class="text-theme max-w-md truncate text-2xl font-bold">
+                    {{ forge.displayName }}
+                  </h1>
+                  <NTag size="small" :type="sourceConfig.type" round class="shrink-0">
+                    {{ sourceConfig.text }}
+                  </NTag>
+                </div>
 
-              <NPopconfirm v-if="forge.canEdit" @positive-click="handleDelete">
-                <template #trigger>
-                  <NButton secondary type="error">
+                <div class="text-theme-secondary mt-2 flex flex-wrap items-center gap-4 text-sm">
+                  <span class="flex items-center gap-1">
+                    <NIcon :component="FlameOutline" />
+                    {{ forge.usageCount }} 次使用
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <NIcon :component="TimeOutline" />
+                    {{ formatDate(forge.createdAt) }}
+                  </span>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <NButton
+                    :type="forge.isFavorite ? 'warning' : 'default'"
+                    secondary
+                    @click="handleFavorite"
+                  >
                     <template #icon>
-                      <NIcon :component="TrashOutline" />
+                      <NIcon :component="forge.isFavorite ? Star : StarOutline" />
                     </template>
-                    删除
+                    {{ forge.isFavorite ? '已收藏' : '收藏' }}
                   </NButton>
-                </template>
-                确定要删除这个 Forge 吗？
-              </NPopconfirm>
+
+                  <NButton v-if="forge.canEdit" secondary @click="handleEdit">
+                    <template #icon>
+                      <NIcon :component="CreateOutline" />
+                    </template>
+                    编辑
+                  </NButton>
+
+                  <NPopconfirm v-if="forge.canEdit" @positive-click="handleDelete">
+                    <template #trigger>
+                      <NButton secondary type="error">
+                        <template #icon>
+                          <NIcon :component="TrashOutline" />
+                        </template>
+                        删除
+                      </NButton>
+                    </template>
+                    确定要删除这个 Forge 吗？
+                  </NPopconfirm>
+                </div>
+              </div>
+            </div>
+
+            <!-- Forge 介绍 -->
+            <div v-if="forge.description" class="mt-2">
+              <!-- 标题 -->
+              <div class="mb-3 flex items-center gap-2">
+                <div class="icon-bg-cyan flex h-8 w-8 items-center justify-center rounded-lg">
+                  <NIcon :component="DocumentTextOutline" :size="18" class="text-accent-cyan" />
+                </div>
+                <h3 class="text-theme font-semibold">Forge 介绍</h3>
+              </div>
+
+              <!-- Markdown 内容 -->
+              <EMarkdown
+                :model-value="forge.description"
+                mode="preview"
+                editor-id="forge-description-preview"
+              />
             </div>
           </div>
-        </div>
 
-        <!-- Forge 介绍 -->
-        <div v-if="forge.description" class="mt-2">
-          <!-- 标题 -->
-          <div class="mb-3 flex items-center gap-2">
-            <div class="icon-bg-cyan flex h-8 w-8 items-center justify-center rounded-lg">
-              <NIcon :component="DocumentTextOutline" :size="18" class="text-accent-cyan" />
-            </div>
-            <h3 class="text-theme font-semibold">Forge 介绍</h3>
+          <!-- 右侧：MCP 工具面板（固定宽度） -->
+          <div class="w-80 shrink-0">
+            <MCPToolsPanel :mcp-tools="forge.mcpTools" />
           </div>
-
-          <!-- Markdown 内容 -->
-          <EMarkdown
-            :model-value="forge.description"
-            mode="preview"
-            editor-id="forge-description-preview"
-          />
         </div>
       </div>
 
