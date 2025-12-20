@@ -14,7 +14,7 @@ import {
   reconnectMCP as reconnectMCPApi,
   deleteMCP as deleteMCPApi,
 } from '@/utils';
-import type { MCP, MCPDetail, CreateMCPParams, UpdateMCPParams } from '@/types';
+import type { MCP, MCPDetail, CreateMCPParams, UpdateMCPParams, MCPStatus } from '@/types';
 
 export const useMCPStore = defineStore('mcp', () => {
   // ========== 状态 ==========
@@ -203,6 +203,49 @@ export const useMCPStore = defineStore('mcp', () => {
     searchKeyword.value = keyword;
   }
 
+  /**
+   * 处理 SSE 推送的 MCP 状态变化
+   * @param mcpId MCP ID
+   * @param status 新状态
+   * @param name MCP 名称（可选）
+   */
+  function updateMCPStatus(mcpId: number, status: MCPStatus, name?: string) {
+    // 更新列表中的 MCP 状态
+    const mcp = mcpList.value.find((m) => m.id === mcpId);
+    if (mcp) {
+      mcp.status = status;
+    }
+
+    // 更新当前 MCP 详情的状态
+    if (currentMCP.value?.id === mcpId) {
+      currentMCP.value.status = status;
+    }
+
+    console.log(`[MCPStore] MCP ${mcpId} (${name || '未知'}) 状态已更新: ${status}`);
+  }
+
+  /**
+   * 初始化 SSE 监听器
+   * 在应用启动时调用，监听 MCP 状态变化事件
+   */
+  function initializeSSEListener() {
+    // 监听自定义事件 mcp:status_change
+    window.addEventListener('mcp:status_change', (event: Event) => {
+      const customEvent = event as unknown as {
+        detail: {
+          mcpId: number;
+          status: MCPStatus;
+          name?: string;
+        };
+      };
+
+      const { mcpId, status, name } = customEvent.detail;
+      updateMCPStatus(mcpId, status, name);
+    });
+
+    console.log('[MCPStore] SSE 监听器已初始化');
+  }
+
   return {
     // 状态
     mcpList,
@@ -221,5 +264,7 @@ export const useMCPStore = defineStore('mcp', () => {
     deleteMCP,
     clearCurrentMCP,
     setSearchKeyword,
+    updateMCPStatus,
+    initializeSSEListener,
   };
 });
