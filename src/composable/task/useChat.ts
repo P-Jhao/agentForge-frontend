@@ -1,90 +1,62 @@
 /**
  * AI 对话 composable
  * 封装与 AI 交互的核心逻辑
- * 使用新的 /api/task/:id/message 接口
+ * 使用扁平消息格式，每条消息独立渲染
  */
 import { ref, nextTick } from 'vue';
 import { createStreamRequest, createTask } from '@/utils';
 import { useTaskStore } from '@/stores';
-import type {
-  Message,
-  MessageSegment,
-  TaskSSEChunk,
-  ToolCallStartData,
-  ToolCallResultData,
-  ToolCallSegment,
-} from '@/types';
+import type { FlatMessage, TaskSSEChunk, ToolCallStartData, ToolCallResultData } from '@/types';
 
 // 工具调用状态类型
 export type ToolCallStatus = 'running' | 'success' | 'failed';
 
-// 前端展示用的消息类型
+// 前端展示用的消息类型（扁平格式）
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
-  content: string | MessageSegment[]; // user: 字符串; assistant: 段落数组
+  type: 'chat' | 'thinking' | 'tool_call' | 'error';
+  content: string;
+  // 工具调用专用字段
+  callId?: string;
+  toolName?: string;
+  arguments?: Record<string, unknown>;
+  result?: unknown;
+  success?: boolean;
   timestamp: number;
 }
 
 // composable 配置选项
 export interface UseChatOptions {
-  // 任务 UUID
   taskId: string;
-  // 滚动到底部的回调函数
   onScrollToBottom?: () => void;
 }
 
-// API 基础路径
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 
-/**
- * 生成消息 ID
- */
 const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 };
 
-/**
- * AI 对话 composable
- */
 export function useChat(options: UseChatOptions) {
   const { onScrollToBottom } = options;
 
-  // 当前任务 ID（响应式，支持切换任务）
   const currentTaskId = ref(options.taskId);
-
-  // 消息列表
   const messages = ref<ChatMessage[]>([]);
-
-  // 输入框内容
   const inputValue = ref('');
-
-  // 是否正在加载
   const isLoading = ref(false);
-
-  // 是否已加载历史消息
   const historyLoaded = ref(false);
 
-  // 当前流式请求的取消函数
   let abortCurrentRequest: (() => void) | null = null;
 
   // 工具调用状态（callId -> status）
   const toolCallStates = ref<Map<string, ToolCallStatus>>(new Map());
 
-  // 工具调用详情（callId -> ToolCallSegment，用于构建最终段落）
-  const toolCallDetails = ref<Map<string, ToolCallSegment>>(new Map());
-
-  /**
-   * 设置任务 ID（切换任务时调用）
-   */
   const setTaskId = (newTaskId: string) => {
     currentTaskId.value = newTaskId;
     historyLoaded.value = false;
   };
 
-  /**
-   * 滚动到底部（带 0ms 延迟确保 DOM 更新完成）
-   */
   const scrollToBottom = async () => {
     await nextTick();
     setTimeout(() => {
@@ -92,28 +64,17 @@ export function useChat(options: UseChatOptions) {
     }, 0);
   };
 
-  // 节流滚动的定时器和标志
+  // 节流滚动
   let throttleTimer: ReturnType<typeof setTimeout> | null = null;
   let pendingScroll = false;
 
-  /**
-   * 节流滚动到底部（用于 SSE 流式输出，500ms 触发一次）
-   */
   const throttledScrollToBottom = async () => {
-    // 标记有待处理的滚动
     pendingScroll = true;
-
-    // 如果已有定时器，等待执行
     if (throttleTimer) return;
-
-    // 立即执行一次
     await scrollToBottom();
     pendingScroll = false;
-
-    // 设置节流定时器
     throttleTimer = setTimeout(async () => {
       throttleTimer = null;
-      // 如果有待处理的滚动，执行一次
       if (pendingScroll) {
         await scrollToBottom();
         pendingScroll = false;
@@ -121,18 +82,21 @@ export function useChat(options: UseChatOptions) {
     }, 500);
   };
 
-  /**
-   * 获取 token
-   */
   const getToken = () => localStorage.getItem('forgeToken') || '';
 
   /**
-   * 将后端 Message 转换为前端 ChatMessage
+   * 将后端 FlatMessage 转换为前端 ChatMessage
    */
-  const convertMessage = (msg: Message): ChatMessage => ({
+  const convertMessage = (msg: FlatMessage): ChatMessage => ({
     id: msg.id?.toString() || generateId(),
     role: msg.role as 'user' | 'assistant',
+    type: msg.type || 'chat',
     content: msg.content,
+    callId: msg.callId,
+    toolName: msg.toolName,
+    arguments: msg.arguments,
+    result: msg.result,
+    success: msg.success,
     timestamp: new Date(msg.createdAt).getTime(),
   });
 
@@ -143,141 +107,92 @@ export function useChat(options: UseChatOptions) {
     messages.value.push({
       id: generateId(),
       role: 'user',
+      type: 'chat',
       content,
       timestamp: Date.now(),
     });
   };
 
   /**
-   * 添加 AI 消息（空内容，后续流式填充）
+   * 添加 AI 消息
    */
-  const addAssistantMessage = (segments: MessageSegment[] = []) => {
-    const msg: ChatMessage = {
+  const addAssistantMessage = (msg: Partial<ChatMessage> = {}): ChatMessage => {
+    const newMsg: ChatMessage = {
       id: generateId(),
       role: 'assistant',
-      content: segments,
+      type: msg.type || 'chat',
+      content: msg.content || '',
+      callId: msg.callId,
+      toolName: msg.toolName,
+      arguments: msg.arguments,
+      result: msg.result,
+      success: msg.success,
       timestamp: Date.now(),
     };
-    messages.value.push(msg);
-    return msg;
-  };
-
-  /**
-   * 更新最后一条 AI 消息的内容
-   */
-  const updateLastAssistantSegments = (segments: MessageSegment[]) => {
-    const lastMsg = messages.value[messages.value.length - 1];
-    if (lastMsg && lastMsg.role === 'assistant') {
-      lastMsg.content = [...segments];
-    }
+    messages.value.push(newMsg);
+    return newMsg;
   };
 
   /**
    * 加载历史消息
-   * 如果任务正在运行，会继续接收流式输出
    */
   const loadHistory = async () => {
     if (historyLoaded.value) return;
 
     isLoading.value = true;
-
-    // 清空工具调用状态
     toolCallStates.value.clear();
-    toolCallDetails.value.clear();
-
-    // 用于收集正在进行的 LLM 回复段落
-    const segments: MessageSegment[] = [];
-    let currentType: string | null = null;
-    let isReceivingStream = false;
-
-    // 合并段落和工具调用，更新 UI
-    const updateUI = () => {
-      const allSegments: MessageSegment[] = [...segments];
-      for (const toolCall of toolCallDetails.value.values()) {
-        allSegments.push(toolCall);
-      }
-      updateLastAssistantSegments(allSegments);
-    };
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
       body: { loadHistory: true },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
+        console.log('[SSE loadHistory]', chunk.type, chunk.data);
+
         if (chunk.type === 'history' && Array.isArray(chunk.data)) {
-          // 历史消息
-          const historyMessages = chunk.data as Message[];
+          // 历史消息（扁平格式）
+          const historyMessages = chunk.data as FlatMessage[];
           messages.value = historyMessages.map(convertMessage);
           await scrollToBottom();
         } else if (chunk.type === 'tool_call_start' && chunk.data) {
           // 工具调用开始（任务正在运行）
           const data = chunk.data as ToolCallStartData;
-
-          if (!isReceivingStream) {
-            isReceivingStream = true;
-            addAssistantMessage();
-          }
-
           toolCallStates.value.set(data.callId, 'running');
-          toolCallDetails.value.set(data.callId, {
+          addAssistantMessage({
             type: 'tool_call',
             callId: data.callId,
             toolName: data.toolName,
             arguments: {},
             success: false,
           });
-          updateUI();
           await throttledScrollToBottom();
         } else if (chunk.type === 'tool_call_result' && chunk.data) {
-          // 工具调用结果（任务正在运行）
+          // 工具调用结果
           const data = chunk.data as ToolCallResultData;
-
           toolCallStates.value.set(data.callId, data.success ? 'success' : 'failed');
-          const toolCall = toolCallDetails.value.get(data.callId);
-          if (toolCall) {
-            toolCall.success = data.success;
-            toolCall.result = data.result;
-            toolCall.error = data.error;
+          // 更新对应的工具调用消息
+          const toolMsg = messages.value.find(
+            (m) => m.type === 'tool_call' && m.callId === data.callId
+          );
+          if (toolMsg) {
+            toolMsg.success = data.success;
+            toolMsg.result = data.result;
           }
-          updateUI();
           await throttledScrollToBottom();
-        } else if (
-          ['thinking', 'chat', 'tool'].includes(chunk.type) &&
-          typeof chunk.data === 'string'
-        ) {
-          // 正在进行的流式输出（任务正在运行）
-          const chunkType = chunk.type as 'thinking' | 'chat' | 'tool';
-          const chunkContent = chunk.data;
-
-          // 第一次收到流式内容时，添加一个空的 assistant 消息
-          if (!isReceivingStream) {
-            isReceivingStream = true;
-            addAssistantMessage();
-          }
-
-          if (currentType !== chunkType) {
-            // 开始新段落
-            segments.push({ type: chunkType, content: chunkContent });
-            currentType = chunkType;
+        } else if (chunk.type === 'chat' && typeof chunk.data === 'string') {
+          // 流式文本输出
+          const lastMsg = messages.value[messages.value.length - 1];
+          if (lastMsg && lastMsg.role === 'assistant' && lastMsg.type === 'chat') {
+            lastMsg.content += chunk.data;
           } else {
-            // 拼接到当前段落
-            const lastSegment = segments[segments.length - 1];
-            if (lastSegment && lastSegment.type !== 'tool_call') {
-              (lastSegment as { content: string }).content += chunkContent;
-            }
+            addAssistantMessage({ type: 'chat', content: chunk.data });
           }
-
-          updateUI();
           await throttledScrollToBottom();
         } else if (chunk.type === 'error' && chunk.data) {
           const data = chunk.data as { message: string };
           console.error('加载历史消息失败:', data.message);
-          if (isReceivingStream) {
-            segments.push({ type: 'error', content: data.message });
-            updateUI();
-          }
+          addAssistantMessage({ type: 'error', content: data.message });
         }
-        // done 类型表示结束
       },
       onComplete: () => {
         isLoading.value = false;
@@ -301,118 +216,85 @@ export function useChat(options: UseChatOptions) {
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading.value) return;
 
-    // 添加用户消息
     addUserMessage(content);
     await scrollToBottom();
 
-    // 开始加载
     isLoading.value = true;
-
-    // 清空工具调用状态
     toolCallStates.value.clear();
-    toolCallDetails.value.clear();
 
-    // 添加空的 AI 消息，用于流式填充
-    addAssistantMessage();
-
-    // 用于收集 LLM 回复的段落（不包含工具调用，工具调用单独处理）
-    const segments: MessageSegment[] = [];
-    let currentType: string | null = null;
-
-    // 合并段落和工具调用，更新 UI
-    const updateUI = () => {
-      // 将工具调用段落插入到合适的位置
-      const allSegments: MessageSegment[] = [...segments];
-      // 工具调用段落添加到末尾（实际顺序由后端保存时决定）
-      for (const toolCall of toolCallDetails.value.values()) {
-        allSegments.push(toolCall);
-      }
-      updateLastAssistantSegments(allSegments);
-    };
+    // 当前正在流式输出的消息
+    let currentStreamMsg: ChatMessage | null = null;
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
       body: { content },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
-        // 处理工具调用开始
+        console.log('[SSE sendMessage]', chunk.type, chunk.data);
+
         if (chunk.type === 'tool_call_start' && chunk.data) {
           const data = chunk.data as ToolCallStartData;
-          // 更新工具调用状态
+          // 结束当前流式消息
+          currentStreamMsg = null;
+          // 添加工具调用消息
           toolCallStates.value.set(data.callId, 'running');
-          // 创建工具调用段落
-          toolCallDetails.value.set(data.callId, {
+          addAssistantMessage({
             type: 'tool_call',
             callId: data.callId,
             toolName: data.toolName,
             arguments: {},
             success: false,
           });
-          updateUI();
           await throttledScrollToBottom();
           return;
         }
 
-        // 处理工具调用结果
         if (chunk.type === 'tool_call_result' && chunk.data) {
           const data = chunk.data as ToolCallResultData;
-          // 更新工具调用状态
           toolCallStates.value.set(data.callId, data.success ? 'success' : 'failed');
-          // 更新工具调用详情
-          const toolCall = toolCallDetails.value.get(data.callId);
-          if (toolCall) {
-            toolCall.success = data.success;
-            toolCall.result = data.result;
-            toolCall.error = data.error;
+          // 更新对应的工具调用消息
+          const toolMsg = messages.value.find(
+            (m) => m.type === 'tool_call' && m.callId === data.callId
+          );
+          if (toolMsg) {
+            toolMsg.success = data.success;
+            toolMsg.result = data.result;
           }
-          updateUI();
           await throttledScrollToBottom();
           return;
         }
 
-        // 处理流式内容（thinking/chat/tool）
-        if (['thinking', 'chat', 'tool'].includes(chunk.type) && typeof chunk.data === 'string') {
-          const chunkType = chunk.type as 'thinking' | 'chat' | 'tool';
-          const chunkContent = chunk.data;
-
-          if (currentType !== chunkType) {
-            // 开始新段落
-            segments.push({ type: chunkType, content: chunkContent });
-            currentType = chunkType;
+        if (chunk.type === 'chat' && typeof chunk.data === 'string') {
+          if (!currentStreamMsg) {
+            // 开始新的流式消息
+            currentStreamMsg = addAssistantMessage({ type: 'chat', content: chunk.data });
           } else {
-            // 拼接到当前段落
-            const lastSegment = segments[segments.length - 1];
-            if (lastSegment && lastSegment.type !== 'tool_call') {
-              (lastSegment as { content: string }).content += chunkContent;
-            }
+            // 追加到当前流式消息
+            currentStreamMsg.content += chunk.data;
           }
-
-          updateUI();
           await throttledScrollToBottom();
           return;
         }
 
-        // 处理错误
         if (chunk.type === 'error' && chunk.data) {
           const data = chunk.data as { message: string };
-          segments.push({ type: 'error', content: data.message });
-          updateUI();
+          currentStreamMsg = null;
+          addAssistantMessage({ type: 'error', content: data.message });
         }
 
-        // done 类型表示结束，不需要特殊处理
+        if (chunk.type === 'done') {
+          currentStreamMsg = null;
+        }
       },
       onComplete: async () => {
         isLoading.value = false;
         abortCurrentRequest = null;
-        // 完成时确保滚动到底部
         await scrollToBottom();
-        // 乐观更新：更新任务的 updatedAt 并移动到列表最前面
         const taskStore = useTaskStore();
         taskStore.touchTask(currentTaskId.value);
       },
       onError: (error) => {
-        segments.push({ type: 'error', content: `请求失败：${error.message}` });
-        updateUI();
+        addAssistantMessage({ type: 'error', content: `请求失败：${error.message}` });
         isLoading.value = false;
         abortCurrentRequest = null;
       },
@@ -422,72 +304,48 @@ export function useChat(options: UseChatOptions) {
     await promise;
   };
 
-  /**
-   * 处理输入框发送
-   */
   const handleSend = async () => {
     const content = inputValue.value.trim();
     if (!content) return;
-
     inputValue.value = '';
     await sendMessage(content);
   };
 
-  /**
-   * 初始化：检查是否有初始消息，决定是创建新任务还是加载历史
-   */
   const init = async () => {
     const taskId = currentTaskId.value;
     const initKey = `task_${taskId}_init`;
     const initMessage = sessionStorage.getItem(initKey);
 
     if (initMessage) {
-      // 有初始消息，可能是新任务或从 Forge 创建的任务
       try {
-        // 尝试创建任务（如果任务已存在会返回 400）
         const task = await createTask({
           id: taskId,
           firstMessage: initMessage,
         });
-
-        // 创建成功，添加到 TaskStore
         const taskStore = useTaskStore();
         taskStore.addTask(task);
         taskStore.setCurrentTask(taskId);
       } catch {
-        // 任务可能已存在（从 Forge 创建），忽略错误
         console.log('任务可能已存在，继续发送消息');
         const taskStore = useTaskStore();
         taskStore.setCurrentTask(taskId);
       }
 
-      // 清除 sessionStorage
       sessionStorage.removeItem(initKey);
-
-      // 标记历史已加载（新任务没有历史）
       historyLoaded.value = true;
-
-      // 发送初始消息
       await sendMessage(initMessage);
     } else {
-      // 没有初始消息，说明是已有任务，加载历史
       const taskStore = useTaskStore();
       taskStore.setCurrentTask(taskId);
       await loadHistory();
     }
   };
 
-  /**
-   * 清空对话
-   */
   const clearMessages = () => {
     messages.value = [];
     historyLoaded.value = false;
   };
 
-  /**
-   * 取消当前请求
-   */
   const cancelRequest = () => {
     if (abortCurrentRequest) {
       abortCurrentRequest();
@@ -496,32 +354,16 @@ export function useChat(options: UseChatOptions) {
     }
   };
 
-  /**
-   * 获取消息的纯文本内容（用于显示）
-   */
   const getMessageText = (msg: ChatMessage): string => {
-    if (typeof msg.content === 'string') {
-      return msg.content;
-    }
-    // assistant 消息：合并所有段落（排除 tool_call 类型）
-    return msg.content
-      .filter(
-        (seg): seg is { type: 'thinking' | 'chat' | 'tool' | 'error'; content: string } =>
-          seg.type !== 'tool_call'
-      )
-      .map((seg) => seg.content)
-      .join('\n');
+    return msg.content;
   };
 
   return {
-    // 状态
     messages,
     inputValue,
     isLoading,
     historyLoaded,
     toolCallStates,
-
-    // 方法
     init,
     setTaskId,
     loadHistory,

@@ -5,12 +5,12 @@
 // 任务状态枚举
 export type TaskStatus = 'running' | 'completed' | 'cancelled';
 
-// 消息类型枚举（LLM 输出的不同阶段）
-export type MessageType = 'thinking' | 'chat' | 'tool' | 'error' | 'tool_call';
+// 消息类型枚举（新格式，不再包含 tool）
+export type MessageType = 'chat' | 'thinking' | 'tool_call' | 'error';
 
-// 基础消息段落（thinking/chat/tool/error）
+// 基础消息段落（thinking/chat/error）
 export interface BaseMessageSegment {
-  type: 'thinking' | 'chat' | 'tool' | 'error';
+  type: 'thinking' | 'chat' | 'error';
   content: string;
 }
 
@@ -46,7 +46,22 @@ export interface ToolCallResultData {
 // 消息角色
 export type MessageRole = 'user' | 'assistant' | 'system';
 
-// 消息类型
+// 扁平消息类型（新格式，每条消息一个类型）
+export interface FlatMessage {
+  id: number;
+  role: MessageRole;
+  type: MessageType;
+  content: string;
+  // 工具调用专用字段
+  callId?: string;
+  toolName?: string;
+  arguments?: Record<string, unknown>;
+  result?: unknown;
+  success?: boolean;
+  createdAt: string;
+}
+
+// 旧消息类型（兼容）
 export interface Message {
   id: number;
   role: MessageRole;

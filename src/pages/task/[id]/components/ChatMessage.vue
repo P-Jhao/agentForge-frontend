@@ -1,20 +1,27 @@
 <script setup lang="ts">
 /**
  * 单条聊天消息组件
- * 展示用户或 AI 的消息
- * 支持 assistant 消息的多段落显示（thinking/chat/tool/error/tool_call）
+ * 扁平格式：每条消息独立渲染，不再嵌套段落数组
  */
 import { computed } from 'vue';
 import { NSpin, NAvatar } from 'naive-ui';
 import { useThemeStore, useUserStore } from '@/stores';
-import type { MessageSegment, ToolCallSegment, TaskForge } from '@/types';
+import type { TaskForge } from '@/types';
 import ToolCallItem from './ToolCallItem.vue';
 import type { ToolCallStatus } from './ToolCallItem.vue';
 
+// 扁平消息类型
 interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string | MessageSegment[];
+  type: 'chat' | 'thinking' | 'tool_call' | 'error';
+  content: string;
+  // 工具调用专用字段
+  callId?: string;
+  toolName?: string;
+  arguments?: Record<string, unknown>;
+  result?: unknown;
+  success?: boolean;
 }
 
 interface Props {
@@ -50,25 +57,13 @@ const userInitial = computed(() => {
 });
 
 const isUserMessage = computed(() => props.message.role === 'user');
+const isToolCall = computed(() => props.message.type === 'tool_call');
 
-// 获取消息内容（统一为字符串或段落数组）
-const messageContent = computed(() => {
-  if (typeof props.message.content === 'string') {
-    return props.message.content;
-  }
-  return props.message.content;
-});
-
-// 是否为段落数组
-const isSegments = computed(() => Array.isArray(messageContent.value));
-
-// 是否显示加载状态（assistant 消息内容为空时）
+// 是否显示加载状态（assistant chat 消息内容为空时）
 const showLoading = computed(() => {
   if (props.message.role !== 'assistant') return false;
-  if (typeof props.message.content === 'string') {
-    return !props.message.content;
-  }
-  return props.message.content.length === 0;
+  if (props.message.type !== 'chat') return false;
+  return !props.message.content;
 });
 
 const containerClass = computed(() => ({
@@ -89,49 +84,41 @@ const messageClass = computed(() => {
   return themeStore.isDark ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800';
 });
 
-// 获取段落的样式类
-const getSegmentClass = (type: string) => {
-  switch (type) {
+// 获取消息的样式类（根据类型）
+const contentClass = computed(() => {
+  switch (props.message.type) {
     case 'thinking':
       return themeStore.isDark ? 'text-gray-400 italic' : 'text-gray-500 italic';
     case 'error':
       return 'text-red-500';
-    case 'tool':
-      return themeStore.isDark ? 'text-blue-400' : 'text-blue-600';
     default:
       return '';
   }
-};
+});
 
-// 获取段落的前缀标签
-const getSegmentLabel = (type: string) => {
-  switch (type) {
+// 获取消息的前缀标签
+const contentLabel = computed(() => {
+  switch (props.message.type) {
     case 'thinking':
       return '💭 ';
-    case 'tool':
-      return '🔧 ';
     case 'error':
       return '❌ ';
     default:
       return '';
   }
-};
-
-// 判断是否为工具调用段落
-const isToolCallSegment = (segment: MessageSegment): segment is ToolCallSegment => {
-  return segment.type === 'tool_call';
-};
+});
 
 // 获取工具调用的状态
-const getToolCallStatus = (segment: ToolCallSegment): ToolCallStatus => {
+const toolCallStatus = computed((): ToolCallStatus => {
+  if (!props.message.callId) return 'failed';
   // 优先使用实时状态（流式输出时）
-  const realtimeStatus = props.toolCallStates.get(segment.callId);
+  const realtimeStatus = props.toolCallStates.get(props.message.callId);
   if (realtimeStatus) {
     return realtimeStatus;
   }
   // 否则使用保存的状态（历史消息）
-  return segment.success ? 'success' : 'failed';
-};
+  return props.message.success ? 'success' : 'failed';
+});
 </script>
 
 <template>
@@ -163,35 +150,20 @@ const getToolCallStatus = (segment: ToolCallSegment): ToolCallStatus => {
       <!-- 加载状态 -->
       <NSpin v-if="showLoading" size="small" />
 
-      <!-- 用户消息（纯字符串） -->
-      <p v-else-if="isUserMessage" class="text-sm whitespace-pre-wrap">
-        {{ messageContent }}
-      </p>
+      <!-- 工具调用消息 -->
+      <ToolCallItem
+        v-else-if="isToolCall"
+        :call-id="message.callId || ''"
+        :tool-name="message.toolName || ''"
+        :status="toolCallStatus"
+        :arguments="message.arguments || {}"
+        :result="message.result"
+      />
 
-      <!-- AI 消息（段落数组） -->
-      <div v-else-if="isSegments" class="space-y-2">
-        <template v-for="(segment, index) in messageContent as MessageSegment[]" :key="index">
-          <!-- 工具调用段落 -->
-          <ToolCallItem
-            v-if="isToolCallSegment(segment)"
-            :call-id="segment.callId"
-            :tool-name="segment.toolName"
-            :status="getToolCallStatus(segment)"
-            :arguments="segment.arguments"
-            :result="segment.result"
-            :error="segment.error"
-          />
-          <!-- 普通文本段落 -->
-          <div v-else class="text-sm whitespace-pre-wrap" :class="getSegmentClass(segment.type)">
-            <span v-if="segment.type !== 'chat'">{{ getSegmentLabel(segment.type) }}</span>
-            {{ segment.content }}
-          </div>
-        </template>
-      </div>
-
-      <!-- AI 消息（纯字符串，兼容旧数据） -->
-      <p v-else class="text-sm whitespace-pre-wrap">
-        {{ messageContent }}
+      <!-- 普通文本消息 -->
+      <p v-else class="text-sm whitespace-pre-wrap" :class="contentClass">
+        <span v-if="contentLabel">{{ contentLabel }}</span>
+        {{ message.content }}
       </p>
     </div>
   </div>
