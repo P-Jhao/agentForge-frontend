@@ -12,7 +12,7 @@ import type { FlatMessage, TaskSSEChunk, ToolCallStartData, ToolCallResultData }
 export type ToolCallStatus = 'running' | 'success' | 'failed';
 
 // 消息类型
-export type MessageType = 'user' | 'chat' | 'thinking' | 'tool_call' | 'error';
+export type MessageType = 'user' | 'chat' | 'thinking' | 'tool_call' | 'summary' | 'error';
 
 // 基础消息数据
 interface BaseMessageData {
@@ -26,9 +26,9 @@ export interface UserMessageData extends BaseMessageData {
   content: string;
 }
 
-// 文本消息数据（chat/thinking/error）
+// 文本消息数据（chat/thinking/summary/error）
 export interface TextMessageData extends BaseMessageData {
-  type: 'chat' | 'thinking' | 'error';
+  type: 'chat' | 'thinking' | 'summary' | 'error';
   content: string;
 }
 
@@ -130,9 +130,12 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 添加文本消息（chat/thinking/error）
+   * 添加文本消息（chat/thinking/summary/error）
    */
-  const addTextMessage = (type: 'chat' | 'thinking' | 'error', content: string): RenderItem => {
+  const addTextMessage = (
+    type: 'chat' | 'thinking' | 'summary' | 'error',
+    content: string
+  ): RenderItem => {
     const id = generateId();
     const data = reactive<TextMessageData>({
       id,
@@ -206,9 +209,9 @@ export function useChat(options: UseChatOptions) {
       return true;
     }
 
-    // 文本消息（chat/thinking/error）
-    if (['chat', 'thinking'].includes(type) && typeof data === 'string') {
-      const msgType = type as 'chat' | 'thinking';
+    // 文本消息（chat/thinking/summary）
+    if (['chat', 'thinking', 'summary'].includes(type) && typeof data === 'string') {
+      const msgType = type as 'chat' | 'thinking' | 'summary';
 
       // 如果当前有流式消息且类型相同，追加内容
       if (currentStreamItem && currentStreamItem.type === msgType) {
