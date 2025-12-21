@@ -27,10 +27,14 @@ const generateUUID = () => {
 /**
  * 发送消息，跳转到任务页
  */
-const handleSend = (message: string) => {
+const handleSend = (message: string, enableThinking?: boolean) => {
   const taskId = generateUUID();
   // 将初始消息存储到 sessionStorage，供任务页读取
   sessionStorage.setItem(`task_${taskId}_init`, message);
+  // 存储深度思考设置
+  if (enableThinking !== undefined) {
+    localStorage.setItem('enableThinking', String(enableThinking));
+  }
   askInput.value = '';
   router.push(`/task/${taskId}`);
 };

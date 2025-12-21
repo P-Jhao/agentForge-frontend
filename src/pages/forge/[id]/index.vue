@@ -112,7 +112,7 @@ const handleDelete = async () => {
 };
 
 // 发送消息创建任务
-const handleSend = async (content: string) => {
+const handleSend = async (content: string, enableThinking?: boolean) => {
   if (!forge.value || sending.value) return;
 
   sending.value = true;
@@ -125,6 +125,11 @@ const handleSend = async (content: string) => {
 
     // 将初始消息存入 sessionStorage，供 useChat.init() 使用
     sessionStorage.setItem(`task_${taskUuid}_init`, content);
+
+    // 存储深度思考设置
+    if (enableThinking !== undefined) {
+      localStorage.setItem('enableThinking', String(enableThinking));
+    }
 
     // 刷新任务列表
     await taskStore.fetchTasks();

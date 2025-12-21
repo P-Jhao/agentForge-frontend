@@ -27,12 +27,12 @@ const props = withDefaults(defineProps<Props>(), {
 // v-model
 const modelValue = defineModel<string>({ default: '' });
 
-// 深度思考开关状态
-const enableThinking = ref(true);
+// 深度思考开关状态（默认关闭）
+const enableThinking = ref(false);
 
 // Emits
 const emit = defineEmits<{
-  send: [value: string];
+  send: [value: string, enableThinking: boolean];
 }>();
 
 // 初始化深度思考状态
@@ -55,7 +55,7 @@ const handleThinkingChange = (value: boolean) => {
 const handleSend = () => {
   const value = modelValue.value.trim();
   if (!value || props.disabled || props.loading) return;
-  emit('send', value);
+  emit('send', value, enableThinking.value);
 };
 
 /**

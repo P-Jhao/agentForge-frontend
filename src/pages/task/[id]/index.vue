@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
         placeholder="输入消息..."
         :loading="isLoading"
         @update:model-value="inputValue = $event"
-        @send="handleSend"
+        @send="(content, enableThinking) => handleSend(content, enableThinking)"
       />
     </div>
   </div>

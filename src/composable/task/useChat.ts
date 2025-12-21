@@ -324,7 +324,7 @@ export function useChat(options: UseChatOptions) {
   /**
    * 发送消息并获取流式响应
    */
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, enableThinking?: boolean) => {
     if (!content.trim() || isLoading.value) return;
 
     addUserMessage(content);
@@ -333,12 +333,12 @@ export function useChat(options: UseChatOptions) {
     isLoading.value = true;
     currentStreamItem = null;
 
-    // 从 localStorage 获取深度思考设置
-    const enableThinking = localStorage.getItem('enableThinking') !== 'false';
+    // 优先使用传入的参数，否则从 localStorage 获取
+    const thinkingEnabled = enableThinking ?? localStorage.getItem('enableThinking') === 'true';
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
-      body: { content, enableThinking },
+      body: { content, enableThinking: thinkingEnabled },
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
         console.log('[SSE sendMessage]', chunk.type, chunk.data);
@@ -365,11 +365,11 @@ export function useChat(options: UseChatOptions) {
     await promise;
   };
 
-  const handleSend = async () => {
-    const content = inputValue.value.trim();
-    if (!content) return;
+  const handleSend = async (content?: string, enableThinking?: boolean) => {
+    const messageContent = content ?? inputValue.value.trim();
+    if (!messageContent) return;
     inputValue.value = '';
-    await sendMessage(content);
+    await sendMessage(messageContent, enableThinking);
   };
 
   const init = async () => {
