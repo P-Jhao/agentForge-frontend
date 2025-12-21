@@ -198,6 +198,10 @@ export function useChat(options: UseChatOptions) {
         toolData.success = resultData.success;
         toolData.result = resultData.result;
         toolData.status = resultData.success ? 'success' : 'failed';
+        // 从 tool_call_result 中获取参数（工具 LLM 决定的参数）
+        if (resultData.args) {
+          toolData.arguments = resultData.args;
+        }
       }
       return true;
     }

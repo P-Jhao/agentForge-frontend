@@ -41,6 +41,7 @@ export interface ToolCallResultData {
   success: boolean;
   result?: unknown;
   error?: string;
+  args?: Record<string, unknown>; // 工具 LLM 决定的参数
 }
 
 // 消息角色
