@@ -20,10 +20,19 @@ interface BaseMessageData {
   type: MessageType;
 }
 
+// 用户上传的文件信息
+export interface UploadedFileInfo {
+  filePath: string;
+  originalName: string;
+  size: number;
+  url: string;
+}
+
 // 用户消息数据
 export interface UserMessageData extends BaseMessageData {
   type: 'user';
   content: string;
+  files?: UploadedFileInfo[];
 }
 
 // 文本消息数据（chat/thinking/summary/error）
@@ -117,12 +126,13 @@ export function useChat(options: UseChatOptions) {
   /**
    * 添加用户消息
    */
-  const addUserMessage = (content: string): RenderItem => {
+  const addUserMessage = (content: string, fileInfo?: UploadedFileInfo): RenderItem => {
     const id = generateId();
     const data = reactive<UserMessageData>({
       id,
       type: 'user',
       content,
+      files: fileInfo ? [fileInfo] : undefined,
     });
     const item: RenderItem = { id, type: 'user', data };
     renderItems.value.push(item);
@@ -251,6 +261,7 @@ export function useChat(options: UseChatOptions) {
         id,
         type: 'user',
         content: msg.content,
+        files: msg.files,
       });
       return { id, type: 'user', data };
     }
@@ -327,10 +338,17 @@ export function useChat(options: UseChatOptions) {
   /**
    * 发送消息并获取流式响应
    */
-  const sendMessage = async (content: string, enableThinking?: boolean) => {
+  const sendMessage = async (
+    content: string,
+    enableThinking?: boolean,
+    fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+  ) => {
     if (!content.trim() || isLoading.value) return;
 
-    addUserMessage(content);
+    console.log('[useChat] sendMessage 被调用', { content, enableThinking, fileInfo });
+
+    // 添加用户消息（包含文件信息）
+    addUserMessage(content, fileInfo);
     await scrollToBottom();
 
     isLoading.value = true;
@@ -339,9 +357,20 @@ export function useChat(options: UseChatOptions) {
     // 优先使用传入的参数，否则从 localStorage 获取
     const thinkingEnabled = enableThinking ?? localStorage.getItem('enableThinking') === 'true';
 
+    // 构建请求体
+    const body: Record<string, unknown> = {
+      content,
+      enableThinking: thinkingEnabled,
+    };
+
+    // 如果有文件，添加到请求体
+    if (fileInfo) {
+      body.files = [fileInfo];
+    }
+
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
-      body: { content, enableThinking: thinkingEnabled },
+      body,
       headers: { Authorization: `Bearer ${getToken()}` },
       onChunk: async (chunk) => {
         console.log('[SSE sendMessage]', chunk.type, chunk.data);
@@ -368,19 +397,36 @@ export function useChat(options: UseChatOptions) {
     await promise;
   };
 
-  const handleSend = async (content?: string, enableThinking?: boolean) => {
+  const handleSend = async (
+    content?: string,
+    enableThinking?: boolean,
+    fileInfo?: UploadedFileInfo
+  ) => {
+    console.log('[useChat] handleSend 被调用', { content, enableThinking, fileInfo });
     const messageContent = content ?? inputValue.value.trim();
     if (!messageContent) return;
     inputValue.value = '';
-    await sendMessage(messageContent, enableThinking);
+    await sendMessage(messageContent, enableThinking, fileInfo);
   };
 
   const init = async () => {
     const taskId = currentTaskId.value;
     const initKey = `task_${taskId}_init`;
+    const fileKey = `task_${taskId}_file`;
     const initMessage = sessionStorage.getItem(initKey);
 
     if (initMessage) {
+      // 读取文件信息（如果有）
+      let fileInfo: UploadedFileInfo | undefined;
+      const fileInfoStr = sessionStorage.getItem(fileKey);
+      if (fileInfoStr) {
+        try {
+          fileInfo = JSON.parse(fileInfoStr);
+        } catch {
+          // 解析失败，忽略
+        }
+      }
+
       try {
         const task = await createTask({
           id: taskId,
@@ -395,9 +441,13 @@ export function useChat(options: UseChatOptions) {
         taskStore.setCurrentTask(taskId);
       }
 
+      // 清理 sessionStorage
       sessionStorage.removeItem(initKey);
+      sessionStorage.removeItem(fileKey);
+
       historyLoaded.value = true;
-      await sendMessage(initMessage);
+      // 发送消息时带上文件信息
+      await sendMessage(initMessage, undefined, fileInfo);
     } else {
       const taskStore = useTaskStore();
       taskStore.setCurrentTask(taskId);

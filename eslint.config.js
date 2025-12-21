@@ -43,6 +43,11 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        // 文件相关全局类型
+        File: 'readonly',
+        FileList: 'readonly',
+        DragEvent: 'readonly',
+        FormData: 'readonly',
       },
     },
     rules: {

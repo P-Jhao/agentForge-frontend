@@ -47,6 +47,14 @@ export interface ToolCallResultData {
 // 消息角色
 export type MessageRole = 'user' | 'assistant' | 'system';
 
+// 用户上传的文件信息
+export interface UploadedFileInfo {
+  filePath: string;
+  originalName: string;
+  size: number;
+  url: string;
+}
+
 // 扁平消息类型（新格式，每条消息一个类型）
 export interface FlatMessage {
   id: number;
@@ -59,6 +67,8 @@ export interface FlatMessage {
   arguments?: Record<string, unknown>;
   result?: unknown;
   success?: boolean;
+  // 用户上传的文件
+  files?: UploadedFileInfo[];
   createdAt: string;
 }
 

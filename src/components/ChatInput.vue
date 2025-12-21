@@ -1,12 +1,19 @@
 <script setup lang="ts">
 /**
  * 聊天输入框组件
- * 统一的卡片式输入框，发送按钮在右下角
- * 使用 CSS 类自动适配深浅主题
+ * 统一的卡片式输入框，支持文件上传（点击/拖拽）
  */
-import { NInput, NButton, NIcon, NSwitch, NTooltip } from 'naive-ui';
-import { SendOutline, SparklesOutline } from '@vicons/ionicons5';
-import { ref, onMounted } from 'vue';
+import { NInput, NButton, NIcon, NSwitch, NTooltip, NUpload, useMessage } from 'naive-ui';
+import type { UploadFileInfo } from 'naive-ui';
+import {
+  SendOutline,
+  SparklesOutline,
+  AttachOutline,
+  CloseCircle,
+  DocumentTextOutline,
+} from '@vicons/ionicons5';
+import { ref, onMounted, computed } from 'vue';
+import { uploadChatFile } from '@/api/upload';
 
 // Props
 interface Props {
@@ -30,9 +37,95 @@ const modelValue = defineModel<string>({ default: '' });
 // 深度思考开关状态（默认关闭）
 const enableThinking = ref(false);
 
+// 已上传的文件信息
+const uploadedFile = ref<{
+  filePath: string;
+  originalName: string;
+  size: number;
+  url: string;
+} | null>(null);
+
+// 是否正在上传
+const uploading = ref(false);
+
+// 是否拖拽中
+const isDragging = ref(false);
+
+// 消息提示
+const message = useMessage();
+
+// 支持的文件扩展名（与 MCP 服务器支持的格式对应）
+const SUPPORTED_EXTENSIONS = [
+  // 文档格式（file-to-markdown-mcp）
+  '.pdf',
+  '.docx',
+  '.xlsx',
+  '.pptx',
+  // 纯文本格式（read-text-file-mcp）
+  '.txt',
+  '.log',
+  '.js',
+  '.ts',
+  '.jsx',
+  '.tsx',
+  '.py',
+  '.java',
+  '.c',
+  '.cpp',
+  '.h',
+  '.go',
+  '.rs',
+  '.rb',
+  '.php',
+  '.swift',
+  '.kt',
+  '.cs',
+  '.vue',
+  '.svelte',
+  '.json',
+  '.yaml',
+  '.yml',
+  '.xml',
+  '.csv',
+  '.tsv',
+  '.env',
+  '.ini',
+  '.toml',
+  '.conf',
+  '.config',
+  '.md',
+  '.markdown',
+  '.rst',
+  '.html',
+  '.css',
+  '.scss',
+  '.less',
+  '.sh',
+  '.bash',
+  '.zsh',
+  '.ps1',
+  '.bat',
+  '.cmd',
+];
+
+// 文件大小限制（字节）
+const FILE_SIZE_LIMITS: Record<string, number> = {
+  // 文档格式
+  '.pdf': 10 * 1024 * 1024, // 10MB
+  '.docx': 10 * 1024 * 1024, // 10MB
+  '.xlsx': 5 * 1024 * 1024, // 5MB
+  '.pptx': 15 * 1024 * 1024, // 15MB
+  // 纯文本格式默认 1MB
+};
+const DEFAULT_SIZE_LIMIT = 1 * 1024 * 1024; // 1MB
+
 // Emits
 const emit = defineEmits<{
-  send: [value: string, enableThinking: boolean];
+  send: [
+    value: string,
+    enableThinking: boolean,
+    fileInfo?: { filePath: string; originalName: string; size: number; url: string },
+  ];
 }>();
 
 // 初始化深度思考状态
@@ -50,12 +143,154 @@ const handleThinkingChange = (value: boolean) => {
 };
 
 /**
+ * 格式化文件大小
+ */
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
+
+/**
+ * 验证文件
+ */
+const validateFile = (file: File): string | null => {
+  // 检查文件扩展名
+  const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+  if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+    return `不支持的文件类型: ${ext}`;
+  }
+
+  // 检查文件大小
+  const sizeLimit = FILE_SIZE_LIMITS[ext] || DEFAULT_SIZE_LIMIT;
+  if (file.size > sizeLimit) {
+    const limitMB = (sizeLimit / (1024 * 1024)).toFixed(0);
+    return `${ext} 文件大小不能超过 ${limitMB}MB`;
+  }
+
+  return null;
+};
+
+/**
+ * 处理文件上传
+ */
+const handleFileUpload = async (file: File) => {
+  // 验证文件
+  const error = validateFile(file);
+  if (error) {
+    message.error(error);
+    return;
+  }
+
+  // 如果已有文件，先清除
+  if (uploadedFile.value) {
+    uploadedFile.value = null;
+  }
+
+  uploading.value = true;
+
+  try {
+    const result = await uploadChatFile(file);
+    uploadedFile.value = {
+      filePath: result.filePath,
+      originalName: result.originalName,
+      size: result.size,
+      url: result.url,
+    };
+    message.success('文件上传成功');
+  } catch (err) {
+    message.error((err as Error).message || '文件上传失败');
+  } finally {
+    uploading.value = false;
+  }
+};
+
+/**
+ * 处理 NUpload 的文件变化
+ */
+const handleUploadChange = (options: { file: UploadFileInfo }) => {
+  const rawFile = options.file.file;
+  if (rawFile) {
+    handleFileUpload(rawFile);
+  }
+};
+
+/**
+ * 移除已上传的文件
+ */
+const removeFile = () => {
+  uploadedFile.value = null;
+};
+
+/**
+ * 处理拖拽进入
+ */
+const handleDragEnter = (e: DragEvent) => {
+  e.preventDefault();
+  isDragging.value = true;
+};
+
+/**
+ * 处理拖拽离开
+ */
+const handleDragLeave = (e: DragEvent) => {
+  e.preventDefault();
+  isDragging.value = false;
+};
+
+/**
+ * 处理拖拽悬停
+ */
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault();
+};
+
+/**
+ * 处理拖拽放下
+ */
+const handleDrop = (e: DragEvent) => {
+  e.preventDefault();
+  isDragging.value = false;
+
+  const files = e.dataTransfer?.files;
+  if (files && files.length > 0) {
+    // 只处理第一个文件
+    const firstFile = files[0];
+    if (firstFile) {
+      handleFileUpload(firstFile);
+    }
+  }
+};
+
+/**
  * 处理发送
  */
 const handleSend = () => {
   const value = modelValue.value.trim();
   if (!value || props.disabled || props.loading) return;
-  emit('send', value, enableThinking.value);
+
+  // 发送消息，带上文件信息（如果有）
+  const fileInfo = uploadedFile.value
+    ? {
+      filePath: uploadedFile.value.filePath,
+      originalName: uploadedFile.value.originalName,
+      size: uploadedFile.value.size,
+      url: uploadedFile.value.url,
+    }
+    : undefined;
+
+  console.log('[ChatInput] handleSend', {
+    value,
+    enableThinking: enableThinking.value,
+    fileInfo,
+    uploadedFile: uploadedFile.value,
+  });
+
+  emit('send', value, enableThinking.value, fileInfo);
+
+  // 清空输入和文件
+  modelValue.value = '';
+  uploadedFile.value = null;
 };
 
 /**
@@ -74,10 +309,45 @@ const inputThemeOverrides = {
   colorFocus: 'transparent',
   colorDisabled: 'transparent',
 };
+
+// 是否可以发送
+const canSend = computed(() => {
+  return modelValue.value.trim() && !props.disabled && !props.loading && !uploading.value;
+});
 </script>
 
 <template>
-  <div class="chat-input-container input-container rounded-2xl border p-4">
+  <div
+    class="chat-input-container input-container rounded-2xl border p-4"
+    :class="{ 'border-primary border-2': isDragging }"
+    @dragenter="handleDragEnter"
+    @dragleave="handleDragLeave"
+    @dragover="handleDragOver"
+    @drop="handleDrop"
+  >
+    <!-- 已上传文件预览 -->
+    <div
+      v-if="uploadedFile"
+      class="mb-3 flex items-center gap-2 rounded-lg bg-gray-100 p-2 dark:bg-gray-800"
+    >
+      <NIcon :component="DocumentTextOutline" :size="18" class="text-gray-500" />
+      <span class="flex-1 truncate text-sm">{{ uploadedFile.originalName }}</span>
+      <span class="text-xs text-gray-400">{{ formatFileSize(uploadedFile.size) }}</span>
+      <NButton quaternary circle size="tiny" @click="removeFile">
+        <template #icon>
+          <NIcon :component="CloseCircle" />
+        </template>
+      </NButton>
+    </div>
+
+    <!-- 拖拽提示 -->
+    <div
+      v-if="isDragging"
+      class="bg-primary/10 pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl"
+    >
+      <span class="text-primary text-lg font-medium">释放以上传文件</span>
+    </div>
+
     <!-- 输入区域 -->
     <NInput
       v-model:value="modelValue"
@@ -90,10 +360,12 @@ const inputThemeOverrides = {
       class="chat-textarea"
       @keydown="handleKeydown"
     />
+
     <!-- 底部功能区 -->
     <div class="mt-3 flex items-center justify-between">
       <!-- 左侧功能按钮 -->
       <div class="flex items-center gap-2">
+        <!-- 深度思考开关 -->
         <NTooltip>
           <template #trigger>
             <div
@@ -106,14 +378,40 @@ const inputThemeOverrides = {
           </template>
           {{ enableThinking ? '已启用深度思考' : '已禁用深度思考' }}
         </NTooltip>
+
+        <!-- 文件上传按钮 -->
+        <NUpload
+          :show-file-list="false"
+          :disabled="disabled || uploading"
+          @change="handleUploadChange"
+        >
+          <NTooltip>
+            <template #trigger>
+              <NButton
+                quaternary
+                :loading="uploading"
+                :disabled="disabled"
+                class="rounded-lg px-3 py-2"
+              >
+                <template #icon>
+                  <NIcon :component="AttachOutline" :size="18" />
+                </template>
+                <span class="text-sm">上传文件</span>
+              </NButton>
+            </template>
+            支持拖拽上传，PDF/DOCX/PPTX 最大 10-15MB，其他文件最大 1MB
+          </NTooltip>
+        </NUpload>
+
         <slot name="actions"></slot>
       </div>
+
       <!-- 右侧发送按钮 -->
       <NButton
         type="primary"
         size="large"
         round
-        :disabled="!modelValue.trim() || disabled"
+        :disabled="!canSend"
         :loading="loading"
         class="btn-theme"
         @click="handleSend"
@@ -130,5 +428,10 @@ const inputThemeOverrides = {
 /* 输入框内边距调整 */
 .chat-textarea :deep(.n-input-wrapper) {
   padding: 0 !important;
+}
+
+/* 容器相对定位，用于拖拽提示 */
+.chat-input-container {
+  position: relative;
 }
 </style>

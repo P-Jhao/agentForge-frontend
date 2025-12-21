@@ -112,7 +112,11 @@ const handleDelete = async () => {
 };
 
 // 发送消息创建任务
-const handleSend = async (content: string, enableThinking?: boolean) => {
+const handleSend = async (
+  content: string,
+  enableThinking?: boolean,
+  fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+) => {
   if (!forge.value || sending.value) return;
 
   sending.value = true;
@@ -129,6 +133,11 @@ const handleSend = async (content: string, enableThinking?: boolean) => {
     // 存储深度思考设置
     if (enableThinking !== undefined) {
       localStorage.setItem('enableThinking', String(enableThinking));
+    }
+
+    // 存储文件信息（如果有）
+    if (fileInfo) {
+      sessionStorage.setItem(`task_${taskUuid}_file`, JSON.stringify(fileInfo));
     }
 
     // 刷新任务列表

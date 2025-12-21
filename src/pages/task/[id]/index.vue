@@ -43,6 +43,16 @@ const {
   onScrollToBottom: scrollToBottom,
 });
 
+// 处理发送事件
+const onSend = (
+  content: string,
+  enableThinking: boolean,
+  fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+) => {
+  console.log('[TaskPage] onSend 收到参数', { content, enableThinking, fileInfo });
+  handleSend(content, enableThinking, fileInfo);
+};
+
 // 监听 taskId 变化，切换任务时重新初始化
 watch(
   taskId,
@@ -86,7 +96,7 @@ onBeforeUnmount(() => {
         placeholder="输入消息..."
         :loading="isLoading"
         @update:model-value="inputValue = $event"
-        @send="(content, enableThinking) => handleSend(content, enableThinking)"
+        @send="onSend"
       />
     </div>
   </div>
