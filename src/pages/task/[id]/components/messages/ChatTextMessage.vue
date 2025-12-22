@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /**
  * AI 文本消息组件
- * 显示 AI 回复的文本内容，内容为空时显示加载状态
+ * 使用 Markdown 渲染内容，内容为空时显示加载状态
  */
 import { computed } from 'vue';
 import { NSpin } from 'naive-ui';
+import EMarkdown from '@/components/EMarkdown.vue';
 import type { TextMessageData } from '@/composable/task/useChat';
 
 const props = defineProps<{
@@ -17,5 +18,5 @@ const showLoading = computed(() => !props.data.content);
 
 <template>
   <NSpin v-if="showLoading" size="small" />
-  <p v-else class="text-sm whitespace-pre-wrap">{{ data.content }}</p>
+  <EMarkdown v-else :model-value="data.content" mode="preview" editor-id="chat-preview" />
 </template>
