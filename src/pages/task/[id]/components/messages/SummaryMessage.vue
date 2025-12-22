@@ -66,7 +66,7 @@ defineProps<{
   }
 }
 
-/* 内容区域 - 默认浅色模式 */
+/* 内容区域 */
 .summary-message {
   position: relative;
   padding: 1rem;
@@ -99,13 +99,15 @@ defineProps<{
   font-size: 0.875rem;
   line-height: 1.6;
 }
+</style>
 
-/* 深色模式适配 */
-:global(.dark) .summary-message {
-  background: rgb(31, 41, 55);
+<!-- 非 scoped 样式用于暗黑模式 -->
+<style>
+.dark .summary-message {
+  background: rgb(31, 41, 55) !important;
 }
 
-:global(.dark) .summary-header {
-  border-bottom-color: rgba(99, 102, 241, 0.3);
+.dark .summary-header {
+  border-bottom-color: rgba(99, 102, 241, 0.3) !important;
 }
 </style>
