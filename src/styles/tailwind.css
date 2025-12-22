@@ -395,9 +395,9 @@
     border-bottom-right-radius: 4px;
   }
 
-  /* AI 消息气泡 - 灰色（自适应深浅模式） */
+  /* AI 消息气泡 - 白色（自适应深浅模式） */
   .bubble-ai {
-    @apply bg-gray-100 text-gray-800;
+    @apply bg-white text-gray-800;
   }
 
   .dark .bubble-ai {

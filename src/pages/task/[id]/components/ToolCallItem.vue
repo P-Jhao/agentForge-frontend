@@ -41,7 +41,7 @@ const containerClass = computed(() => {
   if (themeStore.isDark) {
     return `${base} bg-gray-700/50 hover:bg-gray-700`;
   }
-  return `${base} bg-gray-100 hover:bg-gray-200`;
+  return `${base} bg-white hover:bg-gray-50`;
 });
 
 // 状态图标颜色
