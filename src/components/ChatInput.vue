@@ -3,7 +3,7 @@
  * 聊天输入框组件
  * 统一的卡片式输入框，支持文件上传（点击/拖拽）
  */
-import { NInput, NButton, NIcon, NSwitch, NTooltip, NUpload, useMessage } from 'naive-ui';
+import { NInput, NButton, NIcon, NTooltip, NUpload, useMessage } from 'naive-ui';
 import type { UploadFileInfo } from 'naive-ui';
 import {
   SendOutline,
@@ -365,20 +365,27 @@ const canSend = computed(() => {
     <div class="mt-3 flex items-center justify-between">
       <!-- 左侧功能按钮 -->
       <div class="flex items-center gap-2">
-        <!-- 深度思考开关 -->
+        <!-- 深度思考按钮（DeepSeek 风格） -->
         <NTooltip>
           <template #trigger>
-            <div
-              class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            <button
+              type="button"
+              class="thinking-btn flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200"
+              :class="enableThinking ? 'thinking-btn-active' : 'thinking-btn-inactive'"
+              @click="handleThinkingChange(!enableThinking)"
             >
-              <NIcon :component="SparklesOutline" :size="18" />
-              <span class="text-sm">深度思考</span>
-              <NSwitch :value="enableThinking" size="small" @update:value="handleThinkingChange" />
-            </div>
+              <NIcon :component="SparklesOutline" :size="16" />
+              <span>深度思考</span>
+            </button>
           </template>
-          {{ enableThinking ? '已启用深度思考' : '已禁用深度思考' }}
+          {{ enableThinking ? '已启用深度思考，先思考后回答' : '点击启用深度思考' }}
         </NTooltip>
 
+        <slot name="actions"></slot>
+      </div>
+
+      <!-- 右侧：上传文件 + 发送按钮 -->
+      <div class="flex items-center gap-2">
         <!-- 文件上传按钮 -->
         <NUpload
           :show-file-list="false"
@@ -387,39 +394,31 @@ const canSend = computed(() => {
         >
           <NTooltip>
             <template #trigger>
-              <NButton
-                quaternary
-                :loading="uploading"
-                :disabled="disabled"
-                class="rounded-lg px-3 py-2"
-              >
+              <NButton quaternary circle :loading="uploading" :disabled="disabled">
                 <template #icon>
-                  <NIcon :component="AttachOutline" :size="18" />
+                  <NIcon :component="AttachOutline" :size="20" />
                 </template>
-                <span class="text-sm">上传文件</span>
               </NButton>
             </template>
             支持拖拽上传，PDF/DOCX/PPTX 最大 10-15MB，其他文件最大 1MB
           </NTooltip>
         </NUpload>
 
-        <slot name="actions"></slot>
+        <!-- 发送按钮 -->
+        <NButton
+          type="primary"
+          size="large"
+          round
+          :disabled="!canSend"
+          :loading="loading"
+          class="btn-theme"
+          @click="handleSend"
+        >
+          <template #icon>
+            <NIcon :component="SendOutline" />
+          </template>
+        </NButton>
       </div>
-
-      <!-- 右侧发送按钮 -->
-      <NButton
-        type="primary"
-        size="large"
-        round
-        :disabled="!canSend"
-        :loading="loading"
-        class="btn-theme"
-        @click="handleSend"
-      >
-        <template #icon>
-          <NIcon :component="SendOutline" />
-        </template>
-      </NButton>
     </div>
   </div>
 </template>
@@ -433,5 +432,61 @@ const canSend = computed(() => {
 /* 容器相对定位，用于拖拽提示 */
 .chat-input-container {
   position: relative;
+}
+
+/* 深度思考按钮样式（DeepSeek 风格） */
+.thinking-btn {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  font-weight: 500;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+/* 未选中状态 */
+.thinking-btn-inactive {
+  background-color: rgba(128, 128, 128, 0.1);
+  color: rgba(128, 128, 128, 0.8);
+}
+
+.thinking-btn-inactive:hover {
+  background-color: rgba(128, 128, 128, 0.15);
+  color: rgba(128, 128, 128, 1);
+}
+
+/* 选中状态 - 蓝色高亮 */
+.thinking-btn-active {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: rgb(59, 130, 246);
+}
+
+.thinking-btn-active:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* 暗色模式适配 */
+:global(.dark) .thinking-btn-inactive {
+  background-color: rgba(156, 163, 175, 0.15);
+  color: rgba(156, 163, 175, 0.8);
+}
+
+:global(.dark) .thinking-btn-inactive:hover {
+  background-color: rgba(156, 163, 175, 0.2);
+  color: rgba(156, 163, 175, 1);
+}
+
+:global(.dark) .thinking-btn-active {
+  background-color: rgba(96, 165, 250, 0.2);
+  color: rgb(96, 165, 250);
+}
+
+:global(.dark) .thinking-btn-active:hover {
+  background-color: rgba(96, 165, 250, 0.25);
 }
 </style>
