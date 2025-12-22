@@ -30,18 +30,28 @@ const MessageComponent = computed(() => {
 // 是否为用户消息
 const isUserMessage = computed(() => props.data.type === 'user');
 
+// 是否为思考消息
+const isThinkingMessage = computed(() => props.data.type === 'thinking');
+
 // 是否需要气泡样式（只有 user 和 chat 需要）
 const needsBubble = computed(() => ['user', 'chat'].includes(props.data.type));
 
-// 获取 Forge 头像完整 URL
-const forgeAvatarUrl = computed(() => {
-  if (!props.forge?.avatar) return '';
-  if (props.forge.avatar.startsWith('/')) {
-    const apiBase = import.meta.env.VITE_API_BASE || '';
-    const baseUrl = apiBase.replace(/\/api$/, '');
-    return `${baseUrl}${props.forge.avatar}`;
+// 获取 AI 头像 URL
+const aiAvatarUrl = computed(() => {
+  // 思考消息使用专门的思考头像
+  if (isThinkingMessage.value) {
+    return '/thinking670x670.png';
   }
-  return props.forge.avatar;
+  // 其他消息优先使用 Forge 头像
+  if (props.forge?.avatar) {
+    if (props.forge.avatar.startsWith('/')) {
+      const apiBase = import.meta.env.VITE_API_BASE || '';
+      const baseUrl = apiBase.replace(/\/api$/, '');
+      return `${baseUrl}${props.forge.avatar}`;
+    }
+    return props.forge.avatar;
+  }
+  return '/favicon660x660nobackground.png';
 });
 
 // 获取用户名首字母（大写）
@@ -63,15 +73,8 @@ const userInitial = computed(() => {
       >
         {{ userInitial }}
       </NAvatar>
-      <!-- AI 头像：优先显示 Forge 头像，否则显示默认头像 -->
-      <NAvatar
-        v-else
-        :src="forgeAvatarUrl || '/favicon660x660nobackground.png'"
-        :size="32"
-        round
-        object-fit="cover"
-        class="avatar-ai"
-      />
+      <!-- AI 头像：思考消息用思考头像，其他用 Forge 头像或默认头像 -->
+      <NAvatar v-else :src="aiAvatarUrl" :size="32" round object-fit="cover" class="avatar-ai" />
     </div>
 
     <!-- 消息内容（动态组件） -->

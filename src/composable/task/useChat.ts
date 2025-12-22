@@ -39,6 +39,7 @@ export interface UserMessageData extends BaseMessageData {
 export interface TextMessageData extends BaseMessageData {
   type: 'chat' | 'thinking' | 'summary' | 'error';
   content: string;
+  isStreaming?: boolean; // 是否正在流式输出
 }
 
 // 工具调用消息数据
@@ -227,8 +228,13 @@ export function useChat(options: UseChatOptions) {
       if (currentStreamItem && currentStreamItem.type === msgType) {
         (currentStreamItem.data as TextMessageData).content += data;
       } else {
-        // 类型不同或没有当前消息，创建新消息
+        // 类型不同或没有当前消息，先结束之前的流式消息
+        if (currentStreamItem) {
+          (currentStreamItem.data as TextMessageData).isStreaming = false;
+        }
+        // 创建新消息，标记为正在流式输出
         currentStreamItem = addTextMessage(msgType, data);
+        (currentStreamItem.data as TextMessageData).isStreaming = true;
       }
       return true;
     }
@@ -243,6 +249,10 @@ export function useChat(options: UseChatOptions) {
 
     // done 消息
     if (type === 'done') {
+      // 结束当前流式消息
+      if (currentStreamItem) {
+        (currentStreamItem.data as TextMessageData).isStreaming = false;
+      }
       currentStreamItem = null;
       return true;
     }
