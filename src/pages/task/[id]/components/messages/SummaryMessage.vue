@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * 总结消息组件
- * 科技感样式，使用 Markdown 渲染内容
+ * 科技感样式，带边框旋转动画，使用 Markdown 渲染内容
  */
 import EMarkdown from '@/components/EMarkdown.vue';
 import type { TextMessageData } from '@/composable/task/useChat';
@@ -12,53 +12,66 @@ defineProps<{
 </script>
 
 <template>
-  <div class="summary-message">
-    <div class="summary-header">
-      <span class="summary-title">总结</span>
-    </div>
-    <div class="summary-content">
-      <EMarkdown :model-value="data.content" mode="preview" editor-id="summary-preview" />
+  <div class="summary-wrapper">
+    <div class="summary-message">
+      <div class="summary-header">
+        <span class="summary-title">总结</span>
+      </div>
+      <div class="summary-content">
+        <EMarkdown :model-value="data.content" mode="preview" editor-id="summary-preview" />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 总结消息 - 科技感样式 */
+/* 外层包装器 - 边框旋转动画容器 */
+.summary-wrapper {
+  --border-width: 2px;
+  --border-radius: 0.75rem;
+
+  position: relative;
+  padding: var(--border-width);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+/* 旋转渐变边框 */
+.summary-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* 使用对角线长度确保覆盖矩形容器 */
+  width: max(200%, 200vh);
+  height: max(200%, 200vh);
+  background: conic-gradient(
+    from 0deg,
+    #6366f1,
+    #a855f7,
+    #ec4899,
+    transparent 20%,
+    transparent 80%,
+    #6366f1
+  );
+  transform: translate(-50%, -50%);
+  animation: rotate 4s linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* 内容区域 - 默认浅色模式 */
 .summary-message {
   position: relative;
   padding: 1rem;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  backdrop-filter: blur(8px);
-}
-
-.summary-message::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #6366f1, #a855f7, #6366f1);
-  border-radius: 0.75rem 0.75rem 0 0;
-  animation: shimmer 2s ease-in-out infinite;
-  overflow: hidden;
-}
-
-/* 确保容器裁剪溢出内容 */
-.summary-message {
-  overflow: hidden;
-}
-
-@keyframes shimmer {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+  border-radius: calc(var(--border-radius) - var(--border-width));
+  background: rgb(255, 255, 255);
+  margin-bottom: 1px;
+  margin-right: 1px;
 }
 
 .summary-header {
@@ -86,7 +99,10 @@ defineProps<{
 
 /* 深色模式适配 */
 :global(.dark) .summary-message {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: rgb(31, 41, 55);
+}
+
+:global(.dark) .summary-header {
+  border-bottom-color: rgba(99, 102, 241, 0.3);
 }
 </style>
