@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="-mt-6 flex h-full flex-col overflow-hidden">
+  <div class="-m-6 flex h-[calc(100%+48px)] flex-col overflow-hidden">
     <!-- 头部（固定不滚动） -->
     <TaskHeader />
 
@@ -90,7 +90,7 @@ onBeforeUnmount(() => {
     />
 
     <!-- 输入区域（固定在底部） -->
-    <div class="shrink-0 p-4">
+    <div class="shrink-0 px-4 pt-4 pb-2">
       <ChatInput
         :model-value="inputValue"
         placeholder="输入消息..."
@@ -98,6 +98,8 @@ onBeforeUnmount(() => {
         @update:model-value="inputValue = $event"
         @send="onSend"
       />
+      <!-- 免责声明 -->
+      <p class="mt-2 text-center text-xs text-gray-400">AI 生成，仅供参考</p>
     </div>
   </div>
 </template>
