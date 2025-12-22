@@ -30,6 +30,9 @@ const MessageComponent = computed(() => {
 // 是否为用户消息
 const isUserMessage = computed(() => props.data.type === 'user');
 
+// 是否需要气泡样式（只有 user 和 chat 需要）
+const needsBubble = computed(() => ['user', 'chat'].includes(props.data.type));
+
 // 获取 Forge 头像完整 URL
 const forgeAvatarUrl = computed(() => {
   if (!props.forge?.avatar) return '';
@@ -73,8 +76,14 @@ const userInitial = computed(() => {
 
     <!-- 消息内容（动态组件） -->
     <div
-      class="max-w-[70%] rounded-2xl px-4 py-3"
-      :class="isUserMessage ? 'bubble-user' : 'bubble-ai'"
+      class="max-w-[70%]"
+      :class="
+        needsBubble
+          ? isUserMessage
+            ? 'bubble-user rounded-2xl px-4 py-3'
+            : 'bubble-ai rounded-2xl px-4 py-3'
+          : ''
+      "
     >
       <component :is="MessageComponent" :data="data" />
     </div>

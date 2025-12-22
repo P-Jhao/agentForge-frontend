@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
  * 总结消息组件
- * 科技感样式，带有渐变背景和动画效果
+ * 科技感样式，使用 Markdown 渲染内容
  */
+import EMarkdown from '@/components/EMarkdown.vue';
 import type { TextMessageData } from '@/composable/task/useChat';
 
 defineProps<{
@@ -13,10 +14,11 @@ defineProps<{
 <template>
   <div class="summary-message">
     <div class="summary-header">
-      <span class="summary-icon">✨</span>
-      <span class="summary-title">AI 总结</span>
+      <span class="summary-title">总结</span>
     </div>
-    <div class="summary-content">{{ data.content }}</div>
+    <div class="summary-content">
+      <EMarkdown :model-value="data.content" mode="preview" editor-id="summary-preview" />
+    </div>
   </div>
 </template>
 
@@ -41,6 +43,12 @@ defineProps<{
   background: linear-gradient(90deg, #6366f1, #a855f7, #6366f1);
   border-radius: 0.75rem 0.75rem 0 0;
   animation: shimmer 2s ease-in-out infinite;
+  overflow: hidden;
+}
+
+/* 确保容器裁剪溢出内容 */
+.summary-message {
+  overflow: hidden;
 }
 
 @keyframes shimmer {
@@ -62,21 +70,6 @@ defineProps<{
   border-bottom: 1px solid rgba(99, 102, 241, 0.2);
 }
 
-.summary-icon {
-  font-size: 1.25rem;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
 .summary-title {
   font-weight: 600;
   font-size: 0.875rem;
@@ -89,8 +82,6 @@ defineProps<{
 .summary-content {
   font-size: 0.875rem;
   line-height: 1.6;
-  white-space: pre-wrap;
-  color: inherit;
 }
 
 /* 深色模式适配 */
