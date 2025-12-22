@@ -710,3 +710,38 @@
     box-shadow: 0 0 30px rgba(168, 85, 247, 0.6);
   }
 }
+
+/* ===== Task 页面 Markdown 字体大小调整 ===== */
+.text-sm .md-editor,
+.text-sm .md-preview,
+.text-sm .md-editor-preview {
+  font-size: 0.8125rem !important;
+  line-height: 1.5 !important;
+}
+
+.text-sm .md-editor p,
+.text-sm .md-preview p,
+.text-sm .md-editor-preview p {
+  font-size: 0.8125rem !important;
+  margin: 0.4em 0 !important;
+}
+
+.text-sm .md-editor h1,
+.text-sm .md-preview h1 {
+  font-size: 1.125rem !important;
+}
+
+.text-sm .md-editor h2,
+.text-sm .md-preview h2 {
+  font-size: 1rem !important;
+}
+
+.text-sm .md-editor h3,
+.text-sm .md-preview h3 {
+  font-size: 0.9375rem !important;
+}
+
+.text-sm .md-editor li,
+.text-sm .md-preview li {
+  font-size: 0.8125rem !important;
+}

@@ -77,7 +77,7 @@ const containerClass = computed(() => {
 
     <!-- 思考内容（展开时显示） -->
     <div v-if="isExpanded" class="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700">
-      <p class="text-sm whitespace-pre-wrap text-gray-500 dark:text-gray-400">
+      <p class="text-xs whitespace-pre-wrap text-gray-500 dark:text-gray-400">
         {{ data.content }}
       </p>
     </div>

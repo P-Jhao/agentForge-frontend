@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="-m-6 flex h-[calc(100%+48px)] flex-col overflow-hidden">
+  <div class="-m-6 flex h-[calc(100%+48px)] flex-col overflow-hidden text-sm">
     <!-- 头部（固定不滚动） -->
     <TaskHeader />
 
