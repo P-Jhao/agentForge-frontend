@@ -77,13 +77,7 @@ const userInitial = computed(() => {
     <!-- 消息内容（动态组件） -->
     <div
       class="max-w-[70%]"
-      :class="
-        needsBubble
-          ? isUserMessage
-            ? 'bubble-user rounded-2xl px-4 py-3'
-            : 'bubble-ai rounded-2xl px-4 py-3'
-          : ''
-      "
+      :class="needsBubble ? (isUserMessage ? 'bubble-user px-4 py-3' : 'bubble-ai px-4 py-3') : ''"
     >
       <component :is="MessageComponent" :data="data" />
     </div>

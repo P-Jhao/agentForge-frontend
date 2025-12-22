@@ -28,11 +28,13 @@ defineProps<{
 /* 外层包装器 - 边框旋转动画容器 */
 .summary-wrapper {
   --border-width: 3px;
-  --border-radius: 0.75rem;
+  --border-radius: 18px;
+  --corner-radius: 4px;
 
   position: relative;
   padding: var(--border-width);
   border-radius: var(--border-radius);
+  border-top-left-radius: var(--corner-radius);
   overflow: hidden;
 }
 
@@ -69,6 +71,7 @@ defineProps<{
   position: relative;
   padding: 1rem;
   border-radius: calc(var(--border-radius) - var(--border-width));
+  border-top-left-radius: calc(var(--corner-radius) - var(--border-width));
   background: rgb(255, 255, 255);
   margin-bottom: 1px;
   margin-right: 1px;

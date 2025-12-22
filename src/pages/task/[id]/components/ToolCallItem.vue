@@ -35,13 +35,14 @@ const toggleExpand = () => {
   }
 };
 
-// 容器样式
+// 容器样式 - iMessage 风格
 const containerClass = computed(() => {
-  const base = 'rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors';
+  const base = 'px-3 py-2 text-sm cursor-pointer transition-colors';
+  const borderRadius = 'rounded-[18px] rounded-tl-[4px]';
   if (themeStore.isDark) {
-    return `${base} bg-gray-700/50 hover:bg-gray-700`;
+    return `${base} ${borderRadius} bg-gray-800 hover:bg-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.3)]`;
   }
-  return `${base} bg-white hover:bg-gray-50`;
+  return `${base} ${borderRadius} bg-white hover:bg-gray-50 shadow-[0_1px_2px_rgba(0,0,0,0.05)]`;
 });
 
 // 状态图标颜色
