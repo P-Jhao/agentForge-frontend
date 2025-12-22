@@ -27,7 +27,7 @@ defineProps<{
 <style scoped>
 /* 外层包装器 - 边框旋转动画容器 */
 .summary-wrapper {
-  --border-width: 2px;
+  --border-width: 3px;
   --border-radius: 0.75rem;
 
   position: relative;
