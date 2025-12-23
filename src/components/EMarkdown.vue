@@ -223,6 +223,7 @@ const handleHtmlChanged = (html: string) => {
 :deep(.md-preview .md-editor-code-head) {
   position: relative !important;
   top: auto !important;
+  z-index: auto !important;
 }
 
 /* 引用块样式 - 简洁的灰色边框风格 */
