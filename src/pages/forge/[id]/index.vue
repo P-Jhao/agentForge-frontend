@@ -20,6 +20,7 @@ import { useForgeStore, useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
 import EMarkdown from '@/components/EMarkdown.vue';
 import MCPToolsPanel from '../components/MCPToolsPanel.vue';
+import type { EnhanceMode } from '@/utils/enhanceMode';
 
 const route = useRoute();
 const router = useRouter();
@@ -115,6 +116,7 @@ const handleDelete = async () => {
 const handleSend = async (
   content: string,
   enableThinking?: boolean,
+  enhanceMode?: EnhanceMode,
   files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
   if (!forge.value || sending.value) return;
@@ -133,6 +135,11 @@ const handleSend = async (
     // 存储深度思考设置
     if (enableThinking !== undefined) {
       localStorage.setItem('enableThinking', String(enableThinking));
+    }
+
+    // 存储增强模式设置
+    if (enhanceMode) {
+      sessionStorage.setItem(`task_${taskUuid}_enhanceMode`, enhanceMode);
     }
 
     // 存储文件信息（如果有）

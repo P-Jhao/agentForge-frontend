@@ -7,12 +7,26 @@ import { ref, reactive, nextTick } from 'vue';
 import { createStreamRequest, createTask } from '@/utils';
 import { useTaskStore } from '@/stores';
 import type { FlatMessage, TaskSSEChunk, ToolCallStartData, ToolCallResultData } from '@/types';
+import type { EnhanceMode } from '@/utils/enhanceMode';
 
 // 工具调用状态类型
 export type ToolCallStatus = 'running' | 'success' | 'failed';
 
-// 消息类型
-export type MessageType = 'user' | 'chat' | 'thinking' | 'tool_call' | 'summary' | 'error';
+// 消息类型（扩展支持提示词增强相关类型）
+export type MessageType =
+  | 'user'
+  | 'chat'
+  | 'thinking'
+  | 'tool_call'
+  | 'summary'
+  | 'error'
+  // 提示词增强相关类型
+  | 'user_original' // 开启增强时的用户原始输入
+  | 'user_answer' // 智能迭代中用户对澄清问题的回复
+  | 'reviewer' // 审查者输出
+  | 'questioner' // 提问者输出
+  | 'expert' // 专家分析输出
+  | 'enhancer'; // 增强后的提示词
 
 // 基础消息数据
 interface BaseMessageData {
@@ -346,16 +360,17 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 发送消息并获取流式响应（支持多文件）
+   * 发送消息并获取流式响应（支持多文件和增强模式）
    */
   const sendMessage = async (
     content: string,
     enableThinking?: boolean,
+    enhanceMode?: EnhanceMode,
     files?: UploadedFileInfo[]
   ) => {
     if (!content.trim() || isLoading.value) return;
 
-    console.log('[useChat] sendMessage 被调用', { content, enableThinking, files });
+    console.log('[useChat] sendMessage 被调用', { content, enableThinking, enhanceMode, files });
 
     // 添加用户消息（包含文件信息）
     addUserMessage(content, files);
@@ -372,6 +387,11 @@ export function useChat(options: UseChatOptions) {
       content,
       enableThinking: thinkingEnabled,
     };
+
+    // 添加增强模式参数
+    if (enhanceMode && enhanceMode !== 'off') {
+      body.enhanceMode = enhanceMode;
+    }
 
     // 如果有文件，添加到请求体
     if (files && files.length > 0) {
@@ -410,13 +430,14 @@ export function useChat(options: UseChatOptions) {
   const handleSend = async (
     content?: string,
     enableThinking?: boolean,
+    enhanceMode?: EnhanceMode,
     files?: UploadedFileInfo[]
   ) => {
-    console.log('[useChat] handleSend 被调用', { content, enableThinking, files });
+    console.log('[useChat] handleSend 被调用', { content, enableThinking, enhanceMode, files });
     const messageContent = content ?? inputValue.value.trim();
     if (!messageContent) return;
     inputValue.value = '';
-    await sendMessage(messageContent, enableThinking, files);
+    await sendMessage(messageContent, enableThinking, enhanceMode, files);
   };
 
   const init = async () => {

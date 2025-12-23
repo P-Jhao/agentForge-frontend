@@ -10,6 +10,7 @@ import { useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
 import TaskHeader from './components/TaskHeader.vue';
 import ChatMessageList from './components/ChatMessageList.vue';
+import type { EnhanceMode } from '@/utils/enhanceMode';
 
 const route = useRoute();
 const taskStore = useTaskStore();
@@ -47,10 +48,11 @@ const {
 const onSend = (
   content: string,
   enableThinking: boolean,
+  enhanceMode: EnhanceMode,
   files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
-  console.log('[TaskPage] onSend 收到参数', { content, enableThinking, files });
-  handleSend(content, enableThinking, files);
+  console.log('[TaskPage] onSend 收到参数', { content, enableThinking, enhanceMode, files });
+  handleSend(content, enableThinking, enhanceMode, files);
 };
 
 // 监听 taskId 变化，切换任务时重新初始化

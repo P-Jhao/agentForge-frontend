@@ -14,6 +14,9 @@ import {
 } from '@vicons/ionicons5';
 import { ref, onMounted, computed } from 'vue';
 import { uploadChatFile } from '@/api/upload';
+import EnhanceModeSelector from './EnhanceModeSelector.vue';
+import type { EnhanceMode } from '@/utils/enhanceMode';
+import { getEnhanceMode, setEnhanceMode } from '@/utils/enhanceMode';
 
 // Props
 interface Props {
@@ -36,6 +39,9 @@ const modelValue = defineModel<string>({ default: '' });
 
 // 深度思考开关状态（默认关闭）
 const enableThinking = ref(false);
+
+// 增强模式状态（默认关闭）
+const enhanceMode = ref<EnhanceMode>('off');
 
 // 已上传的文件列表（支持多文件）
 const uploadedFiles = ref<
@@ -126,22 +132,32 @@ const emit = defineEmits<{
   send: [
     value: string,
     enableThinking: boolean,
+    enhanceMode: EnhanceMode,
     files?: { filePath: string; originalName: string; size: number; url: string }[],
   ];
 }>();
 
-// 初始化深度思考状态
+// 初始化深度思考状态和增强模式
 onMounted(() => {
+  // 深度思考状态
   const stored = localStorage.getItem('enableThinking');
   if (stored !== null) {
     enableThinking.value = stored === 'true';
   }
+  // 增强模式
+  enhanceMode.value = getEnhanceMode();
 });
 
 // 监听深度思考状态变化，保存到 localStorage
 const handleThinkingChange = (value: boolean) => {
   enableThinking.value = value;
   localStorage.setItem('enableThinking', String(value));
+};
+
+// 监听增强模式变化，保存到 localStorage
+const handleEnhanceModeChange = (value: EnhanceMode) => {
+  enhanceMode.value = value;
+  setEnhanceMode(value);
 };
 
 /**
@@ -278,10 +294,11 @@ const handleSend = () => {
   console.log('[ChatInput] handleSend', {
     value,
     enableThinking: enableThinking.value,
+    enhanceMode: enhanceMode.value,
     files,
   });
 
-  emit('send', value, enableThinking.value, files);
+  emit('send', value, enableThinking.value, enhanceMode.value, files);
 
   // 清空输入和文件列表
   modelValue.value = '';
@@ -378,6 +395,13 @@ const canSend = computed(() => {
           </template>
           {{ enableThinking ? '已启用深度思考，先思考后回答' : '点击启用深度思考' }}
         </NTooltip>
+
+        <!-- 增强模式选择器 -->
+        <EnhanceModeSelector
+          v-model="enhanceMode"
+          :disabled="disabled"
+          @update:model-value="handleEnhanceModeChange"
+        />
 
         <slot name="actions"></slot>
       </div>

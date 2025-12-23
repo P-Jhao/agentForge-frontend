@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router';
 import { NIcon, NTag } from 'naive-ui';
 import { SparklesOutline, ChevronForwardOutline } from '@vicons/ionicons5';
 import ChatInput from '@/components/ChatInput.vue';
+import type { EnhanceMode } from '@/utils/enhanceMode';
 
 const router = useRouter();
 const askInput = ref('');
@@ -30,6 +31,7 @@ const generateUUID = () => {
 const handleSend = (
   message: string,
   enableThinking?: boolean,
+  enhanceMode?: EnhanceMode,
   files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
   const taskId = generateUUID();
@@ -38,6 +40,10 @@ const handleSend = (
   // 存储深度思考设置
   if (enableThinking !== undefined) {
     localStorage.setItem('enableThinking', String(enableThinking));
+  }
+  // 存储增强模式设置
+  if (enhanceMode) {
+    sessionStorage.setItem(`task_${taskId}_enhanceMode`, enhanceMode);
   }
   // 存储文件信息（如果有）
   if (files && files.length > 0) {
