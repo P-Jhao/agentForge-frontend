@@ -291,13 +291,6 @@ const handleSend = () => {
   // 发送消息，带上文件列表（如果有）
   const files = uploadedFiles.value.length > 0 ? [...uploadedFiles.value] : undefined;
 
-  console.log('[ChatInput] handleSend', {
-    value,
-    enableThinking: enableThinking.value,
-    enhanceMode: enhanceMode.value,
-    files,
-  });
-
   emit('send', value, enableThinking.value, enhanceMode.value, files);
 
   // 清空输入和文件列表

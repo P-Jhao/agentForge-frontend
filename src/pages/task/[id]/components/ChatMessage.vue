@@ -27,20 +27,33 @@ const MessageComponent = computed(() => {
   return messageComponents[props.data.type] || messageComponents.chat;
 });
 
-// 是否为用户消息
-const isUserMessage = computed(() => props.data.type === 'user');
+// 是否为用户消息（包括 user、user_original、user_answer、enhancer）
+const isUserMessage = computed(() =>
+  ['user', 'user_original', 'user_answer', 'enhancer'].includes(props.data.type)
+);
 
 // 是否为思考消息
 const isThinkingMessage = computed(() => props.data.type === 'thinking');
 
-// 是否需要气泡样式（只有 user 和 chat 需要）
-const needsBubble = computed(() => ['user', 'chat'].includes(props.data.type));
+// 是否为增强过程消息（reviewer、questioner、expert）
+const isEnhanceProcessMessage = computed(() =>
+  ['reviewer', 'questioner', 'expert'].includes(props.data.type)
+);
+
+// 是否需要气泡样式（user、chat、user_original、user_answer 需要）
+const needsBubble = computed(() =>
+  ['user', 'chat', 'user_original', 'user_answer'].includes(props.data.type)
+);
 
 // 获取 AI 头像 URL
 const aiAvatarUrl = computed(() => {
   // 思考消息使用专门的思考头像
   if (isThinkingMessage.value) {
     return '/thinking670x670.png';
+  }
+  // 增强过程消息使用增强头像
+  if (isEnhanceProcessMessage.value) {
+    return '/favicon660x660nobackground.png';
   }
   // 其他消息优先使用 Forge 头像
   if (props.forge?.avatar) {

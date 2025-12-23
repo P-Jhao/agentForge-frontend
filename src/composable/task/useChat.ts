@@ -49,9 +49,20 @@ export interface UserMessageData extends BaseMessageData {
   files?: UploadedFileInfo[];
 }
 
-// 文本消息数据（chat/thinking/summary/error）
+// 文本消息数据（chat/thinking/summary/error 及增强相关类型）
 export interface TextMessageData extends BaseMessageData {
-  type: 'chat' | 'thinking' | 'summary' | 'error';
+  type:
+    | 'chat'
+    | 'thinking'
+    | 'summary'
+    | 'error'
+    // 提示词增强相关类型
+    | 'user_original'
+    | 'user_answer'
+    | 'reviewer'
+    | 'questioner'
+    | 'expert'
+    | 'enhancer';
   content: string;
   isStreaming?: boolean; // 是否正在流式输出
 }
@@ -155,10 +166,20 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 添加文本消息（chat/thinking/summary/error）
+   * 添加文本消息（chat/thinking/summary/error 及增强相关类型）
    */
   const addTextMessage = (
-    type: 'chat' | 'thinking' | 'summary' | 'error',
+    type:
+      | 'chat'
+      | 'thinking'
+      | 'summary'
+      | 'error'
+      | 'user_original'
+      | 'user_answer'
+      | 'reviewer'
+      | 'questioner'
+      | 'expert'
+      | 'enhancer',
     content: string
   ): RenderItem => {
     const id = generateId();
@@ -234,9 +255,21 @@ export function useChat(options: UseChatOptions) {
       return true;
     }
 
-    // 文本消息（chat/thinking/summary）
-    if (['chat', 'thinking', 'summary'].includes(type) && typeof data === 'string') {
-      const msgType = type as 'chat' | 'thinking' | 'summary';
+    // 文本消息（chat/thinking/summary 及增强相关类型）
+    if (
+      ['chat', 'thinking', 'summary', 'reviewer', 'questioner', 'expert', 'enhancer'].includes(
+        type
+      ) &&
+      typeof data === 'string'
+    ) {
+      const msgType = type as
+        | 'chat'
+        | 'thinking'
+        | 'summary'
+        | 'reviewer'
+        | 'questioner'
+        | 'expert'
+        | 'enhancer';
 
       // 如果当前有流式消息且类型相同，追加内容
       if (currentStreamItem && currentStreamItem.type === msgType) {
@@ -250,6 +283,13 @@ export function useChat(options: UseChatOptions) {
         currentStreamItem = addTextMessage(msgType, data);
         (currentStreamItem.data as TextMessageData).isStreaming = true;
       }
+      return true;
+    }
+
+    // 用户原始输入消息（增强模式下）
+    if (type === 'user_original' && typeof data === 'string') {
+      // 用户原始输入不需要流式处理，直接创建
+      addTextMessage('user_original', data);
       return true;
     }
 
@@ -304,8 +344,29 @@ export function useChat(options: UseChatOptions) {
       return { id, type: 'tool_call', data };
     }
 
-    // chat/thinking/error
-    const msgType = (msg.type || 'chat') as 'chat' | 'thinking' | 'error';
+    // 处理增强相关类型
+    if (
+      ['user_original', 'user_answer', 'reviewer', 'questioner', 'expert', 'enhancer'].includes(
+        msg.type
+      )
+    ) {
+      const msgType = msg.type as
+        | 'user_original'
+        | 'user_answer'
+        | 'reviewer'
+        | 'questioner'
+        | 'expert'
+        | 'enhancer';
+      const data = reactive<TextMessageData>({
+        id,
+        type: msgType,
+        content: msg.content,
+      });
+      return { id, type: msgType, data };
+    }
+
+    // chat/thinking/error/summary
+    const msgType = (msg.type || 'chat') as 'chat' | 'thinking' | 'error' | 'summary';
     const data = reactive<TextMessageData>({
       id,
       type: msgType,
@@ -370,8 +431,6 @@ export function useChat(options: UseChatOptions) {
   ) => {
     if (!content.trim() || isLoading.value) return;
 
-    console.log('[useChat] sendMessage 被调用', { content, enableThinking, enhanceMode, files });
-
     // 添加用户消息（包含文件信息）
     addUserMessage(content, files);
     await scrollToBottom();
@@ -433,7 +492,6 @@ export function useChat(options: UseChatOptions) {
     enhanceMode?: EnhanceMode,
     files?: UploadedFileInfo[]
   ) => {
-    console.log('[useChat] handleSend 被调用', { content, enableThinking, enhanceMode, files });
     const messageContent = content ?? inputValue.value.trim();
     if (!messageContent) return;
     inputValue.value = '';
@@ -444,6 +502,7 @@ export function useChat(options: UseChatOptions) {
     const taskId = currentTaskId.value;
     const initKey = `task_${taskId}_init`;
     const fileKey = `task_${taskId}_file`;
+    const enhanceModeKey = `task_${taskId}_enhanceMode`;
     const initMessage = sessionStorage.getItem(initKey);
 
     if (initMessage) {
@@ -464,6 +523,9 @@ export function useChat(options: UseChatOptions) {
         }
       }
 
+      // 读取增强模式（如果有）
+      const storedEnhanceMode = sessionStorage.getItem(enhanceModeKey) as EnhanceMode | null;
+
       try {
         const task = await createTask({
           id: taskId,
@@ -481,10 +543,11 @@ export function useChat(options: UseChatOptions) {
       // 清理 sessionStorage
       sessionStorage.removeItem(initKey);
       sessionStorage.removeItem(fileKey);
+      sessionStorage.removeItem(enhanceModeKey);
 
       historyLoaded.value = true;
-      // 发送消息时带上文件信息
-      await sendMessage(initMessage, undefined, files);
+      // 发送消息时带上增强模式和文件信息
+      await sendMessage(initMessage, undefined, storedEnhanceMode || undefined, files);
     } else {
       const taskStore = useTaskStore();
       taskStore.setCurrentTask(taskId);

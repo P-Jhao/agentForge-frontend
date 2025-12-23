@@ -51,7 +51,6 @@ const onSend = (
   enhanceMode: EnhanceMode,
   files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
-  console.log('[TaskPage] onSend 收到参数', { content, enableThinking, enhanceMode, files });
   handleSend(content, enableThinking, enhanceMode, files);
 };
 

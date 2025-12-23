@@ -11,6 +11,12 @@ import ThinkingMessage from './ThinkingMessage.vue';
 import ToolCallMessage from './ToolCallMessage.vue';
 import SummaryMessage from './SummaryMessage.vue';
 import ErrorMessage from './ErrorMessage.vue';
+// 提示词增强相关组件
+import EnhanceProcessCard from './EnhanceProcessCard.vue';
+import ExpertAnalysisCard from './ExpertAnalysisCard.vue';
+import EnhancedPromptBubble from './EnhancedPromptBubble.vue';
+import UserOriginalMessage from './UserOriginalMessage.vue';
+import UserAnswerMessage from './UserAnswerMessage.vue';
 
 // 消息类型到组件的映射
 export const messageComponents: Record<MessageType, Component> = {
@@ -20,6 +26,13 @@ export const messageComponents: Record<MessageType, Component> = {
   tool_call: ToolCallMessage,
   summary: SummaryMessage,
   error: ErrorMessage,
+  // 提示词增强相关类型
+  user_original: UserOriginalMessage,
+  user_answer: UserAnswerMessage,
+  reviewer: EnhanceProcessCard,
+  questioner: EnhanceProcessCard,
+  expert: ExpertAnalysisCard,
+  enhancer: EnhancedPromptBubble,
 };
 
 // 导出所有消息组件
@@ -30,4 +43,10 @@ export {
   ToolCallMessage,
   SummaryMessage,
   ErrorMessage,
+  // 提示词增强相关组件
+  EnhanceProcessCard,
+  ExpertAnalysisCard,
+  EnhancedPromptBubble,
+  UserOriginalMessage,
+  UserAnswerMessage,
 };
