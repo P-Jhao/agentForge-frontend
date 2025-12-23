@@ -218,6 +218,13 @@ const handleHtmlChanged = (html: string) => {
   margin: 16px 0;
 }
 
+/* 禁用代码块头部的 sticky 定位，避免滚动时重叠 */
+:deep(.md-editor-preview .md-editor-code-head),
+:deep(.md-preview .md-editor-code-head) {
+  position: relative !important;
+  top: auto !important;
+}
+
 /* 引用块样式 - 简洁的灰色边框风格 */
 :deep(.md-editor-preview blockquote),
 :deep(.md-preview blockquote) {

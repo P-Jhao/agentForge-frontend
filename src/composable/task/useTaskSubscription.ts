@@ -175,7 +175,6 @@ export function useTaskSubscription() {
 
       case 'title_update':
         if (event.taskUuid && event.data?.title) {
-          console.log(`[TaskSubscription] 任务 ${event.taskUuid} 标题更新:`, event.data.title);
           // 使用打字机效果更新标题
           taskStore.updateTaskTitleWithTypewriter(event.taskUuid, event.data.title);
         }

@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router';
 import { useChat } from '@/composable/task';
 import { useTaskStore } from '@/stores';
 import ChatInput from '@/components/ChatInput.vue';
+import SmartIterateReplyInput from '@/components/SmartIterateReplyInput.vue';
 import TaskHeader from './components/TaskHeader.vue';
 import ChatMessageList from './components/ChatMessageList.vue';
 import type { EnhanceMode } from '@/utils/enhanceMode';
@@ -39,6 +40,8 @@ const {
   clearMessages,
   setTaskId,
   cancelRequest,
+  needsSmartIterateReply,
+  sendSmartIterateReply,
 } = useChat({
   taskId: taskId.value,
   onScrollToBottom: scrollToBottom,
@@ -53,6 +56,14 @@ const onSend = (
 ) => {
   handleSend(content, enableThinking, enhanceMode, files);
 };
+
+// 处理智能迭代回复
+const onSmartIterateReply = (answer: string) => {
+  sendSmartIterateReply(answer);
+};
+
+// 是否显示智能迭代回复输入框
+const showSmartIterateReply = computed(() => needsSmartIterateReply());
 
 // 监听 taskId 变化，切换任务时重新初始化
 watch(
@@ -92,7 +103,15 @@ onBeforeUnmount(() => {
 
     <!-- 输入区域（固定在底部） -->
     <div class="shrink-0 px-4 pt-4 pb-2">
+      <!-- 智能迭代回复输入框（当需要回复澄清问题时显示） -->
+      <SmartIterateReplyInput
+        v-if="showSmartIterateReply"
+        :loading="isLoading"
+        @submit="onSmartIterateReply"
+      />
+      <!-- 普通输入框 -->
       <ChatInput
+        v-else
         :model-value="inputValue"
         placeholder="输入消息..."
         :loading="isLoading"

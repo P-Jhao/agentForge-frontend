@@ -570,6 +570,119 @@ export function useChat(options: UseChatOptions) {
     }
   };
 
+  /**
+   * 获取智能迭代上下文
+   * 从消息列表中提取原始提示词、reviewer、questioner 的内容
+   * 用于用户回复澄清问题后发送请求
+   */
+  const getSmartIterateContext = () => {
+    let originalPrompt = '';
+    let reviewerOutput = '';
+    let questionerOutput = '';
+
+    // 从后往前遍历，找到最近的一组迭代消息
+    for (let i = renderItems.value.length - 1; i >= 0; i--) {
+      const item = renderItems.value[i];
+      if (!item) continue;
+
+      if (item.type === 'questioner' && !questionerOutput) {
+        const data = item.data as TextMessageData;
+        questionerOutput = data.content;
+      } else if (item.type === 'reviewer' && !reviewerOutput) {
+        const data = item.data as TextMessageData;
+        reviewerOutput = data.content;
+      } else if ((item.type === 'user_original' || item.type === 'user') && !originalPrompt) {
+        // 支持 user_original（历史消息）和 user（当前会话）两种类型
+        const data = item.data as TextMessageData | UserMessageData;
+        originalPrompt = data.content;
+      }
+
+      // 如果三个都找到了，退出循环
+      if (originalPrompt && reviewerOutput && questionerOutput) {
+        break;
+      }
+
+      // 如果遇到 enhancer 或 chat，说明已经过了当前迭代周期
+      if (item.type === 'enhancer' || item.type === 'chat') {
+        break;
+      }
+    }
+
+    return { originalPrompt, reviewerOutput, questionerOutput };
+  };
+
+  /**
+   * 检查是否需要显示智能迭代回复输入框
+   * 条件：最后一条消息是 questioner 类型，且不在加载中
+   */
+  const needsSmartIterateReply = () => {
+    if (isLoading.value) return false;
+    const lastItem = renderItems.value[renderItems.value.length - 1];
+    return lastItem?.type === 'questioner';
+  };
+
+  /**
+   * 发送智能迭代回复
+   * @param answer 用户对澄清问题的回复
+   */
+  const sendSmartIterateReply = async (answer: string) => {
+    if (!answer.trim() || isLoading.value) return;
+
+    // 获取迭代上下文
+    const iterateContext = getSmartIterateContext();
+    if (!iterateContext.originalPrompt) {
+      console.error('[useChat] 无法获取智能迭代上下文');
+      return;
+    }
+
+    // 添加用户回复消息到界面
+    const id = `msg_${Date.now()}_${idCounter++}`;
+    const data = reactive<TextMessageData>({
+      id,
+      type: 'user_answer',
+      content: answer,
+    });
+    renderItems.value.push({ id, type: 'user_answer', data });
+    await scrollToBottom();
+
+    isLoading.value = true;
+    currentStreamItem = null;
+
+    // 构建请求体，带上迭代上下文
+    const body = {
+      content: answer,
+      enhanceMode: 'smart' as const,
+      iterateContext,
+    };
+
+    const { abort, promise } = createStreamRequest<TaskSSEChunk>({
+      url: `${API_BASE}/task/${currentTaskId.value}/message`,
+      body,
+      headers: { Authorization: `Bearer ${getToken()}` },
+      onChunk: async (chunk) => {
+        handleSSEChunk(chunk);
+        await throttledScrollToBottom();
+      },
+      onComplete: async () => {
+        isLoading.value = false;
+        abortCurrentRequest = null;
+        currentStreamItem = null;
+        await scrollToBottom();
+        const taskStore = useTaskStore();
+        taskStore.touchTask(currentTaskId.value);
+      },
+      onError: (error) => {
+        addTextMessage('error', `请求失败：${error.message}`);
+        isLoading.value = false;
+        abortCurrentRequest = null;
+        currentStreamItem = null;
+      },
+    });
+
+    abortCurrentRequest = abort;
+    await promise;
+  };
+
   return {
     // 状态
     renderItems,
@@ -586,5 +699,8 @@ export function useChat(options: UseChatOptions) {
     clearMessages,
     cancelRequest,
     scrollToBottom,
+    // 智能迭代相关
+    needsSmartIterateReply,
+    sendSmartIterateReply,
   };
 }
