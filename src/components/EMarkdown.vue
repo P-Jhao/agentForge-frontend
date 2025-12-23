@@ -180,8 +180,11 @@ const handleHtmlChanged = (html: string) => {
   border: none !important;
 }
 
-/* 移除所有边框线 */
-.e-markdown.preview-only :deep(*) {
+/* 移除预览模式的外层边框线（但保留内容元素的边框） */
+.e-markdown.preview-only :deep(.md-preview),
+.e-markdown.preview-only :deep(.md-preview-wrapper),
+.e-markdown.preview-only :deep(.md-editor-preview),
+.e-markdown.preview-only :deep(.md-editor-preview-wrapper) {
   border-color: transparent !important;
 }
 
@@ -215,13 +218,20 @@ const handleHtmlChanged = (html: string) => {
   margin: 16px 0;
 }
 
-/* 引用块样式 */
+/* 引用块样式 - 简洁的灰色边框风格 */
 :deep(.md-editor-preview blockquote),
 :deep(.md-preview blockquote) {
-  border-left: 4px solid #6172f3;
-  margin: 16px 0;
-  padding: 12px 16px;
-  background: rgba(97, 114, 243, 0.1);
-  border-radius: 0 6px 6px 0;
+  border-left: 3px solid #9ca3af !important;
+  margin: 16px 0 !important;
+  padding: 8px 16px !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+  color: inherit !important;
+  border-radius: 0 4px 4px 0 !important;
+}
+
+.dark :deep(.md-editor-preview blockquote),
+.dark :deep(.md-preview blockquote) {
+  border-left-color: #6b7280 !important;
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 </style>
