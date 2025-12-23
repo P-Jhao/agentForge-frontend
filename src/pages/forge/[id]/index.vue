@@ -115,7 +115,7 @@ const handleDelete = async () => {
 const handleSend = async (
   content: string,
   enableThinking?: boolean,
-  fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+  files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
   if (!forge.value || sending.value) return;
 
@@ -136,8 +136,8 @@ const handleSend = async (
     }
 
     // 存储文件信息（如果有）
-    if (fileInfo) {
-      sessionStorage.setItem(`task_${taskUuid}_file`, JSON.stringify(fileInfo));
+    if (files && files.length > 0) {
+      sessionStorage.setItem(`task_${taskUuid}_file`, JSON.stringify(files));
     }
 
     // 刷新任务列表

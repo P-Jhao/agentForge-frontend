@@ -30,7 +30,7 @@ const generateUUID = () => {
 const handleSend = (
   message: string,
   enableThinking?: boolean,
-  fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+  files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
   const taskId = generateUUID();
   // 将初始消息存储到 sessionStorage，供任务页读取
@@ -40,8 +40,8 @@ const handleSend = (
     localStorage.setItem('enableThinking', String(enableThinking));
   }
   // 存储文件信息（如果有）
-  if (fileInfo) {
-    sessionStorage.setItem(`task_${taskId}_file`, JSON.stringify(fileInfo));
+  if (files && files.length > 0) {
+    sessionStorage.setItem(`task_${taskId}_file`, JSON.stringify(files));
   }
   askInput.value = '';
   router.push(`/task/${taskId}`);

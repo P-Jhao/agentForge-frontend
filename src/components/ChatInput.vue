@@ -37,13 +37,15 @@ const modelValue = defineModel<string>({ default: '' });
 // 深度思考开关状态（默认关闭）
 const enableThinking = ref(false);
 
-// 已上传的文件信息
-const uploadedFile = ref<{
-  filePath: string;
-  originalName: string;
-  size: number;
-  url: string;
-} | null>(null);
+// 已上传的文件列表（支持多文件）
+const uploadedFiles = ref<
+  {
+    filePath: string;
+    originalName: string;
+    size: number;
+    url: string;
+  }[]
+>([]);
 
 // 是否正在上传
 const uploading = ref(false);
@@ -124,7 +126,7 @@ const emit = defineEmits<{
   send: [
     value: string,
     enableThinking: boolean,
-    fileInfo?: { filePath: string; originalName: string; size: number; url: string },
+    files?: { filePath: string; originalName: string; size: number; url: string }[],
   ];
 }>();
 
@@ -172,7 +174,7 @@ const validateFile = (file: File): string | null => {
 };
 
 /**
- * 处理文件上传
+ * 处理文件上传（支持多文件追加）
  */
 const handleFileUpload = async (file: File) => {
   // 验证文件
@@ -182,21 +184,23 @@ const handleFileUpload = async (file: File) => {
     return;
   }
 
-  // 如果已有文件，先清除
-  if (uploadedFile.value) {
-    uploadedFile.value = null;
+  // 检查是否已上传同名文件
+  if (uploadedFiles.value.some((f) => f.originalName === file.name)) {
+    message.warning(`文件 "${file.name}" 已存在`);
+    return;
   }
 
   uploading.value = true;
 
   try {
     const result = await uploadChatFile(file);
-    uploadedFile.value = {
+    // 追加到文件列表
+    uploadedFiles.value.push({
       filePath: result.filePath,
       originalName: result.originalName,
       size: result.size,
       url: result.url,
-    };
+    });
     message.success('文件上传成功');
   } catch (err) {
     message.error((err as Error).message || '文件上传失败');
@@ -216,10 +220,10 @@ const handleUploadChange = (options: { file: UploadFileInfo }) => {
 };
 
 /**
- * 移除已上传的文件
+ * 移除已上传的文件（按索引）
  */
-const removeFile = () => {
-  uploadedFile.value = null;
+const removeFile = (index: number) => {
+  uploadedFiles.value.splice(index, 1);
 };
 
 /**
@@ -246,7 +250,7 @@ const handleDragOver = (e: DragEvent) => {
 };
 
 /**
- * 处理拖拽放下
+ * 处理拖拽放下（支持多文件）
  */
 const handleDrop = (e: DragEvent) => {
   e.preventDefault();
@@ -254,11 +258,10 @@ const handleDrop = (e: DragEvent) => {
 
   const files = e.dataTransfer?.files;
   if (files && files.length > 0) {
-    // 只处理第一个文件
-    const firstFile = files[0];
-    if (firstFile) {
-      handleFileUpload(firstFile);
-    }
+    // 处理所有拖入的文件
+    Array.from(files).forEach((file) => {
+      handleFileUpload(file);
+    });
   }
 };
 
@@ -269,28 +272,20 @@ const handleSend = () => {
   const value = modelValue.value.trim();
   if (!value || props.disabled || props.loading) return;
 
-  // 发送消息，带上文件信息（如果有）
-  const fileInfo = uploadedFile.value
-    ? {
-      filePath: uploadedFile.value.filePath,
-      originalName: uploadedFile.value.originalName,
-      size: uploadedFile.value.size,
-      url: uploadedFile.value.url,
-    }
-    : undefined;
+  // 发送消息，带上文件列表（如果有）
+  const files = uploadedFiles.value.length > 0 ? [...uploadedFiles.value] : undefined;
 
   console.log('[ChatInput] handleSend', {
     value,
     enableThinking: enableThinking.value,
-    fileInfo,
-    uploadedFile: uploadedFile.value,
+    files,
   });
 
-  emit('send', value, enableThinking.value, fileInfo);
+  emit('send', value, enableThinking.value, files);
 
-  // 清空输入和文件
+  // 清空输入和文件列表
   modelValue.value = '';
-  uploadedFile.value = null;
+  uploadedFiles.value = [];
 };
 
 /**
@@ -325,19 +320,22 @@ const canSend = computed(() => {
     @dragover="handleDragOver"
     @drop="handleDrop"
   >
-    <!-- 已上传文件预览 -->
-    <div
-      v-if="uploadedFile"
-      class="mb-3 flex items-center gap-2 rounded-lg bg-gray-100 p-2 dark:bg-gray-800"
-    >
-      <NIcon :component="DocumentTextOutline" :size="18" class="text-gray-500" />
-      <span class="flex-1 truncate text-sm">{{ uploadedFile.originalName }}</span>
-      <span class="text-xs text-gray-400">{{ formatFileSize(uploadedFile.size) }}</span>
-      <NButton quaternary circle size="tiny" @click="removeFile">
-        <template #icon>
-          <NIcon :component="CloseCircle" />
-        </template>
-      </NButton>
+    <!-- 已上传文件预览（支持多文件） -->
+    <div v-if="uploadedFiles.length > 0" class="mb-3 flex flex-wrap gap-2">
+      <div
+        v-for="(file, index) in uploadedFiles"
+        :key="file.filePath"
+        class="flex items-center gap-2 rounded-lg bg-gray-100 px-2 py-1.5 dark:bg-gray-800"
+      >
+        <NIcon :component="DocumentTextOutline" :size="16" class="text-gray-500" />
+        <span class="max-w-32 truncate text-sm">{{ file.originalName }}</span>
+        <span class="text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
+        <NButton quaternary circle size="tiny" @click="removeFile(index)">
+          <template #icon>
+            <NIcon :component="CloseCircle" :size="14" />
+          </template>
+        </NButton>
+      </div>
     </div>
 
     <!-- 拖拽提示 -->

@@ -125,15 +125,15 @@ export function useChat(options: UseChatOptions) {
   const getToken = () => localStorage.getItem('forgeToken') || '';
 
   /**
-   * 添加用户消息
+   * 添加用户消息（支持多文件）
    */
-  const addUserMessage = (content: string, fileInfo?: UploadedFileInfo): RenderItem => {
+  const addUserMessage = (content: string, files?: UploadedFileInfo[]): RenderItem => {
     const id = generateId();
     const data = reactive<UserMessageData>({
       id,
       type: 'user',
       content,
-      files: fileInfo ? [fileInfo] : undefined,
+      files: files && files.length > 0 ? files : undefined,
     });
     const item: RenderItem = { id, type: 'user', data };
     renderItems.value.push(item);
@@ -346,19 +346,19 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
-   * 发送消息并获取流式响应
+   * 发送消息并获取流式响应（支持多文件）
    */
   const sendMessage = async (
     content: string,
     enableThinking?: boolean,
-    fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+    files?: UploadedFileInfo[]
   ) => {
     if (!content.trim() || isLoading.value) return;
 
-    console.log('[useChat] sendMessage 被调用', { content, enableThinking, fileInfo });
+    console.log('[useChat] sendMessage 被调用', { content, enableThinking, files });
 
     // 添加用户消息（包含文件信息）
-    addUserMessage(content, fileInfo);
+    addUserMessage(content, files);
     await scrollToBottom();
 
     isLoading.value = true;
@@ -374,8 +374,8 @@ export function useChat(options: UseChatOptions) {
     };
 
     // 如果有文件，添加到请求体
-    if (fileInfo) {
-      body.files = [fileInfo];
+    if (files && files.length > 0) {
+      body.files = files;
     }
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
@@ -410,13 +410,13 @@ export function useChat(options: UseChatOptions) {
   const handleSend = async (
     content?: string,
     enableThinking?: boolean,
-    fileInfo?: UploadedFileInfo
+    files?: UploadedFileInfo[]
   ) => {
-    console.log('[useChat] handleSend 被调用', { content, enableThinking, fileInfo });
+    console.log('[useChat] handleSend 被调用', { content, enableThinking, files });
     const messageContent = content ?? inputValue.value.trim();
     if (!messageContent) return;
     inputValue.value = '';
-    await sendMessage(messageContent, enableThinking, fileInfo);
+    await sendMessage(messageContent, enableThinking, files);
   };
 
   const init = async () => {
@@ -426,12 +426,18 @@ export function useChat(options: UseChatOptions) {
     const initMessage = sessionStorage.getItem(initKey);
 
     if (initMessage) {
-      // 读取文件信息（如果有）
-      let fileInfo: UploadedFileInfo | undefined;
+      // 读取文件信息（如果有，支持单文件或多文件）
+      let files: UploadedFileInfo[] | undefined;
       const fileInfoStr = sessionStorage.getItem(fileKey);
       if (fileInfoStr) {
         try {
-          fileInfo = JSON.parse(fileInfoStr);
+          const parsed = JSON.parse(fileInfoStr);
+          // 兼容旧格式（单文件对象）和新格式（文件数组）
+          if (Array.isArray(parsed)) {
+            files = parsed;
+          } else {
+            files = [parsed];
+          }
         } catch {
           // 解析失败，忽略
         }
@@ -457,7 +463,7 @@ export function useChat(options: UseChatOptions) {
 
       historyLoaded.value = true;
       // 发送消息时带上文件信息
-      await sendMessage(initMessage, undefined, fileInfo);
+      await sendMessage(initMessage, undefined, files);
     } else {
       const taskStore = useTaskStore();
       taskStore.setCurrentTask(taskId);

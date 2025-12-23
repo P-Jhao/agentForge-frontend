@@ -47,10 +47,10 @@ const {
 const onSend = (
   content: string,
   enableThinking: boolean,
-  fileInfo?: { filePath: string; originalName: string; size: number; url: string }
+  files?: { filePath: string; originalName: string; size: number; url: string }[]
 ) => {
-  console.log('[TaskPage] onSend 收到参数', { content, enableThinking, fileInfo });
-  handleSend(content, enableThinking, fileInfo);
+  console.log('[TaskPage] onSend 收到参数', { content, enableThinking, files });
+  handleSend(content, enableThinking, files);
 };
 
 // 监听 taskId 变化，切换任务时重新初始化
