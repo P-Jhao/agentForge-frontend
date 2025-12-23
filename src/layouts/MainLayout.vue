@@ -3,7 +3,7 @@
  * 主布局组件
  * 使用 CSS 类自动适配深浅主题
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { NLayout, NLayoutContent } from 'naive-ui';
 import { LayoutSider, LayoutHeader } from './components';
@@ -34,12 +34,32 @@ const contentHeight = computed(() => {
   return `calc(100vh - ${headerHeight.value}px)`;
 });
 
+// 处理鼠标离开视口时收起 header
+function handleMouseLeaveDocument(e: MouseEvent) {
+  // 当鼠标离开文档（移出视口）时，收起 header
+  if (
+    isTaskPage.value &&
+    (e.clientY <= 0 ||
+      e.clientX <= 0 ||
+      e.clientX >= window.innerWidth ||
+      e.clientY >= window.innerHeight)
+  ) {
+    headerExpanded.value = false;
+  }
+}
+
 // 初始化任务状态订阅（全局 SSE 连接）
 const { connect: connectTaskSubscription } = useTaskSubscription();
 
 onMounted(() => {
   // 建立 SSE 连接，接收任务状态实时推送
   connectTaskSubscription();
+  // 监听鼠标离开文档事件
+  document.addEventListener('mouseleave', handleMouseLeaveDocument);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mouseleave', handleMouseLeaveDocument);
 });
 </script>
 
