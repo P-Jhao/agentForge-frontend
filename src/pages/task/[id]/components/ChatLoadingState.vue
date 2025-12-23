@@ -36,7 +36,12 @@ const forgeAvatarUrl = computed(() => {
       class="avatar-ai flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full"
     >
       <!-- 优先显示 Forge 头像，否则显示默认头像 -->
-      <NAvatar :src="forgeAvatarUrl || '/favicon660x660.png'" :size="32" round object-fit="cover" />
+      <NAvatar
+        :src="forgeAvatarUrl || '/favicon660x660nobackground.png'"
+        :size="32"
+        round
+        object-fit="cover"
+      />
     </div>
 
     <!-- 加载动画 -->
