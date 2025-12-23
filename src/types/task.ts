@@ -6,11 +6,34 @@
 export type TaskStatus = 'running' | 'completed' | 'cancelled';
 
 // 消息类型枚举（新格式，不再包含 tool）
-export type MessageType = 'chat' | 'thinking' | 'tool_call' | 'error';
+export type MessageType =
+  | 'chat'
+  | 'thinking'
+  | 'tool_call'
+  | 'error'
+  | 'summary'
+  // 提示词增强相关类型
+  | 'user_original' // 开启增强时的用户原始输入
+  | 'user_answer' // 智能迭代中用户对澄清问题的回复
+  | 'reviewer' // 审查者输出
+  | 'questioner' // 提问者输出
+  | 'expert' // 专家分析输出
+  | 'enhancer'; // 增强后的提示词
 
-// 基础消息段落（thinking/chat/error）
+// 基础消息段落（thinking/chat/error 及增强相关类型）
 export interface BaseMessageSegment {
-  type: 'thinking' | 'chat' | 'error';
+  type:
+    | 'thinking'
+    | 'chat'
+    | 'error'
+    | 'summary'
+    // 提示词增强相关类型
+    | 'user_original'
+    | 'user_answer'
+    | 'reviewer'
+    | 'questioner'
+    | 'expert'
+    | 'enhancer';
   content: string;
 }
 
@@ -137,8 +160,15 @@ export type TaskSSEChunkType =
   | 'tool'
   | 'tool_call_start'
   | 'tool_call_result'
+  | 'summary'
   | 'error'
-  | 'done';
+  | 'done'
+  // 提示词增强相关类型
+  | 'user_original' // 用户原始输入（增强模式下）
+  | 'reviewer' // 审查者输出
+  | 'questioner' // 提问者输出
+  | 'expert' // 专家分析输出
+  | 'enhancer'; // 增强后的提示词
 
 // SSE 消息结构
 export interface TaskSSEChunk {

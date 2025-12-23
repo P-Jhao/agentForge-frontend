@@ -13,7 +13,12 @@ export type ChunkType =
   | 'status' // 状态变更
   | 'heartbeat' // 心跳
   | 'error' // 错误
-  | 'done'; // 结束
+  | 'done' // 结束
+  // 提示词增强相关类型
+  | 'reviewer' // 审查者输出
+  | 'questioner' // 提问者输出
+  | 'expert' // 专家分析输出
+  | 'enhancer'; // 增强后的提示词
 
 // 流式事件类型
 export type StreamEvent = 'start' | 'data' | 'end';
