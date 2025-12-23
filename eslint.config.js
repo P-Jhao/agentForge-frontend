@@ -48,6 +48,8 @@ export default [
         FileList: 'readonly',
         DragEvent: 'readonly',
         FormData: 'readonly',
+        // 观察者 API
+        IntersectionObserver: 'readonly',
       },
     },
     rules: {

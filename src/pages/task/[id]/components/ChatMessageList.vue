@@ -2,9 +2,9 @@
 /**
  * 聊天消息列表组件
  * 展示所有消息和加载状态
- * 使用 CSS 类自动适配深浅主题
+ * 监听滚动事件控制自动滚动
  */
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
 import type { TaskForge } from '@/types';
@@ -23,11 +23,39 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 滚动容器引用
 const containerRef = ref<HTMLElement | null>(null);
+// 是否允许自动滚动（用户在底部时为 true）
+const autoScrollEnabled = ref(true);
+// 判断是否接近底部的阈值（像素）
+const BOTTOM_THRESHOLD = 100;
+
+// 检查是否接近底部
+const isNearBottom = () => {
+  if (!containerRef.value) return true;
+  const { scrollTop, scrollHeight, clientHeight } = containerRef.value;
+  return scrollHeight - scrollTop - clientHeight < BOTTOM_THRESHOLD;
+};
+
+// 用户滚轮事件处理（只有用户主动滚动才会触发）
+const handleWheel = () => {
+  // 延迟检查，等滚动完成后再判断位置
+  setTimeout(() => {
+    autoScrollEnabled.value = isNearBottom();
+  }, 50);
+};
+
+onMounted(() => {
+  containerRef.value?.addEventListener('wheel', handleWheel, { passive: true });
+});
+
+onBeforeUnmount(() => {
+  containerRef.value?.removeEventListener('wheel', handleWheel);
+});
 
 // 滚动到底部（带平滑过渡效果）
 const scrollToBottom = async (smooth = true) => {
   await nextTick();
-  if (containerRef.value) {
+  // 只有当自动滚动启用时才滚动
+  if (containerRef.value && autoScrollEnabled.value) {
     containerRef.value.scrollTo({
       top: containerRef.value.scrollHeight,
       behavior: smooth ? 'smooth' : 'instant',
@@ -35,9 +63,24 @@ const scrollToBottom = async (smooth = true) => {
   }
 };
 
-// 暴露方法给父组件
+// 强制滚动到底部（忽略 autoScrollEnabled 状态，用于用户发送消息后）
+const forceScrollToBottom = async (smooth = true) => {
+  await nextTick();
+  if (containerRef.value) {
+    containerRef.value.scrollTo({
+      top: containerRef.value.scrollHeight,
+      behavior: smooth ? 'smooth' : 'instant',
+    });
+    // 滚动后重新启用自动滚动
+    autoScrollEnabled.value = true;
+  }
+};
+
+// 暴露方法和状态给父组件
 defineExpose({
   scrollToBottom,
+  forceScrollToBottom,
+  autoScrollEnabled,
 });
 
 // 判断是否需要显示独立的加载状态

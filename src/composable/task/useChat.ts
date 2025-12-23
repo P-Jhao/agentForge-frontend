@@ -92,6 +92,7 @@ export interface RenderItem {
 export interface UseChatOptions {
   taskId: string;
   onScrollToBottom?: () => void;
+  onForceScrollToBottom?: () => void;
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -102,7 +103,7 @@ const generateId = () => {
 };
 
 export function useChat(options: UseChatOptions) {
-  const { onScrollToBottom } = options;
+  const { onScrollToBottom, onForceScrollToBottom } = options;
 
   const currentTaskId = ref(options.taskId);
   const inputValue = ref('');
@@ -129,21 +130,27 @@ export function useChat(options: UseChatOptions) {
     }, 0);
   };
 
-  // 节流滚动
+  // 强制滚动到底部（用户发送消息后使用）
+  const forceScrollToBottom = async () => {
+    await nextTick();
+    setTimeout(() => {
+      onForceScrollToBottom?.();
+    }, 0);
+  };
+
+  // 节流滚动（每次调用都会检查 autoScrollEnabled，由 ChatMessageList 控制）
   let throttleTimer: ReturnType<typeof setTimeout> | null = null;
-  let pendingScroll = false;
 
   const throttledScrollToBottom = async () => {
-    pendingScroll = true;
+    // 如果已经有定时器在等待，不重复设置
     if (throttleTimer) return;
+
+    // 立即执行一次滚动
     await scrollToBottom();
-    pendingScroll = false;
-    throttleTimer = setTimeout(async () => {
+
+    // 设置节流定时器，500ms 内不再触发
+    throttleTimer = setTimeout(() => {
       throttleTimer = null;
-      if (pendingScroll) {
-        await scrollToBottom();
-        pendingScroll = false;
-      }
     }, 500);
   };
 
@@ -433,7 +440,7 @@ export function useChat(options: UseChatOptions) {
 
     // 添加用户消息（包含文件信息）
     addUserMessage(content, files);
-    await scrollToBottom();
+    await forceScrollToBottom();
 
     isLoading.value = true;
     currentStreamItem = null;
@@ -643,7 +650,7 @@ export function useChat(options: UseChatOptions) {
       content: answer,
     });
     renderItems.value.push({ id, type: 'user_answer', data });
-    await scrollToBottom();
+    await forceScrollToBottom();
 
     isLoading.value = true;
     currentStreamItem = null;
