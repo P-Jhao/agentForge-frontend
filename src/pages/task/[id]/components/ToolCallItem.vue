@@ -40,7 +40,7 @@ const containerClass = computed(() => {
   const base = 'px-3 py-2 text-sm cursor-pointer transition-colors';
   const borderRadius = 'rounded-[18px] rounded-tl-[4px]';
   if (themeStore.isDark) {
-    return `${base} ${borderRadius} bg-gray-800 hover:bg-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.3)]`;
+    return `${base} ${borderRadius} tool-call-dark`;
   }
   return `${base} ${borderRadius} bg-white hover:bg-gray-50 shadow-[0_1px_2px_rgba(0,0,0,0.05)]`;
 });
@@ -140,3 +140,19 @@ const formattedArgs = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 深色模式工具调用样式 */
+.tool-call-dark {
+  background: linear-gradient(135deg, rgba(97, 114, 243, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border: 1px solid rgba(97, 114, 243, 0.25);
+  box-shadow:
+    0 0 12px rgba(97, 114, 243, 0.1),
+    0 0 24px rgba(97, 114, 243, 0.05);
+}
+
+.tool-call-dark:hover {
+  background: linear-gradient(135deg, rgba(97, 114, 243, 0.18) 0%, rgba(168, 85, 247, 0.12) 100%);
+  border-color: rgba(97, 114, 243, 0.35);
+}
+</style>

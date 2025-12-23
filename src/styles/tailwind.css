@@ -407,8 +407,12 @@
   }
 
   .dark .bubble-ai {
-    @apply bg-gray-800 text-gray-200;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    @apply text-gray-200;
+    background: linear-gradient(135deg, rgba(97, 114, 243, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%);
+    border: 1px solid rgba(97, 114, 243, 0.25);
+    box-shadow:
+      0 0 12px rgba(97, 114, 243, 0.1),
+      0 0 24px rgba(97, 114, 243, 0.05);
   }
 
   /* AI 头像背景（自适应深浅模式） */
@@ -629,7 +633,8 @@
   }
 
   .dark .input-container {
-    @apply border-gray-700 bg-gray-800;
+    background: linear-gradient(135deg, rgba(97, 114, 243, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%);
+    border: 1px solid rgba(97, 114, 243, 0.2);
   }
 
   /* 头部容器 */

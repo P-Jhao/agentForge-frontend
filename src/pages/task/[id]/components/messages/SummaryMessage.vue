@@ -104,7 +104,9 @@ defineProps<{
 <!-- 非 scoped 样式用于暗黑模式 -->
 <style>
 .dark .summary-message {
-  background: rgb(31, 41, 55) !important;
+  /* 使用不透明的深色背景叠加渐变，防止旋转边框透出 */
+  background:
+    linear-gradient(135deg, rgba(97, 114, 243, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%), #0f172a !important;
 }
 
 .dark .summary-header {

@@ -231,7 +231,25 @@ const handleHtmlChanged = (html: string) => {
 
 .dark :deep(.md-editor-preview blockquote),
 .dark :deep(.md-preview blockquote) {
-  border-left-color: #6b7280 !important;
-  background: rgba(255, 255, 255, 0.03) !important;
+  /* 玻璃质感样式 - 模仿侧边栏选中效果 */
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-left: 3px solid rgba(97, 114, 243, 0.6) !important;
+  border-radius: 0 12px 12px 0 !important;
+  padding: 12px 16px !important;
+}
+</style>
+
+<!-- 深色模式引用块样式（非 scoped，确保 .dark 选择器生效） -->
+<style>
+html.dark .e-markdown .md-editor-preview blockquote,
+html.dark .e-markdown .md-preview blockquote,
+html.dark .md-editor-preview blockquote,
+html.dark .md-preview blockquote {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-left: 3px solid rgba(97, 114, 243, 0.6) !important;
+  border-radius: 0 12px 12px 0 !important;
+  padding: 12px 16px !important;
 }
 </style>
