@@ -10,7 +10,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 // SSE 事件类型
 interface TaskSSEEvent {
-  type: 'connected' | 'status_change' | 'task_update' | 'mcp:status_change';
+  type: 'connected' | 'status_change' | 'task_update' | 'title_update' | 'mcp:status_change';
   taskUuid?: string;
   mcpId?: number;
   data?: {
@@ -170,6 +170,14 @@ export function useTaskSubscription() {
             updateData.status = event.data.status as 'running' | 'completed' | 'cancelled';
           }
           taskStore.updateLocalTask(event.taskUuid, updateData);
+        }
+        break;
+
+      case 'title_update':
+        if (event.taskUuid && event.data?.title) {
+          console.log(`[TaskSubscription] 任务 ${event.taskUuid} 标题更新:`, event.data.title);
+          // 使用打字机效果更新标题
+          taskStore.updateTaskTitleWithTypewriter(event.taskUuid, event.data.title);
         }
         break;
 

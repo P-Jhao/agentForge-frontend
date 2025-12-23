@@ -197,6 +197,51 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
+  // 存储正在进行的打字机定时器，用于清理
+  const typewriterTimers = new Map<string, ReturnType<typeof setTimeout>[]>();
+
+  /**
+   * 使用打字机效果更新任务标题
+   * 逐字显示新标题，模拟打字机效果
+   */
+  function updateTaskTitleWithTypewriter(uuid: string, newTitle: string) {
+    const task = tasks.value.find((t) => t.uuid === uuid);
+    if (!task) return;
+
+    // 清理之前的打字机定时器（如果有）
+    const existingTimers = typewriterTimers.get(uuid);
+    if (existingTimers) {
+      existingTimers.forEach((timer) => clearTimeout(timer));
+      typewriterTimers.delete(uuid);
+    }
+
+    // 打字机效果：逐字显示
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const chars = newTitle.split('');
+
+    // 先清空标题，准备打字机效果
+    task.title = '';
+
+    // 计算每个字符的累计延迟（随机 50-100ms）
+    let cumulativeDelay = 0;
+    chars.forEach((char, index) => {
+      // 每个字符随机延迟 50-100ms
+      const randomDelay = Math.floor(Math.random() * 51) + 50;
+      cumulativeDelay += randomDelay;
+
+      const timer = setTimeout(() => {
+        task.title += char;
+        // 最后一个字符时清理定时器记录
+        if (index === chars.length - 1) {
+          typewriterTimers.delete(uuid);
+        }
+      }, cumulativeDelay);
+      timers.push(timer);
+    });
+
+    typewriterTimers.set(uuid, timers);
+  }
+
   return {
     // 状态
     tasks,
@@ -220,5 +265,6 @@ export const useTaskStore = defineStore('task', () => {
     toggleFavorite,
     updateLocalTask,
     touchTask,
+    updateTaskTitleWithTypewriter,
   };
 });
