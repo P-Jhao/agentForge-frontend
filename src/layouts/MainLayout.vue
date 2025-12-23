@@ -3,9 +3,10 @@
  * 主布局组件
  * 使用 CSS 类自动适配深浅主题
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, provide } from 'vue';
 import { useRoute } from 'vue-router';
-import { NLayout, NLayoutContent } from 'naive-ui';
+import { NLayout, NLayoutContent, NIcon, NTooltip } from 'naive-ui';
+import { ChevronDownOutline, ChevronUpOutline } from '@vicons/ionicons5';
 import { LayoutSider, LayoutHeader } from './components';
 import { useTaskSubscription } from '@/composable/task';
 
@@ -14,14 +15,18 @@ const route = useRoute();
 // 侧边栏折叠状态
 const collapsed = ref(false);
 
-// 是否在任务详情页
+// 是否在任务详情页或回放页（都需要收起导航栏）
 const isTaskPage = computed(() => {
   const path = route.path;
   return path.startsWith('/task/') && path !== '/task/list';
 });
 
-// Header 是否展开（任务页默认收起，鼠标悬停展开）
+// Header 是否展开（任务页默认收起，点击按钮展开）
 const headerExpanded = ref(false);
+
+// 提供给子组件使用
+provide('headerExpanded', headerExpanded);
+provide('isTaskPage', isTaskPage);
 
 // 计算 header 高度
 const headerHeight = computed(() => {
@@ -34,18 +39,9 @@ const contentHeight = computed(() => {
   return `calc(100vh - ${headerHeight.value}px)`;
 });
 
-// 处理鼠标离开视口时收起 header
-function handleMouseLeaveDocument(e: MouseEvent) {
-  // 当鼠标离开文档（移出视口）时，收起 header
-  if (
-    isTaskPage.value &&
-    (e.clientY <= 0 ||
-      e.clientX <= 0 ||
-      e.clientX >= window.innerWidth ||
-      e.clientY >= window.innerHeight)
-  ) {
-    headerExpanded.value = false;
-  }
+// 切换展开/收起
+function toggleExpand() {
+  headerExpanded.value = !headerExpanded.value;
 }
 
 // 初始化任务状态订阅（全局 SSE 连接）
@@ -54,12 +50,6 @@ const { connect: connectTaskSubscription } = useTaskSubscription();
 onMounted(() => {
   // 建立 SSE 连接，接收任务状态实时推送
   connectTaskSubscription();
-  // 监听鼠标离开文档事件
-  document.addEventListener('mouseleave', handleMouseLeaveDocument);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('mouseleave', handleMouseLeaveDocument);
 });
 </script>
 
@@ -69,24 +59,33 @@ onUnmounted(() => {
     <LayoutSider v-model:collapsed="collapsed" />
 
     <!-- 右侧主体 -->
-    <NLayout>
-      <!-- 顶部触发区域（任务页时用于触发 header 展开） -->
-      <div
-        v-if="isTaskPage"
-        class="absolute top-0 right-0 left-0 z-50 h-4"
-        @mouseenter="headerExpanded = true"
-      ></div>
-
+    <NLayout class="relative">
       <!-- 顶部导航栏 -->
       <div
         class="transition-all duration-300 ease-in-out"
         :class="{ 'overflow-hidden': isTaskPage }"
         :style="{ height: `${headerHeight}px` }"
-        @mouseenter="headerExpanded = true"
-        @mouseleave="isTaskPage && (headerExpanded = false)"
       >
         <LayoutHeader />
       </div>
+
+      <!-- 任务页展开/收起按钮（始终可见） -->
+      <NTooltip v-if="isTaskPage" :delay="500" placement="bottom">
+        <template #trigger>
+          <button
+            class="absolute left-1/2 z-50 flex h-5 w-10 -translate-x-1/2 items-center justify-center rounded-full border border-gray-200 bg-white transition-all duration-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+            :style="{ top: headerExpanded ? '60px' : '0px' }"
+            @click="toggleExpand"
+          >
+            <NIcon
+              :component="headerExpanded ? ChevronUpOutline : ChevronDownOutline"
+              :size="14"
+              class="text-gray-500"
+            />
+          </button>
+        </template>
+        {{ headerExpanded ? '收起' : '展开' }}
+      </NTooltip>
 
       <!-- 内容区域 -->
       <NLayoutContent

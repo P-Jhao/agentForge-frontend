@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, watch, type Component } from 'vue';
+import { h, watch, inject, type Component, type Ref, type ComputedRef } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import {
   NLayoutHeader,
@@ -17,6 +17,8 @@ import {
   NotificationsOutline,
   SunnyOutline,
   MoonOutline,
+  ChevronDownOutline,
+  ChevronUpOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useUserStore, useTaskStore } from '@/stores';
 
@@ -26,6 +28,10 @@ const themeStore = useThemeStore();
 const userStore = useUserStore();
 const taskStore = useTaskStore();
 
+// 从父组件注入状态
+const headerExpanded = inject<Ref<boolean>>('headerExpanded');
+const isTaskPage = inject<ComputedRef<boolean>>('isTaskPage');
+
 // 监听路由变化，离开任务页面时清除当前任务
 watch(
   () => route.path,
@@ -33,7 +39,8 @@ watch(
     if (!newPath.startsWith('/task/') || newPath === '/task/list') {
       taskStore.clearCurrentTask();
     }
-  }
+  },
+  { immediate: true }
 );
 
 // 渲染图标的辅助函数
@@ -72,6 +79,13 @@ function handleUserSelect(key: string) {
 // 跳转登录页
 function goLogin() {
   router.push('/login');
+}
+
+// 切换展开/收起
+function toggleExpand() {
+  if (headerExpanded) {
+    headerExpanded.value = !headerExpanded.value;
+  }
 }
 </script>
 
@@ -136,6 +150,8 @@ function goLogin() {
         <NAvatar round size="small" class="bg-gray-400">?</NAvatar>
         <span class="sider-item-text text-sm">未登录</span>
       </div>
+
+      <!-- 任务页展开/收起按钮 -->
     </NSpace>
   </NLayoutHeader>
 </template>
