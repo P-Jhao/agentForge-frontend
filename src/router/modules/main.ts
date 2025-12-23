@@ -53,6 +53,12 @@ const mainRoutes: RouteRecordRaw = {
       component: () => import('@/pages/task/[id]/index.vue'),
       meta: { title: '任务详情', requiresAuth: true },
     },
+    {
+      path: 'task/:id/replay',
+      name: 'TaskReplay',
+      component: () => import('@/pages/task/[id]/replay.vue'),
+      meta: { title: '任务回放', requiresAuth: true },
+    },
     // MCP 管理（需要登录）
     {
       path: 'mcp',

@@ -20,6 +20,7 @@ import {
   CogOutline,
 } from '@vicons/ionicons5';
 import { useTaskStore, useForgeStore } from '@/stores';
+import TaskActionMenu from '@/components/TaskActionMenu.vue';
 import type { Task } from '@/types';
 
 // 接收折叠状态
@@ -413,7 +414,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.today"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="group relative block rounded-lg px-3 py-2 transition-all duration-200"
+                      class="task-item group relative block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -421,7 +422,7 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      <!-- 收藏星标 -->
+                      <!-- 收藏星标（右上角） -->
                       <button
                         class="absolute top-1 right-1 cursor-pointer p-1"
                         @click="handleToggleFavorite($event, task)"
@@ -437,14 +438,20 @@ watch(searchKeyword, (keyword) => {
                         />
                       </button>
                       <div class="truncate pr-5 text-sm">{{ task.title }}</div>
-                      <div class="mt-1 flex items-center justify-between text-xs opacity-60">
+                      <div class="mt-1 flex h-6 items-center text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
-                        <NTooltip>
-                          <template #trigger>
-                            <span>{{ formatUpdateTime(task.updatedAt) }}</span>
-                          </template>
-                          {{ formatFullTime(task.updatedAt) }}
-                        </NTooltip>
+                        <span class="ml-auto flex items-center">
+                          <NTooltip>
+                            <template #trigger>
+                              <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                            </template>
+                            {{ formatFullTime(task.updatedAt) }}
+                          </NTooltip>
+                          <!-- 操作菜单（hover 时显示） -->
+                          <span class="ml-1 hidden group-hover:inline-flex">
+                            <TaskActionMenu :task="task" />
+                          </span>
+                        </span>
                       </div>
                     </RouterLink>
                   </div>
@@ -461,7 +468,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.yesterday"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="group relative block rounded-lg px-3 py-2 transition-all duration-200"
+                      class="task-item group relative block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -469,7 +476,7 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      <!-- 收藏星标 -->
+                      <!-- 收藏星标（右上角） -->
                       <button
                         class="absolute top-1 right-1 cursor-pointer p-1"
                         @click="handleToggleFavorite($event, task)"
@@ -485,14 +492,20 @@ watch(searchKeyword, (keyword) => {
                         />
                       </button>
                       <div class="truncate pr-5 text-sm">{{ task.title }}</div>
-                      <div class="mt-1 flex items-center justify-between text-xs opacity-60">
+                      <div class="mt-1 flex h-6 items-center text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
-                        <NTooltip>
-                          <template #trigger>
-                            <span>{{ formatUpdateTime(task.updatedAt) }}</span>
-                          </template>
-                          {{ formatFullTime(task.updatedAt) }}
-                        </NTooltip>
+                        <span class="ml-auto flex items-center">
+                          <NTooltip>
+                            <template #trigger>
+                              <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                            </template>
+                            {{ formatFullTime(task.updatedAt) }}
+                          </NTooltip>
+                          <!-- 操作菜单（hover 时显示） -->
+                          <span class="ml-1 hidden group-hover:inline-flex">
+                            <TaskActionMenu :task="task" />
+                          </span>
+                        </span>
                       </div>
                     </RouterLink>
                   </div>
@@ -509,7 +522,7 @@ watch(searchKeyword, (keyword) => {
                       v-for="task in displayedTasks.earlier"
                       :key="task.uuid"
                       :to="`/task/${task.uuid}`"
-                      class="group relative block rounded-lg px-3 py-2 transition-all duration-200"
+                      class="task-item group relative block rounded-lg px-3 py-2 transition-all duration-200"
                       :class="
                         isActive(`task-${task.uuid}`)
                           ? 'sider-item-active sider-item-active-text'
@@ -517,7 +530,7 @@ watch(searchKeyword, (keyword) => {
                       "
                       @click="handleTaskClick(task)"
                     >
-                      <!-- 收藏星标 -->
+                      <!-- 收藏星标（右上角） -->
                       <button
                         class="absolute top-1 right-1 cursor-pointer p-1"
                         @click="handleToggleFavorite($event, task)"
@@ -533,14 +546,20 @@ watch(searchKeyword, (keyword) => {
                         />
                       </button>
                       <div class="truncate pr-5 text-sm">{{ task.title }}</div>
-                      <div class="mt-1 flex items-center justify-between text-xs opacity-60">
+                      <div class="mt-1 flex h-6 items-center text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
-                        <NTooltip>
-                          <template #trigger>
-                            <span>{{ formatUpdateTime(task.updatedAt) }}</span>
-                          </template>
-                          {{ formatFullTime(task.updatedAt) }}
-                        </NTooltip>
+                        <span class="ml-auto flex items-center">
+                          <NTooltip>
+                            <template #trigger>
+                              <span>{{ formatUpdateTime(task.updatedAt) }}</span>
+                            </template>
+                            {{ formatFullTime(task.updatedAt) }}
+                          </NTooltip>
+                          <!-- 操作菜单（hover 时显示） -->
+                          <span class="ml-1 hidden group-hover:inline-flex">
+                            <TaskActionMenu :task="task" />
+                          </span>
+                        </span>
                       </div>
                     </RouterLink>
                   </div>

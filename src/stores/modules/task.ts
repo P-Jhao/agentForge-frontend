@@ -200,6 +200,9 @@ export const useTaskStore = defineStore('task', () => {
   // 存储正在进行的打字机定时器，用于清理
   const typewriterTimers = new Map<string, ReturnType<typeof setTimeout>[]>();
 
+  // 标题正在生成中的任务 UUID 集合
+  const titleGeneratingSet = ref<Set<string>>(new Set());
+
   /**
    * 使用打字机效果更新任务标题
    * 逐字显示新标题，模拟打字机效果
@@ -214,6 +217,9 @@ export const useTaskStore = defineStore('task', () => {
       existingTimers.forEach((timer) => clearTimeout(timer));
       typewriterTimers.delete(uuid);
     }
+
+    // 标记标题正在生成中
+    titleGeneratingSet.value.add(uuid);
 
     // 打字机效果：逐字显示
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -231,15 +237,33 @@ export const useTaskStore = defineStore('task', () => {
 
       const timer = setTimeout(() => {
         task.title += char;
-        // 最后一个字符时清理定时器记录
+        // 最后一个字符时清理定时器记录并移除生成中状态
         if (index === chars.length - 1) {
           typewriterTimers.delete(uuid);
+          titleGeneratingSet.value.delete(uuid);
         }
       }, cumulativeDelay);
       timers.push(timer);
     });
 
     typewriterTimers.set(uuid, timers);
+  }
+
+  /**
+   * 判断任务标题是否正在生成中
+   */
+  function isTitleGenerating(uuid: string): boolean {
+    return titleGeneratingSet.value.has(uuid);
+  }
+
+  /**
+   * 判断任务是否可以重命名
+   * 条件：标题不是"新会话"且标题不在生成中
+   */
+  function canRename(uuid: string): boolean {
+    const task = tasks.value.find((t) => t.uuid === uuid);
+    if (!task) return false;
+    return task.title !== '新会话' && !isTitleGenerating(uuid);
   }
 
   return {
@@ -266,5 +290,7 @@ export const useTaskStore = defineStore('task', () => {
     updateLocalTask,
     touchTask,
     updateTaskTitleWithTypewriter,
+    isTitleGenerating,
+    canRename,
   };
 });

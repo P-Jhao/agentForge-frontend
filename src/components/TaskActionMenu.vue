@@ -1,0 +1,169 @@
+<script setup lang="ts">
+/**
+ * 任务操作菜单组件
+ * 提供回放、重命名、删除等操作
+ */
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { NDropdown, NIcon, NButton, NModal, NInput, useMessage, useDialog } from 'naive-ui';
+import {
+  EllipsisHorizontalOutline,
+  PlayOutline,
+  CreateOutline,
+  TrashOutline,
+} from '@vicons/ionicons5';
+import { useTaskStore } from '@/stores';
+import type { Task } from '@/types';
+
+const props = defineProps<{
+  task: Task;
+}>();
+
+const emit = defineEmits<{
+  (e: 'deleted'): void;
+  (e: 'renamed', newTitle: string): void;
+}>();
+
+const router = useRouter();
+const message = useMessage();
+const dialog = useDialog();
+const taskStore = useTaskStore();
+
+// 重命名弹窗状态
+const showRenameModal = ref(false);
+const newTitle = ref('');
+const renameLoading = ref(false);
+
+// 是否可以重命名
+const canRename = computed(() => taskStore.canRename(props.task.uuid));
+
+// 下拉菜单选项
+const menuOptions = computed(() => [
+  {
+    label: '回放',
+    key: 'replay',
+    icon: () => h(NIcon, null, { default: () => h(PlayOutline) }),
+  },
+  {
+    label: '重命名',
+    key: 'rename',
+    icon: () => h(NIcon, null, { default: () => h(CreateOutline) }),
+    disabled: !canRename.value,
+  },
+  {
+    type: 'divider',
+    key: 'd1',
+  },
+  {
+    label: '删除',
+    key: 'delete',
+    icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
+    props: {
+      style: 'color: #ef4444',
+    },
+  },
+]);
+
+// 处理菜单选择
+function handleSelect(key: string) {
+  switch (key) {
+    case 'replay':
+      handleReplay();
+      break;
+    case 'rename':
+      handleOpenRename();
+      break;
+    case 'delete':
+      handleDelete();
+      break;
+  }
+}
+
+// 回放
+function handleReplay() {
+  router.push(`/task/${props.task.uuid}/replay`);
+}
+
+// 打开重命名弹窗
+function handleOpenRename() {
+  newTitle.value = props.task.title;
+  showRenameModal.value = true;
+}
+
+// 确认重命名
+async function handleConfirmRename() {
+  const trimmedTitle = newTitle.value.trim();
+  if (!trimmedTitle) {
+    message.warning('标题不能为空');
+    return;
+  }
+  if (trimmedTitle === props.task.title) {
+    showRenameModal.value = false;
+    return;
+  }
+
+  renameLoading.value = true;
+  try {
+    await taskStore.updateTask(props.task.uuid, { title: trimmedTitle });
+    message.success('重命名成功');
+    showRenameModal.value = false;
+    emit('renamed', trimmedTitle);
+  } catch (error) {
+    message.error('重命名失败');
+  } finally {
+    renameLoading.value = false;
+  }
+}
+
+// 删除（带二次确认）
+function handleDelete() {
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除任务「${props.task.title}」吗？此操作不可恢复。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        await taskStore.deleteTask(props.task.uuid);
+        message.success('删除成功');
+        emit('deleted');
+      } catch (error) {
+        message.error('删除失败');
+      }
+    },
+  });
+}
+
+// 需要引入 h 函数
+import { h } from 'vue';
+</script>
+
+<template>
+  <NDropdown trigger="click" :options="menuOptions" placement="right-start" @select="handleSelect">
+    <NButton quaternary circle size="tiny" @click.prevent.stop>
+      <template #icon>
+        <NIcon :component="EllipsisHorizontalOutline" :size="16" />
+      </template>
+    </NButton>
+  </NDropdown>
+
+  <!-- 重命名弹窗 -->
+  <NModal
+    v-model:show="showRenameModal"
+    preset="dialog"
+    title="重命名任务"
+    positive-text="确认"
+    negative-text="取消"
+    :positive-button-props="{ loading: renameLoading }"
+    @positive-click="handleConfirmRename"
+    @negative-click="showRenameModal = false"
+  >
+    <NInput
+      v-model:value="newTitle"
+      placeholder="请输入新标题"
+      :maxlength="50"
+      show-count
+      @keyup.enter="handleConfirmRename"
+    />
+  </NModal>
+</template>
