@@ -415,30 +415,66 @@ export function useAutoOperation() {
       const { forgeConfig } = autoOperationStore;
       const mcpIds = forgeConfig?.mcpIds || [];
 
-      // 5. 高亮并选择 MCP 工具
+      // 5. 滚动到 MCP 工具区域并点击添加按钮
       autoOperationStore.setStage('creating');
       await wait(getDelay('searchUpdate'));
 
+      // 找到"添加 MCP"按钮
+      const addMcpButton = await waitForElement('.forge-form button.border-dashed');
+      if (!addMcpButton) {
+        throw new Error('未找到添加 MCP 按钮');
+      }
+
+      // 滚动到视野内
+      scrollIntoViewIfNeeded(addMcpButton);
+      await wait(getDelay('afterHighlight'));
+
+      // 高亮并点击添加按钮
+      await highlight(addMcpButton, { duration: getDelay('highlightDuration') });
+      checkCancelled();
+      addMcpButton.click();
+
+      // 等待弹窗打开
+      await wait(getDelay('pageTransition'));
+      checkCancelled();
+
+      // 6. 在弹窗中选择 MCP 工具
       for (const mcpId of mcpIds) {
         checkCancelled();
-        const mcpCheckbox = await waitForElement(`[data-mcp-id="${mcpId}"] input[type="checkbox"]`);
-        if (mcpCheckbox && !(mcpCheckbox as HTMLInputElement).checked) {
-          await highlight(mcpCheckbox.parentElement || mcpCheckbox, {
-            duration: getDelay('highlightDuration'),
-          });
-          (mcpCheckbox as HTMLInputElement).click();
-          await wait(getDelay('mcpSelect'));
-        }
+
+        // 通过自定义事件通知组件选择指定的 MCP
+        window.dispatchEvent(
+          new CustomEvent('auto-operation-select-mcp', {
+            detail: { mcpId },
+          })
+        );
+
+        // 等待工具列表加载
+        await wait(getDelay('pageTransition'));
+        checkCancelled();
+
+        // 触发全选该 MCP 的所有工具
+        window.dispatchEvent(new CustomEvent('auto-operation-select-all-tools'));
+        await wait(getDelay('mcpSelect'));
       }
 
       checkCancelled();
       await wait(getDelay('beforeSubmit'));
 
-      // 6. 高亮并点击创建按钮
-      const submitButton = await waitForElement('.forge-form button[type="primary"]');
+      // 7. 触发确认添加
+      window.dispatchEvent(new CustomEvent('auto-operation-confirm-mcp'));
+      await wait(getDelay('searchUpdate'));
+
+      checkCancelled();
+
+      // 8. 滚动到创建按钮并点击
+      const submitButton = await waitForElement('.forge-form .btn-theme');
       if (!submitButton) {
         throw new Error('未找到创建按钮');
       }
+
+      scrollIntoViewIfNeeded(submitButton);
+      await wait(getDelay('afterHighlight'));
 
       await highlight(submitButton, { duration: getDelay('highlightDuration') });
       checkCancelled();
@@ -467,6 +503,8 @@ export function useAutoOperation() {
    * Forge 创建成功后的处理
    */
   const handleAfterForgeCreated = async (_forgeId: string) => {
+    // _forgeId 参数保留用于未来扩展
+    void _forgeId;
     try {
       checkCancelled();
       await wait(getDelay('pageTransition'));

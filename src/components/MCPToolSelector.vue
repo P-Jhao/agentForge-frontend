@@ -4,7 +4,7 @@
  * 显示已选择的 MCP 及其工具，支持添加/删除
  * 科技感设计风格
  */
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   NButton,
   NIcon,
@@ -171,6 +171,57 @@ const isIndeterminate = computed(() => {
   if (!selectedMcpId.value) return false;
   const tools = getMCPTools(selectedMcpId.value);
   return tempSelectedTools.value.length > 0 && tempSelectedTools.value.length < tools.length;
+});
+
+// ==================== 自动操作事件处理 ====================
+
+/**
+ * 处理自动选择 MCP 事件
+ */
+const handleAutoSelectMcp = async (e: Event) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const detail = (e as any).detail as { mcpId: number };
+  const { mcpId } = detail;
+  if (!mcpId || !showModal.value) return;
+
+  // 在 MCP 列表中找到对应的 MCP
+  const mcp = mcpStore.mcpList.find((m) => m.id === mcpId);
+  if (mcp) {
+    await handleSelectMcp(mcp);
+  }
+};
+
+/**
+ * 处理自动全选工具事件
+ */
+const handleAutoSelectAllTools = () => {
+  if (!selectedMcpId.value || !showModal.value) return;
+
+  const tools = getMCPTools(selectedMcpId.value);
+  tempSelectedTools.value = tools.map((t) => t.name);
+};
+
+/**
+ * 处理自动确认添加事件
+ */
+const handleAutoConfirmAdd = () => {
+  if (showModal.value && selectedMcpId.value && tempSelectedTools.value.length > 0) {
+    handleConfirmAdd();
+  }
+};
+
+// 注册自动操作事件监听
+onMounted(() => {
+  window.addEventListener('auto-operation-select-mcp', handleAutoSelectMcp);
+  window.addEventListener('auto-operation-select-all-tools', handleAutoSelectAllTools);
+  window.addEventListener('auto-operation-confirm-mcp', handleAutoConfirmAdd);
+});
+
+// 清理事件监听
+onUnmounted(() => {
+  window.removeEventListener('auto-operation-select-mcp', handleAutoSelectMcp);
+  window.removeEventListener('auto-operation-select-all-tools', handleAutoSelectAllTools);
+  window.removeEventListener('auto-operation-confirm-mcp', handleAutoConfirmAdd);
 });
 </script>
 
