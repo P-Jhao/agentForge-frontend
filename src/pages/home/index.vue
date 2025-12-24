@@ -11,7 +11,6 @@ import { SparklesOutline } from '@vicons/ionicons5';
 import ChatInput from '@/components/ChatInput.vue';
 import FeaturedTaskCard from '@/components/FeaturedTaskCard.vue';
 import XScroll from '@/components/XScroll.vue';
-import { mockFeaturedTasks } from '@/mock/featuredTasks';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 import type { FeaturedTask } from '@/types';
 
@@ -84,15 +83,19 @@ const stats = [
 async function loadFeaturedTasks() {
   featuredLoading.value = true;
   try {
-    // 使用 mock 数据测试 UI
-    featuredTasks.value = mockFeaturedTasks;
-    // 正式环境使用 API
-    // featuredTasks.value = await getFeaturedList();
+    // 调用真实 API 获取推荐示例
+    const { getFeaturedList } = await import('@/utils');
+    featuredTasks.value = await getFeaturedList();
   } catch (error) {
     console.error('加载推荐示例失败:', error);
   } finally {
     featuredLoading.value = false;
   }
+}
+
+// 处理一键做同款
+function handleClone(prompt: string) {
+  askInput.value = prompt;
 }
 
 onMounted(() => {
@@ -187,6 +190,7 @@ onMounted(() => {
             :key="featured.id"
             :featured="featured"
             class="w-56 shrink-0"
+            @clone="handleClone"
           />
         </XScroll>
       </div>

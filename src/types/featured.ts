@@ -21,6 +21,7 @@ export interface FeaturedTask {
   coverImage: string | null;
   title: string;
   description: string | null;
+  clonePrompt: string | null;
   sortOrder: number;
   createdAt: string;
   task: FeaturedTaskInfo | null;
@@ -32,6 +33,7 @@ export interface SetFeaturedParams {
   coverImage?: string;
   title?: string;
   description?: string;
+  clonePrompt?: string;
   sortOrder?: number;
 }
 

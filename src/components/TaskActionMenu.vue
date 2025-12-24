@@ -3,7 +3,7 @@
  * 任务操作菜单组件
  * 提供回放、重命名、删除、推荐示例等操作
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, h } from 'vue';
 import { useRouter } from 'vue-router';
 import { NDropdown, NIcon, NButton, NModal, NInput, useMessage, useDialog } from 'naive-ui';
 import {
@@ -14,7 +14,8 @@ import {
   RibbonOutline,
 } from '@vicons/ionicons5';
 import { useTaskStore, useUserStore } from '@/stores';
-import { checkFeatured, setFeatured, removeFeatured } from '@/utils';
+import { checkFeatured, removeFeatured } from '@/utils';
+import FeaturedFormModal from './FeaturedFormModal.vue';
 import type { Task } from '@/types';
 
 const props = defineProps<{
@@ -41,6 +42,7 @@ const renameLoading = ref(false);
 // 推荐示例状态
 const isFeatured = ref(false);
 const featuredLoading = ref(false);
+const showFeaturedModal = ref(false);
 
 // 是否可以重命名
 const canRename = computed(() => taskStore.canRename(props.task.uuid));
@@ -149,25 +151,29 @@ async function handleConfirmRename() {
 
 // 切换推荐示例状态
 async function handleToggleFeatured() {
-  featuredLoading.value = true;
-  try {
-    if (isFeatured.value) {
-      // 取消推荐
+  if (isFeatured.value) {
+    // 取消推荐
+    featuredLoading.value = true;
+    try {
       await removeFeatured(props.task.uuid);
       isFeatured.value = false;
       message.success('已取消推荐');
-    } else {
-      // 设为推荐
-      await setFeatured({ taskUuid: props.task.uuid });
-      isFeatured.value = true;
-      message.success('已设为推荐示例');
+      emit('featuredChanged', isFeatured.value);
+    } catch {
+      message.error('取消推荐失败');
+    } finally {
+      featuredLoading.value = false;
     }
-    emit('featuredChanged', isFeatured.value);
-  } catch {
-    message.error(isFeatured.value ? '取消推荐失败' : '设为推荐失败');
-  } finally {
-    featuredLoading.value = false;
+  } else {
+    // 打开推荐示例表单弹窗
+    showFeaturedModal.value = true;
   }
+}
+
+// 推荐示例设置成功
+function handleFeaturedSuccess() {
+  isFeatured.value = true;
+  emit('featuredChanged', true);
 }
 
 // 删除（带二次确认）
@@ -204,13 +210,16 @@ async function checkFeaturedStatus() {
 onMounted(() => {
   checkFeaturedStatus();
 });
-
-// 需要引入 h 函数
-import { h } from 'vue';
 </script>
 
 <template>
-  <NDropdown trigger="click" :options="menuOptions" placement="right-start" @select="handleSelect">
+  <NDropdown
+    trigger="click"
+    :options="menuOptions"
+    placement="right-start"
+    to="body"
+    @select="handleSelect"
+  >
     <NButton quaternary circle size="tiny" @click.prevent.stop>
       <template #icon>
         <NIcon :component="EllipsisHorizontalOutline" :size="16" />
@@ -237,4 +246,11 @@ import { h } from 'vue';
       @keyup.enter="handleConfirmRename"
     />
   </NModal>
+
+  <!-- 推荐示例表单弹窗 -->
+  <FeaturedFormModal
+    v-model:show="showFeaturedModal"
+    :task="task"
+    @success="handleFeaturedSuccess"
+  />
 </template>

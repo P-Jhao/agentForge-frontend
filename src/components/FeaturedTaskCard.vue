@@ -12,6 +12,10 @@ const props = defineProps<{
   featured: FeaturedTask;
 }>();
 
+const emit = defineEmits<{
+  (e: 'clone', prompt: string): void;
+}>();
+
 const router = useRouter();
 
 // 默认封面图（使用现有的 favicon）
@@ -20,10 +24,12 @@ const defaultCover = '/favicon660x660nobackground.png';
 // 封面图 URL
 const coverUrl = computed(() => {
   if (!props.featured.coverImage) return defaultCover;
+  // coverImage 格式为 /uploads/images/xxx.png，需要加上 /api 前缀
+  if (props.featured.coverImage.startsWith('/uploads')) {
+    return `/api${props.featured.coverImage}`;
+  }
   if (props.featured.coverImage.startsWith('/')) {
-    const apiBase = import.meta.env.VITE_API_BASE || '';
-    const baseUrl = apiBase.replace(/\/api$/, '');
-    return `${baseUrl}${props.featured.coverImage}`;
+    return props.featured.coverImage;
   }
   return props.featured.coverImage;
 });
@@ -35,7 +41,9 @@ function handleReplay() {
 
 // 一键做同款
 function handleClone() {
-  console.log('一键做同款:', props.featured.taskUuid, props.featured.title);
+  if (props.featured.clonePrompt) {
+    emit('clone', props.featured.clonePrompt);
+  }
 }
 </script>
 
@@ -73,9 +81,6 @@ function handleClone() {
       </h3>
       <p v-if="featured.description" class="text-theme-secondary truncate text-sm">
         {{ featured.description }}
-      </p>
-      <p v-else class="text-theme-muted truncate text-sm">
-        {{ featured.task?.title || '暂无描述' }}
       </p>
     </div>
   </div>
