@@ -4,6 +4,8 @@
  */
 import { ref, onBeforeUnmount } from 'vue';
 import { useTaskStore } from '@/stores';
+import { getIntentSubscriptionManager, isIntentEvent } from '../intent';
+import type { IntentSSEEvent } from '@/types';
 
 // API 基础路径
 const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -112,8 +114,15 @@ export function useTaskSubscription() {
               if (line.startsWith('data: ')) {
                 const jsonStr = line.slice(6);
                 try {
-                  const event = JSON.parse(jsonStr) as TaskSSEEvent;
-                  handleEvent(event);
+                  const event = JSON.parse(jsonStr);
+                  // 根据事件类型分发到不同的处理器
+                  if (isIntentEvent(event.type)) {
+                    // 意图相关事件，分发到 IntentSubscriptionManager
+                    getIntentSubscriptionManager().handleEvent(event as IntentSSEEvent);
+                  } else {
+                    // 任务相关事件
+                    handleEvent(event as TaskSSEEvent);
+                  }
                 } catch {
                   // 忽略解析错误（可能是心跳）
                 }

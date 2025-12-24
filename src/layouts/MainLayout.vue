@@ -9,6 +9,7 @@ import { NLayout, NLayoutContent, NIcon, NTooltip } from 'naive-ui';
 import { ChevronDownOutline, ChevronUpOutline } from '@vicons/ionicons5';
 import { LayoutSider, LayoutHeader } from './components';
 import { useTaskSubscription } from '@/composable/task';
+import OperationStageToast from '@/components/OperationStageToast.vue';
 
 const route = useRoute();
 
@@ -55,6 +56,9 @@ onMounted(() => {
 
 <template>
   <NLayout has-sider class="overflow-hidden" style="height: 100vh; max-height: 100vh">
+    <!-- 全局操作阶段提示 -->
+    <OperationStageToast />
+
     <!-- 侧边栏 -->
     <LayoutSider v-model:collapsed="collapsed" />
 
