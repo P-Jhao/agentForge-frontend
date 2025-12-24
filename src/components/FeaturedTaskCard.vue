@@ -46,14 +46,14 @@ const coverUrl = computed(() => {
       >
         <button
           type="button"
-          class="rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100"
+          class="w-28 cursor-pointer rounded-full border-2 border-transparent bg-white px-4 py-2 text-center text-sm font-medium text-gray-800 transition-all hover:border-gray-300 hover:shadow-md"
           :data-replay="featured.taskUuid"
         >
           查看回放
         </button>
         <button
           type="button"
-          class="bg-primary-500 hover:bg-primary-600 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors"
+          class="bg-primary-500 hover:bg-primary-600 w-28 cursor-pointer rounded-full border-2 border-transparent px-4 py-2 text-center text-sm font-medium text-white transition-all hover:shadow-md"
           :data-clone="featured.clonePrompt || ''"
         >
           一键做同款

@@ -380,10 +380,10 @@ function togglePlay() {
 }
 
 /**
- * 返回任务详情
+ * 返回首页
  */
 function goBack() {
-  router.push(`/task/${taskId.value}`);
+  router.push('/');
 }
 
 /**
@@ -512,7 +512,7 @@ onBeforeUnmount(() => {
     <div class="shrink-0 border-t border-gray-200 px-4 py-3 text-center dark:border-gray-700">
       <p class="text-theme-muted text-xs">
         回放模式下无法发送消息 ·
-        <button class="text-primary-500 hover:underline" @click="goBack">返回对话</button>
+        <button class="text-primary-500 hover:underline" @click="goBack">回到首页</button>
       </p>
     </div>
   </div>
