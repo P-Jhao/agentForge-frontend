@@ -50,6 +50,7 @@ export default [
         FormData: 'readonly',
         // 观察者 API
         IntersectionObserver: 'readonly',
+        IntersectionObserverEntry: 'readonly',
         ResizeObserver: 'readonly',
       },
     },

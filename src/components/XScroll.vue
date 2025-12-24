@@ -1,5 +1,4 @@
 <script setup lang="ts">
-/* global IntersectionObserverEntry */
 import { reactive, computed, ref, onMounted, nextTick } from 'vue';
 
 /**
