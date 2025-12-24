@@ -2,21 +2,14 @@
 /**
  * 推荐示例卡片组件
  * 展示推荐示例，hover 时显示操作按钮
+ * 使用 data-* 属性 + 事件委托处理点击
  */
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { NButton } from 'naive-ui';
 import type { FeaturedTask } from '@/types';
 
 const props = defineProps<{
   featured: FeaturedTask;
 }>();
-
-const emit = defineEmits<{
-  (e: 'clone', prompt: string): void;
-}>();
-
-const router = useRouter();
 
 // 默认封面图（使用现有的 favicon）
 const defaultCover = '/favicon660x660nobackground.png';
@@ -33,18 +26,6 @@ const coverUrl = computed(() => {
   }
   return props.featured.coverImage;
 });
-
-// 查看回放
-function handleReplay() {
-  router.push(`/task/${props.featured.taskUuid}/replay`);
-}
-
-// 一键做同款
-function handleClone() {
-  if (props.featured.clonePrompt) {
-    emit('clone', props.featured.clonePrompt);
-  }
-}
 </script>
 
 <template>
@@ -63,15 +44,20 @@ function handleClone() {
       <div
         class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50 opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100"
       >
-        <NButton
-          type="default"
-          round
-          class="bg-white! text-gray-800! hover:bg-gray-100!"
-          @click.stop="handleReplay"
+        <button
+          type="button"
+          class="rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100"
+          :data-replay="featured.taskUuid"
         >
           查看回放
-        </NButton>
-        <NButton type="primary" round @click.stop="handleClone">一键做同款</NButton>
+        </button>
+        <button
+          type="button"
+          class="bg-primary-500 hover:bg-primary-600 rounded-full px-4 py-2 text-sm font-medium text-white transition-colors"
+          :data-clone="featured.clonePrompt || ''"
+        >
+          一键做同款
+        </button>
       </div>
     </div>
     <!-- 内容区域 -->

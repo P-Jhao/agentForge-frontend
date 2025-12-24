@@ -19,6 +19,10 @@ const props = withDefaults(
   }
 );
 
+const emit = defineEmits<{
+  (e: 'itemClick', event: MouseEvent): void;
+}>();
+
 // 计算高度值
 const heightStyle = computed(() => {
   return typeof props.height === 'number' ? `${props.height}px` : props.height;
@@ -81,6 +85,11 @@ onMounted(() => {
     nextTick(updateHalfWidth);
   }
 });
+
+// 处理内容区点击，向上 emit
+function handleContentClick(e: MouseEvent) {
+  emit('itemClick', e);
+}
 </script>
 
 <template>
@@ -90,7 +99,12 @@ onMounted(() => {
     :style="{ height: heightStyle, width: '100%', overflow: 'hidden' }"
   >
     <div ref="vScrollRef" class="v-scroll">
-      <div ref="contentRef" class="content" :style="{ gap: gapStyle, paddingTop: '8px' }">
+      <div
+        ref="contentRef"
+        class="content"
+        :style="{ gap: gapStyle, paddingTop: '8px' }"
+        @click="handleContentClick"
+      >
         <!-- 开头哨兵 -->
         <div
           v-if="loop && vScrollRef"

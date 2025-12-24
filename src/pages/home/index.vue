@@ -93,9 +93,28 @@ async function loadFeaturedTasks() {
   }
 }
 
-// 处理一键做同款
+// 处理一键做同款（事件委托）
 function handleClone(prompt: string) {
   askInput.value = prompt;
+}
+
+// 处理推荐示例区域的点击事件（事件委托）
+function handleFeaturedClick(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+
+  // 处理一键做同款
+  if (target.dataset.clone !== undefined) {
+    const prompt = target.dataset.clone;
+    if (prompt) {
+      handleClone(prompt);
+    }
+    return;
+  }
+
+  // 处理查看回放
+  if (target.dataset.replay) {
+    router.push(`/task/${target.dataset.replay}/replay`);
+  }
 }
 
 onMounted(() => {
@@ -184,13 +203,12 @@ onMounted(() => {
         <div class="mb-4 flex items-center justify-between">
           <h2 class="text-theme text-xl font-semibold">推荐示例</h2>
         </div>
-        <XScroll :height="220" :gap="16" loop>
+        <XScroll :height="220" :gap="16" loop @item-click="handleFeaturedClick">
           <FeaturedTaskCard
             v-for="featured in featuredTasks"
             :key="featured.id"
             :featured="featured"
             class="w-56 shrink-0"
-            @clone="handleClone"
           />
         </XScroll>
       </div>
