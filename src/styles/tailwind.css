@@ -462,7 +462,7 @@
   }
 
   .dark .card-theme-gradient {
-    @apply bg-dark-800 relative rounded-2xl border-0 p-6;
+    @apply bg-dark-800 relative rounded-2xl border-0;
     background: linear-gradient(135deg, rgba(97, 114, 243, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
     border: none;
   }

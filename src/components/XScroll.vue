@@ -90,7 +90,7 @@ onMounted(() => {
     :style="{ height: heightStyle, width: '100%', overflow: 'hidden' }"
   >
     <div ref="vScrollRef" class="v-scroll">
-      <div ref="contentRef" class="content" :style="{ gap: gapStyle }">
+      <div ref="contentRef" class="content" :style="{ gap: gapStyle, paddingTop: '8px' }">
         <!-- 开头哨兵 -->
         <div
           v-if="loop && vScrollRef"

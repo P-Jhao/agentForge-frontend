@@ -41,7 +41,7 @@ function handleClone() {
 
 <template>
   <div
-    class="card-theme-gradient group relative cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+    class="card-theme-gradient group relative cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
   >
     <!-- 封面图区域 -->
     <div class="relative aspect-16/10 overflow-hidden">
