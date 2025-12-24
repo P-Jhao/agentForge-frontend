@@ -5,3 +5,4 @@ export * from './stream';
 export * from './task';
 export * from './forge';
 export * from './mcp';
+export * from './featured';

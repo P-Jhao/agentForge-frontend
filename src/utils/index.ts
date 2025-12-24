@@ -8,3 +8,4 @@ export * from './forgeApi';
 export * from './uploadApi';
 export * from './mcpApi';
 export * from './enhanceMode';
+export * from './featuredApi';

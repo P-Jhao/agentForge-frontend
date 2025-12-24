@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
  * 任务操作菜单组件
- * 提供回放、重命名、删除等操作
+ * 提供回放、重命名、删除、推荐示例等操作
  */
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { NDropdown, NIcon, NButton, NModal, NInput, useMessage, useDialog } from 'naive-ui';
 import {
@@ -11,8 +11,10 @@ import {
   PlayOutline,
   CreateOutline,
   TrashOutline,
+  RibbonOutline,
 } from '@vicons/ionicons5';
-import { useTaskStore } from '@/stores';
+import { useTaskStore, useUserStore } from '@/stores';
+import { checkFeatured, setFeatured, removeFeatured } from '@/utils';
 import type { Task } from '@/types';
 
 const props = defineProps<{
@@ -22,47 +24,74 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'deleted'): void;
   (e: 'renamed', newTitle: string): void;
+  (e: 'featuredChanged', isFeatured: boolean): void;
 }>();
 
 const router = useRouter();
 const message = useMessage();
 const dialog = useDialog();
 const taskStore = useTaskStore();
+const userStore = useUserStore();
 
 // 重命名弹窗状态
 const showRenameModal = ref(false);
 const newTitle = ref('');
 const renameLoading = ref(false);
 
+// 推荐示例状态
+const isFeatured = ref(false);
+const featuredLoading = ref(false);
+
 // 是否可以重命名
 const canRename = computed(() => taskStore.canRename(props.task.uuid));
 
+// 是否为管理员
+const isAdmin = computed(() => userStore.isAdmin);
+
+// 菜单选项类型
+import type { DropdownOption, DropdownDividerOption } from 'naive-ui';
+type MenuOption = DropdownOption | DropdownDividerOption;
+
 // 下拉菜单选项
-const menuOptions = computed(() => [
-  {
-    label: '回放',
-    key: 'replay',
-    icon: () => h(NIcon, null, { default: () => h(PlayOutline) }),
-  },
-  {
-    label: '重命名',
-    key: 'rename',
-    icon: () => h(NIcon, null, { default: () => h(CreateOutline) }),
-    disabled: !canRename.value,
-  },
-  {
-    type: 'divider',
-    key: 'd1',
-  },
-  {
-    label: '删除',
-    key: 'delete',
-    icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-    props: {
-      style: 'color: #ef4444',
+const menuOptions = computed<MenuOption[]>(() => {
+  const options: MenuOption[] = [
+    {
+      label: '回放',
+      key: 'replay',
+      icon: () => h(NIcon, null, { default: () => h(PlayOutline) }),
     },
-  },
-]);
+    {
+      label: '重命名',
+      key: 'rename',
+      icon: () => h(NIcon, null, { default: () => h(CreateOutline) }),
+      disabled: !canRename.value,
+    },
+  ];
+
+  // 管理员可见推荐示例选项
+  if (isAdmin.value) {
+    options.push({
+      label: isFeatured.value ? '取消推荐' : '推荐示例',
+      key: 'featured',
+      icon: () => h(NIcon, null, { default: () => h(RibbonOutline) }),
+      disabled: featuredLoading.value,
+    });
+  }
+
+  options.push(
+    { type: 'divider', key: 'd1' },
+    {
+      label: '删除',
+      key: 'delete',
+      icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
+      props: {
+        style: 'color: #ef4444',
+      },
+    }
+  );
+
+  return options;
+});
 
 // 处理菜单选择
 function handleSelect(key: string) {
@@ -72,6 +101,9 @@ function handleSelect(key: string) {
       break;
     case 'rename':
       handleOpenRename();
+      break;
+    case 'featured':
+      handleToggleFeatured();
       break;
     case 'delete':
       handleDelete();
@@ -108,10 +140,33 @@ async function handleConfirmRename() {
     message.success('重命名成功');
     showRenameModal.value = false;
     emit('renamed', trimmedTitle);
-  } catch (error) {
+  } catch {
     message.error('重命名失败');
   } finally {
     renameLoading.value = false;
+  }
+}
+
+// 切换推荐示例状态
+async function handleToggleFeatured() {
+  featuredLoading.value = true;
+  try {
+    if (isFeatured.value) {
+      // 取消推荐
+      await removeFeatured(props.task.uuid);
+      isFeatured.value = false;
+      message.success('已取消推荐');
+    } else {
+      // 设为推荐
+      await setFeatured({ taskUuid: props.task.uuid });
+      isFeatured.value = true;
+      message.success('已设为推荐示例');
+    }
+    emit('featuredChanged', isFeatured.value);
+  } catch {
+    message.error(isFeatured.value ? '取消推荐失败' : '设为推荐失败');
+  } finally {
+    featuredLoading.value = false;
   }
 }
 
@@ -127,12 +182,28 @@ function handleDelete() {
         await taskStore.deleteTask(props.task.uuid);
         message.success('删除成功');
         emit('deleted');
-      } catch (error) {
+      } catch {
         message.error('删除失败');
       }
     },
   });
 }
+
+// 检查是否为推荐示例（仅管理员需要）
+async function checkFeaturedStatus() {
+  if (!isAdmin.value) return;
+  try {
+    const res = await checkFeatured(props.task.uuid);
+    isFeatured.value = res.isFeatured;
+  } catch {
+    // 忽略错误
+  }
+}
+
+// 组件挂载时检查推荐状态
+onMounted(() => {
+  checkFeaturedStatus();
+});
 
 // 需要引入 h 函数
 import { h } from 'vue';

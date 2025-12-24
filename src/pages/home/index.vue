@@ -1,18 +1,26 @@
 <script setup lang="ts">
 /**
  * 首页
- * 欢迎页 + 快速入口 + 推荐 Forge
+ * 欢迎页 + 快速入口 + 推荐示例
  * 使用 CSS 类自动适配深浅主题
  */
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { NIcon, NTag } from 'naive-ui';
-import { SparklesOutline, ChevronForwardOutline } from '@vicons/ionicons5';
+import { SparklesOutline } from '@vicons/ionicons5';
 import ChatInput from '@/components/ChatInput.vue';
+import FeaturedTaskCard from '@/components/FeaturedTaskCard.vue';
+import XScroll from '@/components/XScroll.vue';
+import { mockFeaturedTasks } from '@/mock/featuredTasks';
 import type { EnhanceMode } from '@/utils/enhanceMode';
+import type { FeaturedTask } from '@/types';
 
 const router = useRouter();
 const askInput = ref('');
+
+// 推荐示例列表
+const featuredTasks = ref<FeaturedTask[]>([]);
+const featuredLoading = ref(false);
 
 /**
  * 生成 UUID
@@ -53,34 +61,6 @@ const handleSend = (
   router.push(`/task/${taskId}`);
 };
 
-// 推荐 Forge 数据
-const recommendForges = [
-  {
-    id: '1',
-    icon: '🔍',
-    name: '代码审计专家',
-    desc: '智能分析代码安全漏洞，提供修复建议',
-    gradient: 'from-cyan-500 to-blue-500',
-    usageCount: 128,
-  },
-  {
-    id: '2',
-    icon: '📊',
-    name: '智能评分助手',
-    desc: '根据样本案例自动评分，判断是否符合要求',
-    gradient: 'from-purple-500 to-pink-500',
-    usageCount: 86,
-  },
-  {
-    id: '3',
-    icon: '📚',
-    name: 'RAG 知识检索',
-    desc: '上传文档构建知识库，智能语义检索',
-    gradient: 'from-orange-500 to-red-500',
-    usageCount: 64,
-  },
-];
-
 // 快速分类标签
 const categories = [
   '推荐',
@@ -99,6 +79,25 @@ const stats = [
   { label: '活跃 Forge', value: '5' },
   { label: 'MCP 工具', value: '28' },
 ];
+
+// 加载推荐示例
+async function loadFeaturedTasks() {
+  featuredLoading.value = true;
+  try {
+    // 使用 mock 数据测试 UI
+    featuredTasks.value = mockFeaturedTasks;
+    // 正式环境使用 API
+    // featuredTasks.value = await getFeaturedList();
+  } catch (error) {
+    console.error('加载推荐示例失败:', error);
+  } finally {
+    featuredLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadFeaturedTasks();
+});
 </script>
 
 <template>
@@ -179,51 +178,19 @@ const stats = [
         </NTag>
       </div>
 
-      <!-- 推荐 Forge -->
-      <div>
+      <!-- 推荐示例 -->
+      <div v-if="featuredTasks.length > 0">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-theme text-xl font-semibold">推荐 Forge</h2>
-          <RouterLink
-            to="/forge-plaza"
-            class="text-primary-500 hover:text-primary-600 flex items-center gap-1 text-sm"
-          >
-            查看全部
-            <NIcon :component="ChevronForwardOutline" :size="14" />
-          </RouterLink>
+          <h2 class="text-theme text-xl font-semibold">推荐示例</h2>
         </div>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <RouterLink
-            v-for="forge in recommendForges"
-            :key="forge.id"
-            :to="`/forge/${forge.id}`"
-            class="card-theme-gradient group cursor-pointer p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
-          >
-            <!-- 图标 -->
-            <div
-              class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br text-2xl"
-              :class="forge.gradient"
-            >
-              {{ forge.icon }}
-            </div>
-            <!-- 内容 -->
-            <h3 class="text-theme group-hover:text-primary-500 mb-2 text-lg font-semibold">
-              {{ forge.name }}
-            </h3>
-            <p class="text-theme-secondary text-sm">
-              {{ forge.desc }}
-            </p>
-            <!-- 使用次数 -->
-            <div class="text-theme-muted mt-4 flex items-center justify-between text-sm">
-              <span>使用 {{ forge.usageCount }} 次</span>
-              <span
-                class="text-primary-500 flex items-center opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                开始使用
-                <NIcon :component="ChevronForwardOutline" :size="14" class="ml-1" />
-              </span>
-            </div>
-          </RouterLink>
-        </div>
+        <XScroll :height="280" :gap="16">
+          <FeaturedTaskCard
+            v-for="featured in featuredTasks"
+            :key="featured.id"
+            :featured="featured"
+            class="w-56 shrink-0"
+          />
+        </XScroll>
       </div>
     </div>
   </div>

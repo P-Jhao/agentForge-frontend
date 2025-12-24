@@ -1,0 +1,112 @@
+/**
+ * 推荐示例 Mock 数据
+ */
+import type { FeaturedTask } from '@/types';
+
+export const mockFeaturedTasks: FeaturedTask[] = [
+  {
+    id: 1,
+    taskUuid: 'mock-uuid-1',
+    coverImage: null,
+    title: 'SQL 注入漏洞分析',
+    description: '针对某电商网站的 SQL 注入漏洞进行深度分析',
+    sortOrder: 100,
+    createdAt: '2025-12-20T10:00:00Z',
+    task: {
+      uuid: 'mock-uuid-1',
+      title: 'SQL 注入漏洞分析',
+      status: 'completed',
+      agent: { id: 1, displayName: '代码审计专家', avatar: null },
+    },
+  },
+  {
+    id: 2,
+    taskUuid: 'mock-uuid-2',
+    coverImage: null,
+    title: 'XSS 跨站脚本攻击检测',
+    description: '使用 AI 自动检测前端代码中的 XSS 漏洞',
+    sortOrder: 90,
+    createdAt: '2025-12-19T14:30:00Z',
+    task: {
+      uuid: 'mock-uuid-2',
+      title: 'XSS 跨站脚本攻击检测',
+      status: 'completed',
+      agent: { id: 2, displayName: '安全扫描助手', avatar: null },
+    },
+  },
+  {
+    id: 3,
+    taskUuid: 'mock-uuid-3',
+    coverImage: null,
+    title: '渗透测试报告生成',
+    description: '自动生成专业的渗透测试报告文档',
+    sortOrder: 80,
+    createdAt: '2025-12-18T09:15:00Z',
+    task: {
+      uuid: 'mock-uuid-3',
+      title: '渗透测试报告生成',
+      status: 'completed',
+      agent: { id: 3, displayName: '报告生成器', avatar: null },
+    },
+  },
+  {
+    id: 4,
+    taskUuid: 'mock-uuid-4',
+    coverImage: null,
+    title: 'API 接口安全审计',
+    description: '对 RESTful API 进行全面的安全性评估',
+    sortOrder: 70,
+    createdAt: '2025-12-17T16:45:00Z',
+    task: {
+      uuid: 'mock-uuid-4',
+      title: 'API 接口安全审计',
+      status: 'completed',
+      agent: { id: 1, displayName: '代码审计专家', avatar: null },
+    },
+  },
+  {
+    id: 5,
+    taskUuid: 'mock-uuid-5',
+    coverImage: null,
+    title: '密码强度检测方案',
+    description: '设计并实现用户密码强度检测算法',
+    sortOrder: 60,
+    createdAt: '2025-12-16T11:20:00Z',
+    task: {
+      uuid: 'mock-uuid-5',
+      title: '密码强度检测方案',
+      status: 'completed',
+      agent: { id: 4, displayName: '安全咨询师', avatar: null },
+    },
+  },
+  {
+    id: 6,
+    taskUuid: 'mock-uuid-6',
+    coverImage: null,
+    title: '日志分析与异常检测',
+    description: '基于机器学习的系统日志异常行为检测',
+    sortOrder: 50,
+    createdAt: '2025-12-15T08:30:00Z',
+    task: {
+      uuid: 'mock-uuid-6',
+      title: '日志分析与异常检测',
+      status: 'completed',
+      agent: { id: 5, displayName: 'MSS 运营助手', avatar: null },
+    },
+  },
+  {
+    id: 7,
+    taskUuid: 'mock-uuid-7',
+    coverImage: null,
+    title: '应急响应流程梳理',
+    description: '制定完整的安全事件应急响应预案',
+    sortOrder: 40,
+    createdAt: '2025-12-14T13:00:00Z',
+    task: {
+      uuid: 'mock-uuid-7',
+      title: '应急响应流程梳理',
+      status: 'completed',
+      agent: { id: 6, displayName: '应急响应专家', avatar: null },
+    },
+  },
+];
