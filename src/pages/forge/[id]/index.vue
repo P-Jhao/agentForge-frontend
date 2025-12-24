@@ -3,7 +3,7 @@
  * Forge 详情页面
  * Forge 介绍 + 发送消息创建任务
  */
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NIcon, NTag, NSpin, NPopconfirm, useMessage } from 'naive-ui';
 import {
@@ -164,9 +164,24 @@ watch(forgeId, () => {
   fetchForge();
 });
 
+// 自动操作发送事件处理
+const handleAutoSend = () => {
+  const content = inputValue.value.trim();
+  if (content) {
+    handleSend(content);
+  }
+};
+
 // 初始化
 onMounted(() => {
   fetchForge();
+  // 监听自动操作发送事件
+  window.addEventListener('auto-operation-send', handleAutoSend);
+});
+
+// 清理
+onUnmounted(() => {
+  window.removeEventListener('auto-operation-send', handleAutoSend);
 });
 </script>
 

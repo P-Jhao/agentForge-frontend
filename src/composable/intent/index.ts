@@ -4,3 +4,4 @@
 export * from './useIntentSubscription';
 export * from './useTypewriter';
 export * from './useHighlight';
+export * from './useAutoOperation';

@@ -11,11 +11,15 @@ import { SparklesOutline } from '@vicons/ionicons5';
 import ChatInput from '@/components/ChatInput.vue';
 import FeaturedTaskCard from '@/components/FeaturedTaskCard.vue';
 import XScroll from '@/components/XScroll.vue';
+import { useAutoOperation } from '@/composable/intent';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 import type { FeaturedTask } from '@/types';
 
 const router = useRouter();
 const askInput = ref('');
+
+// 自动操作 composable
+const { executeSmartRouting } = useAutoOperation();
 
 // 发送按钮高亮状态
 const highlightSend = ref(false);
@@ -75,6 +79,9 @@ onUnmounted(() => {
 const featuredTasks = ref<FeaturedTask[]>([]);
 const featuredLoading = ref(false);
 
+// 智能路由加载状态
+const smartRoutingLoading = ref(false);
+
 /**
  * 生成 UUID
  */
@@ -87,14 +94,31 @@ const generateUUID = () => {
 };
 
 /**
- * 发送消息，跳转到任务页
+ * 发送消息，根据智能路由状态决定流程
  */
-const handleSend = (
+const handleSend = async (
   message: string,
   enableThinking?: boolean,
   enhanceMode?: EnhanceMode,
-  files?: { filePath: string; originalName: string; size: number; url: string }[]
+  files?: { filePath: string; originalName: string; size: number; url: string }[],
+  smartRouting?: boolean
 ) => {
+  // 如果启用了智能路由，执行智能路由流程
+  if (smartRouting) {
+    // 不清空输入框，显示加载状态
+    smartRoutingLoading.value = true;
+
+    try {
+      await executeSmartRouting(message);
+    } finally {
+      // 清理加载状态
+      smartRoutingLoading.value = false;
+    }
+    return;
+  }
+
+  // 原有逻辑：清空输入并直接跳转到任务页
+  askInput.value = '';
   const taskId = generateUUID();
   // 将初始消息存储到 sessionStorage，供任务页读取
   sessionStorage.setItem(`task_${taskId}_init`, message);
@@ -110,7 +134,6 @@ const handleSend = (
   if (files && files.length > 0) {
     sessionStorage.setItem(`task_${taskId}_file`, JSON.stringify(files));
   }
-  askInput.value = '';
   router.push(`/task/${taskId}`);
 };
 
@@ -235,6 +258,8 @@ onMounted(() => {
           v-model="askInput"
           placeholder="例如：帮我审计这段代码的安全性..."
           :highlight-send="highlightSend"
+          :show-smart-routing="true"
+          :loading="smartRoutingLoading"
           @send="handleSend"
           @update:model-value="handleInputChange"
         />

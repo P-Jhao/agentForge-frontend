@@ -15,6 +15,7 @@ import {
 import { ref, onMounted, computed } from 'vue';
 import { uploadChatFile } from '@/api/upload';
 import EnhanceModeSelector from './EnhanceModeSelector.vue';
+import SmartRoutingToggle from './SmartRoutingToggle.vue';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 import { getEnhanceMode, setEnhanceMode } from '@/utils/enhanceMode';
 
@@ -28,6 +29,8 @@ interface Props {
   loading?: boolean;
   // 是否高亮发送按钮
   highlightSend?: boolean;
+  // 是否显示智能路由开关
+  showSmartRouting?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -35,6 +38,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   loading: false,
   highlightSend: false,
+  showSmartRouting: false,
 });
 
 // v-model
@@ -45,6 +49,9 @@ const enableThinking = ref(false);
 
 // 增强模式状态（默认关闭）
 const enhanceMode = ref<EnhanceMode>('off');
+
+// 智能路由开关状态
+const smartRoutingEnabled = ref(false);
 
 // 已上传的文件列表（支持多文件）
 const uploadedFiles = ref<
@@ -137,6 +144,7 @@ const emit = defineEmits<{
     enableThinking: boolean,
     enhanceMode: EnhanceMode,
     files?: { filePath: string; originalName: string; size: number; url: string }[],
+    smartRouting?: boolean,
   ];
 }>();
 
@@ -291,14 +299,17 @@ const handleSend = () => {
   const value = modelValue.value.trim();
   if (!value || props.disabled || props.loading) return;
 
-  // 发送消息，带上文件列表（如果有）
+  // 发送消息，带上文件列表（如果有）和智能路由状态
   const files = uploadedFiles.value.length > 0 ? [...uploadedFiles.value] : undefined;
+  const isSmartRouting = props.showSmartRouting && smartRoutingEnabled.value;
 
-  emit('send', value, enableThinking.value, enhanceMode.value, files);
+  emit('send', value, enableThinking.value, enhanceMode.value, files, isSmartRouting || undefined);
 
-  // 清空输入和文件列表
-  modelValue.value = '';
-  uploadedFiles.value = [];
+  // 智能路由模式下不清空输入框，让用户看到原始输入
+  if (!isSmartRouting) {
+    modelValue.value = '';
+    uploadedFiles.value = [];
+  }
 };
 
 /**
@@ -376,6 +387,13 @@ const canSend = computed(() => {
     <div class="mt-3 flex items-center justify-between">
       <!-- 左侧功能按钮 -->
       <div class="flex items-center gap-2">
+        <!-- 智能路由开关（仅在首页显示） -->
+        <SmartRoutingToggle
+          v-if="showSmartRouting"
+          v-model="smartRoutingEnabled"
+          :disabled="disabled"
+        />
+
         <!-- 深度思考按钮（DeepSeek 风格） -->
         <NTooltip>
           <template #trigger>

@@ -3,7 +3,7 @@
  * Forge 表单组件
  * 科技感卡片式布局设计
  */
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import {
   NInput,
   NSwitch,
@@ -50,10 +50,8 @@ const avatarUploading = ref(false);
 // 表单验证错误
 const errors = ref<Record<string, string>>({});
 
-// 加载 MCP 列表
-onMounted(async () => {
-  await mcpStore.fetchMCPList();
-});
+// 表单是否准备好（用于延迟渲染 EMarkdown，避免第三方库报错）
+const formReady = ref(false);
 
 // 表单数据
 const formData = ref({
@@ -65,10 +63,65 @@ const formData = ref({
   isPublic: true,
 });
 
+/**
+ * 处理自动填充事件
+ */
+interface ForgeFormUpdateDetail {
+  field: string;
+  content: string;
+}
+
+const handleAutoFillEvent = (event: Event) => {
+  const customEvent = event as globalThis.CustomEvent<ForgeFormUpdateDetail>;
+  const { field, content } = customEvent.detail;
+  if (field === 'description') {
+    formData.value.description = content;
+  } else if (field === 'systemPrompt') {
+    formData.value.systemPrompt = content;
+  } else if (field === 'name') {
+    formData.value.displayName = content;
+  }
+};
+
+// 监听自动填充事件（用于智能路由自动创建流程）
+onMounted(async () => {
+  await mcpStore.fetchMCPList();
+
+  // 监听表单自动填充事件
+  window.addEventListener('forge-form-update', handleAutoFillEvent);
+
+  // 使用 nextTick 确保 DOM 准备好后再渲染 EMarkdown
+  // 创建模式下立即准备好
+  if (props.mode === 'create') {
+    await nextTick();
+    formReady.value = true;
+  }
+  // 编辑模式下，如果 forge 数据已经存在，也标记为准备好
+  else if (props.mode === 'edit' && props.forge) {
+    // 填充表单数据
+    formData.value = {
+      displayName: props.forge.displayName,
+      avatar: props.forge.avatar || '',
+      description: props.forge.description || '',
+      systemPrompt: props.forge.systemPrompt || '',
+      mcpTools: props.forge.mcpTools || [],
+      isPublic: props.forge.isPublic,
+    };
+    await nextTick();
+    formReady.value = true;
+  }
+});
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('forge-form-update', handleAutoFillEvent);
+});
+
 // 监听 forge 变化，填充表单（编辑模式）
+// 注意：仅在 onMounted 之后 forge 数据变化时触发
 watch(
   () => props.forge,
-  (forge) => {
+  async (forge) => {
     if (forge && props.mode === 'edit') {
       formData.value = {
         displayName: forge.displayName,
@@ -78,9 +131,14 @@ watch(
         mcpTools: forge.mcpTools || [],
         isPublic: forge.isPublic,
       };
+      // 如果还没准备好，等待 nextTick 后再标记
+      if (!formReady.value) {
+        await nextTick();
+        formReady.value = true;
+      }
     }
-  },
-  { immediate: true }
+  }
+  // 移除 immediate: true，改为在 onMounted 中处理初始数据
 );
 
 // 头像完整 URL
@@ -269,11 +327,15 @@ const handleCancel = () => {
       </div>
 
       <EMarkdown
+        v-if="formReady"
         v-model="formData.description"
         height="450px"
         placeholder="支持 Markdown 格式，详细介绍这个 Forge 的功能和使用场景"
         editor-id="forge-description-editor"
       />
+      <div v-else class="flex h-[450px] items-center justify-center">
+        <NSpin size="small" />
+      </div>
       <p v-if="errors.description" class="mt-1 text-xs text-red-500">{{ errors.description }}</p>
     </div>
 
@@ -292,11 +354,15 @@ const handleCancel = () => {
       </div>
 
       <EMarkdown
+        v-if="formReady"
         v-model="formData.systemPrompt"
         height="450px"
         placeholder="定义 Forge 的行为和能力，这将作为 AI 的系统指令"
         editor-id="forge-system-prompt-editor"
       />
+      <div v-else class="flex h-[450px] items-center justify-center">
+        <NSpin size="small" />
+      </div>
       <p v-if="errors.systemPrompt" class="mt-1 text-xs text-red-500">
         {{ errors.systemPrompt }}
       </p>
