@@ -109,9 +109,7 @@ onMounted(() => {
       <div
         class="bg-glow-purple absolute top-20 -right-40 h-96 w-96 rounded-full blur-[120px]"
       ></div>
-      <div
-        class="bg-glow-cyan absolute -bottom-20 left-1/3 h-72 w-72 rounded-full blur-[100px]"
-      ></div>
+      <div class="bg-glow-cyan absolute top-1/2 left-1/4 h-72 w-72 rounded-full blur-[100px]"></div>
     </div>
 
     <div class="relative space-y-8">
