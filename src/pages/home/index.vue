@@ -4,7 +4,7 @@
  * 欢迎页 + 快速入口 + 推荐示例
  * 使用 CSS 类自动适配深浅主题
  */
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { NIcon, NTag } from 'naive-ui';
 import { SparklesOutline } from '@vicons/ionicons5';
@@ -16,6 +16,40 @@ import type { FeaturedTask } from '@/types';
 
 const router = useRouter();
 const askInput = ref('');
+
+// 打字机效果定时器
+let typewriterTimers: ReturnType<typeof setTimeout>[] = [];
+
+/**
+ * 打字机效果输入
+ */
+function typeAskInput(content: string) {
+  // 清理之前的定时器
+  typewriterTimers.forEach((timer) => clearTimeout(timer));
+  typewriterTimers = [];
+
+  // 重置输入框
+  askInput.value = '';
+
+  const chars = content.split('');
+  let cumulativeDelay = 0;
+
+  chars.forEach((char) => {
+    // 每个字符随机延迟 10-50ms
+    const randomDelay = Math.floor(Math.random() * 41) + 10;
+    cumulativeDelay += randomDelay;
+
+    const timer = setTimeout(() => {
+      askInput.value += char;
+    }, cumulativeDelay);
+    typewriterTimers.push(timer);
+  });
+}
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  typewriterTimers.forEach((timer) => clearTimeout(timer));
+});
 
 // 推荐示例列表
 const featuredTasks = ref<FeaturedTask[]>([]);
@@ -95,7 +129,7 @@ async function loadFeaturedTasks() {
 
 // 处理一键做同款（事件委托）
 function handleClone(prompt: string) {
-  askInput.value = prompt;
+  typeAskInput(prompt);
 }
 
 // 处理推荐示例区域的点击事件（事件委托）
