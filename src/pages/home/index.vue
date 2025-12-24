@@ -17,6 +17,11 @@ import type { FeaturedTask } from '@/types';
 const router = useRouter();
 const askInput = ref('');
 
+// 发送按钮高亮状态
+const highlightSend = ref(false);
+// 打字机目标内容（用于检测用户是否修改）
+let typewriterTargetContent = '';
+
 // 打字机效果定时器
 let typewriterTimers: ReturnType<typeof setTimeout>[] = [];
 
@@ -28,22 +33,37 @@ function typeAskInput(content: string) {
   typewriterTimers.forEach((timer) => clearTimeout(timer));
   typewriterTimers = [];
 
-  // 重置输入框
+  // 重置状态
   askInput.value = '';
+  highlightSend.value = false;
+  typewriterTargetContent = content;
 
   const chars = content.split('');
   let cumulativeDelay = 0;
 
-  chars.forEach((char) => {
+  chars.forEach((char, index) => {
     // 每个字符随机延迟 10-50ms
     const randomDelay = Math.floor(Math.random() * 41) + 10;
     cumulativeDelay += randomDelay;
 
     const timer = setTimeout(() => {
       askInput.value += char;
+      // 最后一个字符时，启用高亮效果
+      if (index === chars.length - 1) {
+        highlightSend.value = true;
+      }
     }, cumulativeDelay);
     typewriterTimers.push(timer);
   });
+}
+
+/**
+ * 监听输入框变化，用户修改时取消高亮
+ */
+function handleInputChange() {
+  if (askInput.value !== typewriterTargetContent) {
+    highlightSend.value = false;
+  }
 }
 
 // 组件卸载时清理定时器
@@ -214,7 +234,9 @@ onMounted(() => {
         <ChatInput
           v-model="askInput"
           placeholder="例如：帮我审计这段代码的安全性..."
+          :highlight-send="highlightSend"
           @send="handleSend"
+          @update:model-value="handleInputChange"
         />
       </div>
 

@@ -26,12 +26,15 @@ interface Props {
   disabled?: boolean;
   // 是否加载中
   loading?: boolean;
+  // 是否高亮发送按钮
+  highlightSend?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: '输入消息...',
   disabled: false,
   loading: false,
+  highlightSend: false,
 });
 
 // v-model
@@ -426,7 +429,7 @@ const canSend = computed(() => {
           round
           :disabled="!canSend"
           :loading="loading"
-          class="btn-theme"
+          :class="['btn-theme', { 'send-btn-glow': highlightSend && canSend }]"
           @click="handleSend"
         >
           <template #icon>
@@ -503,5 +506,25 @@ const canSend = computed(() => {
 
 :global(.dark) .thinking-btn-active:hover {
   background-color: rgba(96, 165, 250, 0.25);
+}
+
+/* 发送按钮发光动画效果 */
+.send-btn-glow {
+  animation: send-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes send-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 5px rgba(99, 102, 241, 0.5),
+      0 0 10px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 15px rgba(99, 102, 241, 0.8),
+      0 0 25px rgba(139, 92, 246, 0.5),
+      0 0 35px rgba(168, 85, 247, 0.3);
+  }
 }
 </style>
