@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, watch, inject, type Component, type Ref, type ComputedRef } from 'vue';
+import { h, watch, type Component } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import {
   NLayoutHeader,
@@ -17,8 +17,6 @@ import {
   NotificationsOutline,
   SunnyOutline,
   MoonOutline,
-  ChevronDownOutline,
-  ChevronUpOutline,
 } from '@vicons/ionicons5';
 import { useThemeStore, useUserStore, useTaskStore } from '@/stores';
 
@@ -27,10 +25,6 @@ const route = useRoute();
 const themeStore = useThemeStore();
 const userStore = useUserStore();
 const taskStore = useTaskStore();
-
-// 从父组件注入状态
-const headerExpanded = inject<Ref<boolean>>('headerExpanded');
-const isTaskPage = inject<ComputedRef<boolean>>('isTaskPage');
 
 // 监听路由变化，离开任务页面时清除当前任务
 watch(
@@ -79,13 +73,6 @@ function handleUserSelect(key: string) {
 // 跳转登录页
 function goLogin() {
   router.push('/login');
-}
-
-// 切换展开/收起
-function toggleExpand() {
-  if (headerExpanded) {
-    headerExpanded.value = !headerExpanded.value;
-  }
 }
 </script>
 
