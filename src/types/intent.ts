@@ -37,12 +37,19 @@ export interface MCPNotSupportedResult {
   originalQuery: string;
 }
 
+// MCP 不需要工具结果（LLM 可直接回答）
+export interface MCPNoToolNeededResult {
+  type: 'no_tool_needed';
+  originalQuery: string;
+}
+
 // 统一意图分析结果类型
 export type IntentResult =
   | ForgeIntentResult
   | ForgeNoMatchResult
   | MCPIntentResult
-  | MCPNotSupportedResult;
+  | MCPNotSupportedResult
+  | MCPNoToolNeededResult;
 
 // ========== 配置生成类型 ==========
 

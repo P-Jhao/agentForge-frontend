@@ -580,7 +580,7 @@ export function useAutoOperation() {
   };
 
   /**
-   * 处理不支持场景
+   * 处理不支持场景（需要工具但没有可用工具）
    * 显示提示后跳转到默认任务页
    */
   const handleNotSupported = async (originalQuery: string): Promise<void> => {
@@ -593,6 +593,28 @@ export function useAutoOperation() {
     await wait(1000);
 
     // 跳转到默认任务页（与智能路由关闭时行为一致）
+    const taskId = generateUUID();
+    sessionStorage.setItem(`task_${taskId}_init`, originalQuery);
+    await router.push(`/task/${taskId}`);
+
+    // 完成操作
+    autoOperationStore.completeOperation();
+  };
+
+  /**
+   * 处理不需要工具的场景（LLM 可直接回答）
+   * 显示提示后跳转到默认任务页
+   */
+  const handleNoToolNeeded = async (originalQuery: string): Promise<void> => {
+    // 显示友好提示
+    message.info('当前问题无需工具即可完成，已为您转到对话页面', {
+      duration: 3000,
+    });
+
+    // 等待一小段时间让用户看到提示
+    await wait(800);
+
+    // 跳转到默认任务页
     const taskId = generateUUID();
     sessionStorage.setItem(`task_${taskId}_init`, originalQuery);
     await router.push(`/task/${taskId}`);
@@ -642,8 +664,11 @@ export function useAutoOperation() {
       } else if (result.type === 'create_forge') {
         // 找到可用的 MCP 工具，执行自动创建
         await executeAutoCreate(result as MCPIntentResult);
+      } else if (result.type === 'no_tool_needed') {
+        // 不需要工具，LLM 可直接回答
+        await handleNoToolNeeded(query);
       } else {
-        // 不支持的场景
+        // 不支持的场景（需要工具但没有）
         await handleNotSupported(query);
       }
     } catch (error) {
@@ -667,5 +692,6 @@ export function useAutoOperation() {
     executeAutoNavigation,
     executeAutoCreate,
     handleNotSupported,
+    handleNoToolNeeded,
   };
 }

@@ -12,6 +12,7 @@ import type {
   ForgeNoMatchResult,
   MCPIntentResult,
   MCPNotSupportedResult,
+  MCPNoToolNeededResult,
   ForgeSummary,
 } from '@/types';
 
@@ -26,9 +27,19 @@ const API_BASE = import.meta.env.VITE_API_BASE || '';
  */
 export async function analyzeIntent(
   params: AnalyzeForgeRequest
-): Promise<ForgeIntentResult | ForgeNoMatchResult | MCPIntentResult | MCPNotSupportedResult> {
+): Promise<
+  | ForgeIntentResult
+  | ForgeNoMatchResult
+  | MCPIntentResult
+  | MCPNotSupportedResult
+  | MCPNoToolNeededResult
+> {
   const res = await http.post<
-    ForgeIntentResult | ForgeNoMatchResult | MCPIntentResult | MCPNotSupportedResult
+    | ForgeIntentResult
+    | ForgeNoMatchResult
+    | MCPIntentResult
+    | MCPNotSupportedResult
+    | MCPNoToolNeededResult
   >('/intent/analyze', params);
   return res.data;
 }
