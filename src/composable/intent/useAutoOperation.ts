@@ -35,20 +35,6 @@ const DELAY_MULTIPLIER = {
 const getDelay = (multiplier: keyof typeof DELAY_MULTIPLIER) =>
   BASE_DELAY * DELAY_MULTIPLIER[multiplier];
 
-// 等待指定时间
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// 等待元素出现
-const waitForElement = async (selector: string, timeout = 5000): Promise<HTMLElement | null> => {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeout) {
-    const element = document.querySelector<HTMLElement>(selector);
-    if (element) return element;
-    await wait(100);
-  }
-  return null;
-};
-
 /**
  * 自动操作流程 composable
  */
@@ -63,6 +49,57 @@ export function useAutoOperation() {
 
   // 配置生成的 AbortController
   let configAbortController: AbortController | null = null;
+
+  /**
+   * 可取消的等待函数
+   * 每 50ms 检查一次取消状态，响应更及时
+   */
+  const wait = (ms: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const checkInterval = 50; // 每 50ms 检查一次
+      let elapsed = 0;
+
+      const timer = setInterval(() => {
+        elapsed += checkInterval;
+
+        if (isCancelled.value) {
+          clearInterval(timer);
+          reject(new Error('操作已取消'));
+          return;
+        }
+
+        if (elapsed >= ms) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, checkInterval);
+
+      // 注册清理函数
+      autoOperationStore.registerCleanup(() => clearInterval(timer));
+    });
+  };
+
+  /**
+   * 可取消的等待元素出现
+   */
+  const waitForElement = async (selector: string, timeout = 5000): Promise<HTMLElement | null> => {
+    const checkInterval = 100;
+    let elapsed = 0;
+
+    while (elapsed < timeout) {
+      if (isCancelled.value) {
+        throw new Error('操作已取消');
+      }
+
+      const element = document.querySelector<HTMLElement>(selector);
+      if (element) return element;
+
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+      elapsed += checkInterval;
+    }
+
+    return null;
+  };
 
   /**
    * 使用打字机效果填充输入框
