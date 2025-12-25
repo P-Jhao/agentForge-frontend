@@ -14,6 +14,7 @@ import type {
   MCPIntentResult,
   ConfigFieldName,
   IntentEventHandlers,
+  UploadedFileInfo,
 } from '@/types';
 
 // ==================== 动画时间配置 ====================
@@ -595,6 +596,11 @@ export function useAutoOperation() {
     // 跳转到默认任务页（与智能路由关闭时行为一致）
     const taskId = generateUUID();
     sessionStorage.setItem(`task_${taskId}_init`, originalQuery);
+    // 带上文件信息
+    const files = autoOperationStore.originalFiles;
+    if (files.length > 0) {
+      sessionStorage.setItem(`task_${taskId}_file`, JSON.stringify(files));
+    }
     await router.push(`/task/${taskId}`);
 
     // 完成操作
@@ -617,6 +623,11 @@ export function useAutoOperation() {
     // 跳转到默认任务页
     const taskId = generateUUID();
     sessionStorage.setItem(`task_${taskId}_init`, originalQuery);
+    // 带上文件信息
+    const files = autoOperationStore.originalFiles;
+    if (files.length > 0) {
+      sessionStorage.setItem(`task_${taskId}_file`, JSON.stringify(files));
+    }
     await router.push(`/task/${taskId}`);
 
     // 完成操作
@@ -637,14 +648,15 @@ export function useAutoOperation() {
   /**
    * 执行智能路由流程
    * @param query 用户输入
+   * @param files 用户上传的文件
    * @returns sessionId
    */
-  const executeSmartRouting = async (query: string): Promise<void> => {
+  const executeSmartRouting = async (query: string, files?: UploadedFileInfo[]): Promise<void> => {
     // 重置取消状态
     isCancelled.value = false;
 
-    // 开始操作
-    const sessionId = autoOperationStore.startOperation(query);
+    // 开始操作（保存文件信息）
+    const sessionId = autoOperationStore.startOperation(query, files);
 
     try {
       // 统一意图分析（后端内部串行执行 Forge 匹配和 MCP 分析）
@@ -676,9 +688,13 @@ export function useAutoOperation() {
         console.error('智能路由执行失败:', error);
         message.error('智能路由执行失败，已切换到普通模式');
 
-        // 回退到普通模式
+        // 回退到普通模式（带上文件）
         const taskId = generateUUID();
         sessionStorage.setItem(`task_${taskId}_init`, query);
+        const originalFiles = autoOperationStore.originalFiles;
+        if (originalFiles.length > 0) {
+          sessionStorage.setItem(`task_${taskId}_file`, JSON.stringify(originalFiles));
+        }
         await router.push(`/task/${taskId}`);
       }
       autoOperationStore.cancelOperation();

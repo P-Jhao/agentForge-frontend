@@ -165,10 +165,14 @@ watch(forgeId, () => {
 });
 
 // 自动操作发送事件处理
-const handleAutoSend = () => {
+const handleAutoSend = async () => {
   const content = inputValue.value.trim();
   if (content) {
-    handleSend(content);
+    // 从 autoOperationStore 获取文件信息
+    const { useAutoOperationStore } = await import('@/stores');
+    const autoOperationStore = useAutoOperationStore();
+    const files = autoOperationStore.originalFiles;
+    handleSend(content, undefined, undefined, files.length > 0 ? files : undefined);
   }
 };
 

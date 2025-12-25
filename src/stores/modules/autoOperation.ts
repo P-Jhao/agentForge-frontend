@@ -11,6 +11,7 @@ import type {
   GeneratedForgeConfig,
   ConfigGeneratingState,
   ConfigFieldName,
+  UploadedFileInfo,
 } from '@/types';
 
 // 阶段文本映射（本地定义，避免循环依赖）
@@ -41,6 +42,9 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
 
   // 用户原始输入
   const originalQuery = ref('');
+
+  // 用户上传的文件
+  const originalFiles = ref<UploadedFileInfo[]>([]);
 
   // 意图分析结果
   const intentResult = ref<IntentResult | null>(null);
@@ -88,15 +92,17 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
   /**
    * 开始自动操作
    * @param query 用户原始输入
+   * @param files 用户上传的文件
    * @returns 生成的 sessionId
    */
-  function startOperation(query: string): string {
+  function startOperation(query: string, files?: UploadedFileInfo[]): string {
     // 生成唯一的 sessionId
     const newSessionId = uuidv4();
 
     isActive.value = true;
     stage.value = 'analyzing';
     originalQuery.value = query;
+    originalFiles.value = files || [];
     intentResult.value = null;
     forgeConfig.value = null;
     configGenerating.value = createInitialConfigState();
@@ -197,6 +203,7 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     isActive.value = false;
     stage.value = 'idle';
     originalQuery.value = '';
+    originalFiles.value = [];
     intentResult.value = null;
     forgeConfig.value = null;
     configGenerating.value = createInitialConfigState();
@@ -209,6 +216,7 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     isActive,
     stage,
     originalQuery,
+    originalFiles,
     intentResult,
     forgeConfig,
     configGenerating,
