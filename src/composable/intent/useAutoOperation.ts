@@ -93,10 +93,11 @@ export function useAutoOperation() {
     }
 
     // 取消 SSE 订阅
+    unsubscribe();
+
+    // 调用取消 API
     const sessionId = autoOperationStore.sessionId;
     if (sessionId) {
-      unsubscribe(sessionId);
-      // 调用取消 API
       try {
         await cancelIntent({ sessionId });
       } catch (error) {
@@ -287,7 +288,7 @@ export function useAutoOperation() {
         },
       };
 
-      subscribe(sessionId, configHandlers);
+      subscribe(configHandlers);
       autoOperationStore.setSubscribed(true);
 
       // 发起配置生成请求

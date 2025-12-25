@@ -5,164 +5,108 @@
 import { ref } from 'vue';
 import type { IntentSSEEvent, IntentEventHandlers, ConfigFieldName, IntentResult } from '@/types';
 
-// 全局订阅管理器（单例）
-class IntentEventSubscriptionManager {
-  // 订阅列表：sessionId -> handlers
-  private subscriptions: Map<string, IntentEventHandlers> = new Map();
+// 当前事件处理器（单例，同一时间只有一个智能路由操作）
+let currentHandlers: IntentEventHandlers | null = null;
 
-  /**
-   * 订阅智能路由事件
-   * @param sessionId 会话 ID
-   * @param handlers 事件处理器
-   */
-  subscribe(sessionId: string, handlers: IntentEventHandlers): void {
-    this.subscriptions.set(sessionId, handlers);
-    console.log(`[IntentSubscription] 订阅会话: ${sessionId}`);
+/**
+ * 处理 SSE 事件
+ * @param event 意图 SSE 事件
+ */
+function handleIntentEvent(event: IntentSSEEvent): void {
+  if (!currentHandlers) {
+    console.log('[IntentSubscription] 未找到订阅的处理器');
+    return;
   }
 
-  /**
-   * 取消订阅
-   * @param sessionId 会话 ID
-   */
-  unsubscribe(sessionId: string): void {
-    if (this.subscriptions.has(sessionId)) {
-      this.subscriptions.delete(sessionId);
-      console.log(`[IntentSubscription] 取消订阅会话: ${sessionId}`);
-    }
-  }
+  const { type, data } = event;
 
-  /**
-   * 检查是否已订阅
-   * @param sessionId 会话 ID
-   */
-  isSubscribed(sessionId: string): boolean {
-    return this.subscriptions.has(sessionId);
-  }
+  // 根据事件类型分发
+  switch (type) {
+    case 'intent:analyze_start':
+      currentHandlers.onAnalyzeStart?.();
+      break;
 
-  /**
-   * 处理 SSE 事件
-   * @param event 意图 SSE 事件
-   */
-  handleEvent(event: IntentSSEEvent): void {
-    const { type, sessionId, data } = event;
+    case 'intent:analyze_result':
+      if (data?.result) {
+        currentHandlers.onAnalyzeResult?.(data.result as IntentResult);
+      }
+      break;
 
-    // 获取对应会话的处理器
-    const handlers = this.subscriptions.get(sessionId);
-    if (!handlers) {
-      console.log(`[IntentSubscription] 未找到会话 ${sessionId} 的订阅`);
-      return;
-    }
+    case 'intent:config_start':
+      if (data?.field) {
+        currentHandlers.onConfigStart?.(data.field as ConfigFieldName);
+      }
+      break;
 
-    // 根据事件类型分发
-    switch (type) {
-      case 'intent:analyze_start':
-        handlers.onAnalyzeStart?.();
-        break;
+    case 'intent:config_chunk':
+      if (data?.field && data?.content !== undefined) {
+        currentHandlers.onConfigChunk?.(data.field as ConfigFieldName, data.content);
+      }
+      break;
 
-      case 'intent:analyze_result':
-        if (data?.result) {
-          handlers.onAnalyzeResult?.(data.result as IntentResult);
-        }
-        break;
+    case 'intent:config_done':
+      if (data?.field && data?.content !== undefined) {
+        currentHandlers.onConfigDone?.(data.field as ConfigFieldName, data.content);
+      }
+      break;
 
-      case 'intent:config_start':
-        if (data?.field) {
-          handlers.onConfigStart?.(data.field as ConfigFieldName);
-        }
-        break;
+    case 'intent:config_complete':
+      currentHandlers.onConfigComplete?.();
+      // 完成后自动清理
+      currentHandlers = null;
+      break;
 
-      case 'intent:config_chunk':
-        if (data?.field && data?.content !== undefined) {
-          handlers.onConfigChunk?.(data.field as ConfigFieldName, data.content);
-        }
-        break;
+    case 'intent:cancelled':
+      currentHandlers.onCancelled?.();
+      // 取消后自动清理
+      currentHandlers = null;
+      break;
 
-      case 'intent:config_done':
-        if (data?.field && data?.content !== undefined) {
-          handlers.onConfigDone?.(data.field as ConfigFieldName, data.content);
-        }
-        break;
-
-      case 'intent:config_complete':
-        handlers.onConfigComplete?.();
-        // 完成后自动取消订阅
-        this.unsubscribe(sessionId);
-        break;
-
-      case 'intent:cancelled':
-        handlers.onCancelled?.();
-        // 取消后自动取消订阅
-        this.unsubscribe(sessionId);
-        break;
-
-      case 'intent:error':
-        if (data?.message) {
-          handlers.onError?.(data.message);
-        }
-        // 错误后自动取消订阅
-        this.unsubscribe(sessionId);
-        break;
-    }
-  }
-
-  /**
-   * 清理所有订阅
-   */
-  clear(): void {
-    this.subscriptions.clear();
-    console.log('[IntentSubscription] 清理所有订阅');
+    case 'intent:error':
+      if (data?.message) {
+        currentHandlers.onError?.(data.message);
+      }
+      // 错误后自动清理
+      currentHandlers = null;
+      break;
   }
 }
-
-// 全局单例
-const subscriptionManager = new IntentEventSubscriptionManager();
 
 /**
  * 意图事件订阅 composable
  */
 export function useIntentSubscription() {
-  // 当前订阅的 sessionId
-  const currentSessionId = ref<string | null>(null);
+  // 是否已订阅
+  const subscribed = ref(false);
 
   /**
    * 订阅意图事件
-   * @param sessionId 会话 ID
    * @param handlers 事件处理器
    */
-  const subscribe = (sessionId: string, handlers: IntentEventHandlers): void => {
-    // 如果已有订阅，先取消
-    if (currentSessionId.value) {
-      subscriptionManager.unsubscribe(currentSessionId.value);
-    }
-
-    subscriptionManager.subscribe(sessionId, handlers);
-    currentSessionId.value = sessionId;
+  const subscribe = (handlers: IntentEventHandlers): void => {
+    currentHandlers = handlers;
+    subscribed.value = true;
+    console.log('[IntentSubscription] 已订阅');
   };
 
   /**
    * 取消订阅
-   * @param sessionId 可选，不传则取消当前订阅
    */
-  const unsubscribe = (sessionId?: string): void => {
-    const targetId = sessionId || currentSessionId.value;
-    if (targetId) {
-      subscriptionManager.unsubscribe(targetId);
-      if (targetId === currentSessionId.value) {
-        currentSessionId.value = null;
-      }
-    }
+  const unsubscribe = (): void => {
+    currentHandlers = null;
+    subscribed.value = false;
+    console.log('[IntentSubscription] 已取消订阅');
   };
 
   /**
    * 检查是否已订阅
    */
-  const isSubscribed = (sessionId?: string): boolean => {
-    const targetId = sessionId || currentSessionId.value;
-    return targetId ? subscriptionManager.isSubscribed(targetId) : false;
+  const isSubscribed = (): boolean => {
+    return subscribed.value;
   };
 
   return {
-    currentSessionId,
+    subscribed,
     subscribe,
     unsubscribe,
     isSubscribed,
@@ -170,10 +114,13 @@ export function useIntentSubscription() {
 }
 
 /**
- * 获取全局订阅管理器（用于 SSE 事件分发）
+ * 获取意图订阅管理器（用于 SSE 事件分发）
+ * 返回一个单例对象，供 useTaskSubscription 调用
  */
-export function getIntentSubscriptionManager(): IntentEventSubscriptionManager {
-  return subscriptionManager;
+export function getIntentSubscriptionManager() {
+  return {
+    handleEvent: handleIntentEvent,
+  };
 }
 
 /**
