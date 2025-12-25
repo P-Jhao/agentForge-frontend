@@ -428,9 +428,24 @@ export function useAutoOperation() {
       await wait(getDelay('pageTransition'));
       checkCancelled();
 
-      // 6. 在弹窗中精准选择 MCP 工具
-      for (const { mcpId, toolNames } of mcpTools) {
+      // 6. 在弹窗中精准选择 MCP 工具（每个 MCP 需要单独确认）
+      for (let i = 0; i < mcpTools.length; i++) {
+        const mcpTool = mcpTools[i];
+        if (!mcpTool) continue;
+
+        const { mcpId, toolNames } = mcpTool;
         checkCancelled();
+
+        // 如果不是第一个 MCP，需要重新打开弹窗
+        if (i > 0) {
+          // 重新点击"添加 MCP"按钮打开弹窗
+          const addMcpBtnAgain = await waitForElement('[data-auto-add-mcp-btn]');
+          if (addMcpBtnAgain) {
+            addMcpBtnAgain.click();
+            await wait(getDelay('pageTransition'));
+            checkCancelled();
+          }
+        }
 
         // 通过自定义事件通知组件选择指定的 MCP 和工具
         window.dispatchEvent(
@@ -442,14 +457,12 @@ export function useAutoOperation() {
         // 等待工具列表加载和选择完成
         await wait(getDelay('pageTransition'));
         await wait(getDelay('mcpSelect'));
+        checkCancelled();
+
+        // 确认添加当前 MCP 的工具
+        window.dispatchEvent(new CustomEvent('auto-operation-confirm-mcp'));
+        await wait(getDelay('searchUpdate'));
       }
-
-      checkCancelled();
-      await wait(getDelay('beforeSubmit'));
-
-      // 7. 触发确认添加
-      window.dispatchEvent(new CustomEvent('auto-operation-confirm-mcp'));
-      await wait(getDelay('searchUpdate'));
 
       checkCancelled();
 
