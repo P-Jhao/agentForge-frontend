@@ -12,16 +12,13 @@ import { storeToRefs } from 'pinia';
 
 // 获取 store
 const autoOperationStore = useAutoOperationStore();
-const { isActive, stageText, stage } = storeToRefs(autoOperationStore);
+const { isActive, stageText } = storeToRefs(autoOperationStore);
 
 // 是否已移动到角落（初始在中央）
 const isInCorner = ref(false);
 
 // 是否已启用点击取消监听
 const clickListenerEnabled = ref(false);
-
-// 记录上一次的 isActive 状态，用于判断是否是新开始的操作
-let wasActive = false;
 
 // 定时器
 let moveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -67,7 +64,6 @@ watch(
   (newVal, oldVal) => {
     if (newVal && !oldVal) {
       // 操作刚开始（从 false 变为 true）
-      wasActive = true;
       isInCorner.value = false;
       clickListenerEnabled.value = false;
 
@@ -83,7 +79,6 @@ watch(
       }, 1000);
     } else if (!newVal && oldVal) {
       // 操作结束（从 true 变为 false）
-      wasActive = false;
       isInCorner.value = false;
       clickListenerEnabled.value = false;
       cleanup();
@@ -110,7 +105,7 @@ const handleCancel = () => {
     <Transition name="toast-fade">
       <div
         v-if="isActive && stageText"
-        class="operation-stage-toast fixed z-[9999] flex items-center gap-3 rounded-xl shadow-2xl"
+        class="operation-stage-toast fixed z-9999 flex items-center gap-3 rounded-xl shadow-2xl"
         :class="[
           isInCorner
             ? 'is-corner top-4 right-4 px-5 py-3.5'
