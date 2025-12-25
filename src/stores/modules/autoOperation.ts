@@ -51,11 +51,8 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
   // 配置生成状态
   const configGenerating = ref<ConfigGeneratingState>(createInitialConfigState());
 
-  // 当前操作会话 ID（用于取消操作和 SSE 事件隔离）
+  // 当前操作会话 ID（用于取消操作）
   const sessionId = ref<string | null>(null);
-
-  // SSE 事件订阅状态
-  const isSubscribed = ref(false);
 
   // 定时器和动画清理函数列表
   const cleanupFunctions = ref<Array<() => void>>([]);
@@ -104,7 +101,6 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     forgeConfig.value = null;
     configGenerating.value = createInitialConfigState();
     sessionId.value = newSessionId;
-    isSubscribed.value = false;
     cleanupFunctions.value = [];
 
     return newSessionId;
@@ -122,13 +118,6 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
    */
   function setIntentResult(result: IntentResult) {
     intentResult.value = result;
-  }
-
-  /**
-   * 设置 SSE 订阅状态
-   */
-  function setSubscribed(subscribed: boolean) {
-    isSubscribed.value = subscribed;
   }
 
   /**
@@ -212,7 +201,6 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     forgeConfig.value = null;
     configGenerating.value = createInitialConfigState();
     sessionId.value = null;
-    isSubscribed.value = false;
     cleanupFunctions.value = [];
   }
 
@@ -225,7 +213,6 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     forgeConfig,
     configGenerating,
     sessionId,
-    isSubscribed,
 
     // 计算属性
     stageText,
@@ -237,7 +224,6 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     startOperation,
     setStage,
     setIntentResult,
-    setSubscribed,
     updateConfigField,
     appendConfigContent,
     setForgeConfig,

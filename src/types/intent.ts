@@ -87,36 +87,11 @@ export const STAGE_TEXT_MAP: Record<OperationStage, string> = {
 
 // ========== SSE 事件类型 ==========
 
-// 意图 SSE 事件类型
-export type IntentSSEEventType =
-  | 'intent:analyze_start'
-  | 'intent:analyze_result'
-  | 'intent:config_start'
-  | 'intent:config_chunk'
-  | 'intent:config_done'
-  | 'intent:config_complete'
-  | 'intent:cancelled'
-  | 'intent:error';
-
 // 配置字段名
 export type ConfigFieldName = 'name' | 'description' | 'systemPrompt';
 
-// 意图 SSE 事件
-export interface IntentSSEEvent {
-  type: IntentSSEEventType;
-  sessionId: string;
-  data?: {
-    result?: IntentResult;
-    field?: ConfigFieldName;
-    content?: string;
-    message?: string;
-  };
-}
-
-// 意图事件处理器
+// 意图事件处理器（用于配置生成回调）
 export interface IntentEventHandlers {
-  onAnalyzeStart?: () => void;
-  onAnalyzeResult?: (result: IntentResult) => void;
   onConfigStart?: (field: ConfigFieldName) => void;
   onConfigChunk?: (field: ConfigFieldName, content: string) => void;
   onConfigDone?: (field: ConfigFieldName, content: string) => void;

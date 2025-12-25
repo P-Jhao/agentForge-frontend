@@ -8,7 +8,6 @@ import { useMessage } from 'naive-ui';
 import { useAutoOperationStore } from '@/stores';
 import { useTypewriter } from './useTypewriter';
 import { useHighlight } from './useHighlight';
-import { useIntentSubscription } from './useIntentSubscription';
 import { analyzeIntent, cancelIntent, generateForgeConfig } from '@/utils/intentApi';
 import type {
   ForgeIntentResult,
@@ -57,7 +56,6 @@ export function useAutoOperation() {
   const router = useRouter();
   const message = useMessage();
   const autoOperationStore = useAutoOperationStore();
-  const { subscribe, unsubscribe } = useIntentSubscription();
   const { highlight, getCleanup: getHighlightCleanup } = useHighlight();
 
   // 是否已取消
@@ -116,9 +114,6 @@ export function useAutoOperation() {
       configAbortController.abort();
       configAbortController = null;
     }
-
-    // 取消 SSE 订阅
-    unsubscribe();
 
     // 调用取消 API
     const sessionId = autoOperationStore.sessionId;
@@ -255,7 +250,7 @@ export function useAutoOperation() {
       // 4. 开始配置生成并填充表单
       autoOperationStore.setStage('creating');
 
-      // 订阅配置生成事件
+      // 配置生成事件处理器
       const configHandlers: IntentEventHandlers = {
         onConfigStart: (field: ConfigFieldName) => {
           autoOperationStore.updateConfigField(field, 'streaming');
@@ -281,9 +276,6 @@ export function useAutoOperation() {
           autoOperationStore.cancelOperation();
         },
       };
-
-      subscribe(configHandlers);
-      autoOperationStore.setSubscribed(true);
 
       // 发起配置生成请求
       configAbortController = generateForgeConfig(originalQuery, mcpIds, sessionId, (event) => {
