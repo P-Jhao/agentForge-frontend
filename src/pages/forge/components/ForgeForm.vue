@@ -401,6 +401,7 @@ const handleCancel = () => {
         size="large"
         :loading="loading"
         class="btn-theme"
+        data-auto-submit-btn
         @click="handleSubmit"
       >
         <template #icon>

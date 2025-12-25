@@ -122,6 +122,7 @@ onMounted(async () => {
         placeholder="搜索 Forge..."
         clearable
         class="forge-search-input w-64"
+        data-auto-search-input
       >
         <template #prefix>
           <NIcon :component="SearchOutline" />

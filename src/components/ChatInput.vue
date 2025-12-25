@@ -380,6 +380,7 @@ const canSend = computed(() => {
       :disabled="disabled"
       :theme-overrides="inputThemeOverrides"
       class="chat-textarea"
+      data-auto-chat-input
       @keydown="handleKeydown"
     />
 
@@ -448,6 +449,7 @@ const canSend = computed(() => {
           :disabled="!canSend"
           :loading="loading"
           :class="['btn-theme', { 'send-btn-glow': highlightSend && canSend }]"
+          data-auto-send-btn
           @click="handleSend"
         >
           <template #icon>

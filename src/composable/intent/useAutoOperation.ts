@@ -67,6 +67,36 @@ export function useAutoOperation() {
   let configAbortController: AbortController | null = null;
 
   /**
+   * 使用打字机效果填充输入框
+   * @param element 输入框元素
+   * @param text 要输入的文本
+   */
+  const typeIntoInput = async (
+    element: HTMLInputElement | HTMLTextAreaElement,
+    text: string
+  ): Promise<void> => {
+    const value = ref('');
+
+    return new Promise<void>((resolve) => {
+      const { start, getCleanup } = useTypewriter(value, {
+        onComplete: () => {
+          // 同步到实际输入框
+          element.value = value.value;
+          // 触发 input 事件以更新 Vue 响应式数据
+          element.dispatchEvent(new Event('input', { bubbles: true }));
+          resolve();
+        },
+      });
+
+      // 注册清理函数
+      autoOperationStore.registerCleanup(getCleanup());
+
+      // 开始打字
+      start(text);
+    });
+  };
+
+  /**
    * 检查是否已取消，如果取消则抛出错误
    */
   const checkCancelled = () => {
@@ -121,38 +151,16 @@ export function useAutoOperation() {
 
       // 2. 使用打字机效果在搜索框中输入 Forge 名称
       autoOperationStore.setStage('typing');
-      const searchInput = await waitForElement('.forge-search-input input');
+      const searchInput = await waitForElement('[data-auto-search-input] input');
       if (!searchInput) {
         throw new Error('未找到搜索输入框');
       }
 
-      // 创建打字机效果
-      const searchValue = ref('');
-      const { getCleanup: getTypewriterCleanup } = useTypewriter(searchValue, {
-        onComplete: () => {
-          // 同步到实际输入框
-          (searchInput as HTMLInputElement).value = searchValue.value;
-          // 触发 input 事件以更新 Vue 响应式数据
-          searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-        },
-      });
-
-      // 注册清理函数
-      autoOperationStore.registerCleanup(getTypewriterCleanup());
+      // 注册高亮清理函数
       autoOperationStore.registerCleanup(getHighlightCleanup());
 
-      // 开始打字
-      await new Promise<void>((resolve) => {
-        const { start } = useTypewriter(searchValue, {
-          onComplete: () => {
-            // 同步到实际输入框
-            (searchInput as HTMLInputElement).value = searchValue.value;
-            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            resolve();
-          },
-        });
-        start(forgeName);
-      });
+      // 打字机效果输入
+      await typeIntoInput(searchInput as HTMLInputElement, forgeName);
 
       checkCancelled();
       await wait(getDelay('searchUpdate'));
@@ -176,29 +184,20 @@ export function useAutoOperation() {
 
       // 5. 使用打字机效果填充输入框
       autoOperationStore.setStage('typing');
-      const chatInput = await waitForElement('.chat-input-container textarea');
+      // NInput 的 data 属性在包装 div 上，需要选择内部的 textarea
+      const chatInput = await waitForElement('[data-auto-chat-input] textarea');
       if (!chatInput) {
         throw new Error('未找到聊天输入框');
       }
 
-      const inputValue = ref('');
-      await new Promise<void>((resolve) => {
-        const { start } = useTypewriter(inputValue, {
-          onComplete: () => {
-            (chatInput as HTMLTextAreaElement).value = inputValue.value;
-            chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-            resolve();
-          },
-        });
-        start(originalQuery);
-      });
+      await typeIntoInput(chatInput as HTMLTextAreaElement, originalQuery);
 
       checkCancelled();
       await wait(getDelay('afterTyping'));
 
       // 6. 高亮发送按钮并触发发送
       autoOperationStore.setStage('sending');
-      const sendButton = await waitForElement('.chat-input-container .btn-theme');
+      const sendButton = await waitForElement('[data-auto-send-btn]');
       if (sendButton) {
         await highlight(sendButton, { duration: getDelay('highlightDuration') });
         checkCancelled();
@@ -416,7 +415,7 @@ export function useAutoOperation() {
       await wait(getDelay('searchUpdate'));
 
       // 找到"添加 MCP"按钮
-      const addMcpButton = await waitForElement('.forge-form button.border-dashed');
+      const addMcpButton = await waitForElement('[data-auto-add-mcp-btn]');
       if (!addMcpButton) {
         throw new Error('未找到添加 MCP 按钮');
       }
@@ -464,7 +463,7 @@ export function useAutoOperation() {
       checkCancelled();
 
       // 8. 滚动到创建按钮并点击
-      const submitButton = await waitForElement('.forge-form .btn-theme');
+      const submitButton = await waitForElement('[data-auto-submit-btn]');
       if (!submitButton) {
         throw new Error('未找到创建按钮');
       }
@@ -505,33 +504,23 @@ export function useAutoOperation() {
       checkCancelled();
       await wait(getDelay('pageTransition'));
 
-      // 7. 使用打字机效果填充输入框
+      // 使用打字机效果填充输入框
       autoOperationStore.setStage('typing');
-      const chatInput = await waitForElement('.chat-input-container textarea');
+      // NInput 的 data 属性在包装 div 上，需要选择内部的 textarea
+      const chatInput = await waitForElement('[data-auto-chat-input] textarea');
       if (!chatInput) {
         throw new Error('未找到聊天输入框');
       }
 
       const originalQuery = autoOperationStore.originalQuery;
-      const inputValue = ref('');
-
-      await new Promise<void>((resolve) => {
-        const { start } = useTypewriter(inputValue, {
-          onComplete: () => {
-            (chatInput as HTMLTextAreaElement).value = inputValue.value;
-            chatInput.dispatchEvent(new Event('input', { bubbles: true }));
-            resolve();
-          },
-        });
-        start(originalQuery);
-      });
+      await typeIntoInput(chatInput as HTMLTextAreaElement, originalQuery);
 
       checkCancelled();
       await wait(getDelay('afterTyping'));
 
-      // 8. 高亮发送按钮并触发发送
+      // 高亮发送按钮并触发发送
       autoOperationStore.setStage('sending');
-      const sendButton = await waitForElement('.chat-input-container .btn-theme');
+      const sendButton = await waitForElement('[data-auto-send-btn]');
       if (sendButton) {
         await highlight(sendButton, { duration: getDelay('highlightDuration') });
         checkCancelled();

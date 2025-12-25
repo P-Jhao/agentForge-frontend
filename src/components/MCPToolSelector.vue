@@ -285,6 +285,7 @@ onUnmounted(() => {
     <button
       class="hover:border-primary-500/50 hover:bg-primary-500/10 hover:text-primary-500 mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed py-3 text-sm transition-all"
       :class="themeStore.isDark ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-500'"
+      data-auto-add-mcp-btn
       @click="handleOpenModal"
     >
       <NIcon :component="AddOutline" :size="16" />
