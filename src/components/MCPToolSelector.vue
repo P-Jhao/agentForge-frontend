@@ -176,29 +176,22 @@ const isIndeterminate = computed(() => {
 // ==================== 自动操作事件处理 ====================
 
 /**
- * 处理自动选择 MCP 事件
+ * 处理自动选择 MCP 和工具事件（精准选择）
  */
-const handleAutoSelectMcp = async (e: Event) => {
+const handleAutoSelectTools = async (e: Event) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const detail = (e as any).detail as { mcpId: number };
-  const { mcpId } = detail;
-  if (!mcpId || !showModal.value) return;
+  const detail = (e as any).detail as { mcpId: number; toolNames: string[] };
+  const { mcpId, toolNames } = detail;
+  if (!mcpId || !toolNames || !showModal.value) return;
 
   // 在 MCP 列表中找到对应的 MCP
   const mcp = mcpStore.mcpList.find((m) => m.id === mcpId);
   if (mcp) {
+    // 先选择 MCP
     await handleSelectMcp(mcp);
+    // 然后精准选择指定的工具
+    tempSelectedTools.value = toolNames;
   }
-};
-
-/**
- * 处理自动全选工具事件
- */
-const handleAutoSelectAllTools = () => {
-  if (!selectedMcpId.value || !showModal.value) return;
-
-  const tools = getMCPTools(selectedMcpId.value);
-  tempSelectedTools.value = tools.map((t) => t.name);
 };
 
 /**
@@ -212,15 +205,13 @@ const handleAutoConfirmAdd = () => {
 
 // 注册自动操作事件监听
 onMounted(() => {
-  window.addEventListener('auto-operation-select-mcp', handleAutoSelectMcp);
-  window.addEventListener('auto-operation-select-all-tools', handleAutoSelectAllTools);
+  window.addEventListener('auto-operation-select-tools', handleAutoSelectTools);
   window.addEventListener('auto-operation-confirm-mcp', handleAutoConfirmAdd);
 });
 
 // 清理事件监听
 onUnmounted(() => {
-  window.removeEventListener('auto-operation-select-mcp', handleAutoSelectMcp);
-  window.removeEventListener('auto-operation-select-all-tools', handleAutoSelectAllTools);
+  window.removeEventListener('auto-operation-select-tools', handleAutoSelectTools);
   window.removeEventListener('auto-operation-confirm-mcp', handleAutoConfirmAdd);
 });
 </script>

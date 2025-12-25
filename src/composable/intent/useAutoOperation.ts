@@ -216,12 +216,15 @@ export function useAutoOperation() {
    * 流程：广场 → 新建高亮 → 创建页 → 填充 → MCP 选择 → 提交 → 对话页 → 打字 → 发送
    */
   const executeAutoCreate = async (result: MCPIntentResult): Promise<void> => {
-    const { mcpIds, originalQuery } = result;
+    const { mcpTools, originalQuery } = result;
     const sessionId = autoOperationStore.sessionId;
 
     if (!sessionId) {
       throw new Error('缺少 sessionId');
     }
+
+    // 提取 mcpIds 用于配置生成（后端需要）
+    const mcpIds = mcpTools.map((t) => t.mcpId);
 
     try {
       // 1. 跳转到 Forge 广场
@@ -319,12 +322,12 @@ export function useAutoOperation() {
         }
       });
 
-      // 存储 mcpIds 供后续使用
+      // 存储 mcpTools 供后续使用
       autoOperationStore.setForgeConfig({
         name: '',
         description: '',
         systemPrompt: '',
-        mcpIds,
+        mcpTools,
       });
     } catch (error) {
       if ((error as Error).message !== '操作已取消') {
@@ -400,7 +403,7 @@ export function useAutoOperation() {
       checkCancelled();
 
       const { forgeConfig } = autoOperationStore;
-      const mcpIds = forgeConfig?.mcpIds || [];
+      const mcpTools = forgeConfig?.mcpTools || [];
 
       // 5. 滚动到 MCP 工具区域并点击添加按钮
       autoOperationStore.setStage('creating');
@@ -425,23 +428,19 @@ export function useAutoOperation() {
       await wait(getDelay('pageTransition'));
       checkCancelled();
 
-      // 6. 在弹窗中选择 MCP 工具
-      for (const mcpId of mcpIds) {
+      // 6. 在弹窗中精准选择 MCP 工具
+      for (const { mcpId, toolNames } of mcpTools) {
         checkCancelled();
 
-        // 通过自定义事件通知组件选择指定的 MCP
+        // 通过自定义事件通知组件选择指定的 MCP 和工具
         window.dispatchEvent(
-          new CustomEvent('auto-operation-select-mcp', {
-            detail: { mcpId },
+          new CustomEvent('auto-operation-select-tools', {
+            detail: { mcpId, toolNames },
           })
         );
 
-        // 等待工具列表加载
+        // 等待工具列表加载和选择完成
         await wait(getDelay('pageTransition'));
-        checkCancelled();
-
-        // 触发全选该 MCP 的所有工具
-        window.dispatchEvent(new CustomEvent('auto-operation-select-all-tools'));
         await wait(getDelay('mcpSelect'));
       }
 

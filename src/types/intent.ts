@@ -18,10 +18,16 @@ export interface ForgeNoMatchResult {
   originalQuery: string;
 }
 
+// MCP 工具选择（精确到工具级别）
+export interface MCPToolSelectionResult {
+  mcpId: number;
+  toolNames: string[];
+}
+
 // MCP 意图分析结果
 export interface MCPIntentResult {
   type: 'create_forge';
-  mcpIds: number[];
+  mcpTools: MCPToolSelectionResult[];
   originalQuery: string;
 }
 
@@ -45,7 +51,7 @@ export interface GeneratedForgeConfig {
   name: string;
   description: string;
   systemPrompt: string;
-  mcpIds: number[];
+  mcpTools: MCPToolSelectionResult[];
 }
 
 // 配置生成字段状态
