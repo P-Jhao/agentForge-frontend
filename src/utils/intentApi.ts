@@ -19,7 +19,22 @@ import type {
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 /**
- * 分析 Forge 意图
+ * 统一意图分析
+ * 先尝试匹配现有 Forge，如果没有匹配则分析 MCP 工具
+ * @param params 请求参数
+ * @returns 意图分析结果
+ */
+export async function analyzeIntent(
+  params: AnalyzeForgeRequest
+): Promise<ForgeIntentResult | ForgeNoMatchResult | MCPIntentResult | MCPNotSupportedResult> {
+  const res = await http.post<
+    ForgeIntentResult | ForgeNoMatchResult | MCPIntentResult | MCPNotSupportedResult
+  >('/intent/analyze', params);
+  return res.data;
+}
+
+/**
+ * 分析 Forge 意图（保留兼容，后续可删除）
  * @param params 请求参数
  * @returns Forge 意图分析结果
  */

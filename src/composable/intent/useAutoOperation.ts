@@ -9,12 +9,7 @@ import { useAutoOperationStore } from '@/stores';
 import { useTypewriter } from './useTypewriter';
 import { useHighlight } from './useHighlight';
 import { useIntentSubscription } from './useIntentSubscription';
-import {
-  analyzeForgeIntent,
-  analyzeMCPIntent,
-  cancelIntent,
-  generateForgeConfig,
-} from '@/utils/intentApi';
+import { analyzeIntent, cancelIntent, generateForgeConfig } from '@/utils/intentApi';
 import type {
   ForgeIntentResult,
   MCPIntentResult,
@@ -600,35 +595,23 @@ export function useAutoOperation() {
     const sessionId = autoOperationStore.startOperation(query);
 
     try {
-      // 第一阶段：Forge 意图分析
+      // 统一意图分析（后端内部串行执行 Forge 匹配和 MCP 分析）
       autoOperationStore.setStage('analyzing');
-      const forgeResult = await analyzeForgeIntent({
+      const result = await analyzeIntent({
         userInput: query,
         sessionId,
       });
 
       checkCancelled();
+      autoOperationStore.setIntentResult(result);
 
       // 根据结果执行不同流程
-      if (forgeResult.type === 'use_existing_forge') {
+      if (result.type === 'use_existing_forge') {
         // 找到匹配的 Forge，执行自动导航
-        autoOperationStore.setIntentResult(forgeResult);
-        await executeAutoNavigation(forgeResult);
-        return;
-      }
-
-      // 第二阶段：MCP 意图分析
-      const mcpResult = await analyzeMCPIntent({
-        userInput: query,
-        sessionId,
-      });
-
-      checkCancelled();
-      autoOperationStore.setIntentResult(mcpResult);
-
-      if (mcpResult.type === 'create_forge') {
+        await executeAutoNavigation(result as ForgeIntentResult);
+      } else if (result.type === 'create_forge') {
         // 找到可用的 MCP 工具，执行自动创建
-        await executeAutoCreate(mcpResult);
+        await executeAutoCreate(result as MCPIntentResult);
       } else {
         // 不支持的场景
         await handleNotSupported(query);
