@@ -5,7 +5,7 @@
  * 每个选项带有描述说明
  */
 import { ref, computed } from 'vue';
-import { NPopover, NIcon } from 'naive-ui';
+import { NPopover, NIcon, NTooltip } from 'naive-ui';
 import { TrendingUpSharp } from '@vicons/ionicons5';
 import { CheckmarkOutline } from '@vicons/ionicons5';
 import type { EnhanceMode } from '@/utils/enhanceMode';
@@ -66,51 +66,56 @@ const selectOption = (value: EnhanceMode) => {
 </script>
 
 <template>
-  <NPopover
-    v-model:show="showPopover"
-    trigger="click"
-    placement="top-start"
-    :disabled="disabled"
-    raw
-    :show-arrow="false"
-  >
+  <NTooltip :disabled="showPopover">
     <template #trigger>
-      <button
-        type="button"
-        class="enhance-btn flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200"
-        :class="isActive ? 'enhance-btn-active' : 'enhance-btn-inactive'"
+      <NPopover
+        v-model:show="showPopover"
+        trigger="click"
+        placement="top-start"
         :disabled="disabled"
+        raw
+        :show-arrow="false"
       >
-        <NIcon :component="TrendingUpSharp" :size="16" />
-        <span>{{ currentLabel }}</span>
-      </button>
-    </template>
+        <template #trigger>
+          <button
+            type="button"
+            class="enhance-btn flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200"
+            :class="isActive ? 'enhance-btn-active' : 'enhance-btn-inactive'"
+            :disabled="disabled"
+          >
+            <NIcon :component="TrendingUpSharp" :size="16" />
+            <span>{{ currentLabel }}</span>
+          </button>
+        </template>
 
-    <!-- 自定义下拉菜单 -->
-    <div class="enhance-menu">
-      <div class="menu-title">提示词增强</div>
-      <div class="menu-options">
-        <div
-          v-for="option in options"
-          :key="option.value"
-          class="menu-option"
-          :class="{ 'menu-option-active': modelValue === option.value }"
-          @click="selectOption(option.value)"
-        >
-          <div class="option-header">
-            <span class="option-label">{{ option.label }}</span>
-            <NIcon
-              v-if="modelValue === option.value"
-              :component="CheckmarkOutline"
-              :size="18"
-              class="option-check"
-            />
+        <!-- 自定义下拉菜单 -->
+        <div class="enhance-menu">
+          <div class="menu-title">提示词增强</div>
+          <div class="menu-options">
+            <div
+              v-for="option in options"
+              :key="option.value"
+              class="menu-option"
+              :class="{ 'menu-option-active': modelValue === option.value }"
+              @click="selectOption(option.value)"
+            >
+              <div class="option-header">
+                <span class="option-label">{{ option.label }}</span>
+                <NIcon
+                  v-if="modelValue === option.value"
+                  :component="CheckmarkOutline"
+                  :size="18"
+                  class="option-check"
+                />
+              </div>
+              <div class="option-desc">{{ option.description }}</div>
+            </div>
           </div>
-          <div class="option-desc">{{ option.description }}</div>
         </div>
-      </div>
-    </div>
-  </NPopover>
+      </NPopover>
+    </template>
+    提示词增强：优化你的输入，让 AI 更好地理解你的意图
+  </NTooltip>
 </template>
 
 <style scoped>

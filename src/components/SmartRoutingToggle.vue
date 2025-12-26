@@ -53,7 +53,11 @@ const toggle = () => {
         <span>智能路由</span>
       </button>
     </template>
-    {{ enabled ? '已启用智能路由，自动匹配或创建合适的 Forge' : '点击启用智能路由' }}
+    {{
+      enabled
+        ? '已启用智能路由，自动匹配或创建合适的 Forge'
+        : '智能路由：根据你的问题自动识别意图，匹配最合适的 Forge 或创建新对话'
+    }}
   </NTooltip>
 </template>
 
