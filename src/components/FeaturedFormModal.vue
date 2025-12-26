@@ -22,6 +22,9 @@ const emit = defineEmits<{
 const message = useMessage();
 const loading = ref(false);
 
+// 封面图文件大小限制（10MB，与后端一致）
+const COVER_MAX_SIZE = 10 * 1024 * 1024;
+
 // 表单数据
 const formData = ref({
   coverImage: '',
@@ -52,6 +55,16 @@ watch(
 // 关闭弹窗
 function handleClose() {
   emit('update:show', false);
+}
+
+// 上传前检查文件大小
+function beforeUpload(data: { file: UploadFileInfo }) {
+  const file = data.file.file;
+  if (file && file.size > COVER_MAX_SIZE) {
+    message.error('封面图文件大小不能超过 10MB');
+    return false;
+  }
+  return true;
 }
 
 // 图片上传成功
@@ -148,6 +161,7 @@ function getToken() {
           :default-file-list="fileList"
           accept="image/*"
           :headers="{ Authorization: `Bearer ${getToken()}` }"
+          @before-upload="beforeUpload"
           @finish="handleUploadFinish"
           @remove="handleRemove"
         />

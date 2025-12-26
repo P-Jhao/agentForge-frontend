@@ -47,6 +47,9 @@ const message = useMessage();
 // 头像上传状态
 const avatarUploading = ref(false);
 
+// 头像文件大小限制（5MB，与后端一致）
+const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
+
 // 表单验证错误
 const errors = ref<Record<string, string>>({});
 
@@ -158,6 +161,13 @@ const isEditMode = props.mode === 'edit';
 // 自定义上传请求
 const customUpload = async ({ file, onFinish, onError }: UploadCustomRequestOptions) => {
   if (!file.file) {
+    onError();
+    return;
+  }
+
+  // 检查文件大小
+  if (file.file.size > AVATAR_MAX_SIZE) {
+    message.error('头像文件大小不能超过 5MB');
     onError();
     return;
   }
