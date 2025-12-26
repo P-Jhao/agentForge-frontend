@@ -1,13 +1,14 @@
 <script setup lang="ts">
 /**
  * 登录/注册页面
+ * 密码使用 RSA 加密传输
  */
 import { ref } from 'vue';
 import { NInput, NButton, NIcon, useMessage } from 'naive-ui';
 import { PersonOutline, LockClosedOutline } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores';
-import { http } from '@/utils';
+import { http, encryptApiKey } from '@/utils';
 
 const router = useRouter();
 const message = useMessage();
@@ -50,7 +51,7 @@ async function handleLogin() {
   }
 }
 
-// 注册
+// 注册（密码 RSA 加密传输）
 async function handleRegister() {
   const { username, password, confirmPassword } = formData.value;
 
@@ -72,9 +73,12 @@ async function handleRegister() {
   }
   loading.value = true;
   try {
+    // RSA 加密密码
+    const encryptedPassword = await encryptApiKey(password);
+
     await http.post('/user/register', {
-      username: formData.value.username,
-      password: formData.value.password,
+      username,
+      encryptedPassword,
     });
     message.success('注册成功，请登录');
     mode.value = 'login';

@@ -3,7 +3,7 @@
  */
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { http } from '@/utils';
+import { http, encryptApiKey } from '@/utils';
 
 // 用户角色类型
 export type UserRole = 'user' | 'root';
@@ -42,11 +42,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // 登录
+  // 登录（密码 RSA 加密传输）
   async function login(username: string, password: string) {
+    // RSA 加密密码
+    const encryptedPassword = await encryptApiKey(password);
+
     const res = await http.post<{ token: string; user: UserInfo }>('/user/login', {
       username,
-      password,
+      encryptedPassword,
     });
     token.value = res.data.token;
     userInfo.value = res.data.user;
