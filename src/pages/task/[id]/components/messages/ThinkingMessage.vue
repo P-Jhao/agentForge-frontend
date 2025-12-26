@@ -7,7 +7,7 @@
  */
 import { ref, computed, watch } from 'vue';
 import { NIcon } from 'naive-ui';
-import { ChevronDown, ChevronUp, SparklesOutline } from '@vicons/ionicons5';
+import { ChevronDown, ChevronUp } from '@vicons/ionicons5';
 import EMarkdown from '@/components/EMarkdown.vue';
 import { useThemeStore } from '@/stores';
 import type { TextMessageData } from '@/composable/task/useChat';
@@ -62,7 +62,7 @@ const containerClass = computed(() => {
     <!-- 头部：图标 + 标题 -->
     <div class="flex items-center gap-2">
       <!-- 思考图标 -->
-      <NIcon :component="SparklesOutline" :size="16" class="text-primary-500" />
+      <iconpark-icon name="smart-optimization" size="16" class="text-primary-500" />
 
       <!-- 标题 -->
       <span class="font-medium text-gray-600 dark:text-gray-400">
