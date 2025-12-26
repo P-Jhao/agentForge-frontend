@@ -6,8 +6,7 @@
  */
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { NIcon, NTag } from 'naive-ui';
-import { SparklesOutline } from '@vicons/ionicons5';
+import { NTag } from 'naive-ui';
 import ChatInput from '@/components/ChatInput.vue';
 import FeaturedTaskCard from '@/components/FeaturedTaskCard.vue';
 import XScroll from '@/components/XScroll.vue';
@@ -217,7 +216,7 @@ onMounted(() => {
         <div
           class="border-primary-500/30 bg-primary-500/10 mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-2"
         >
-          <NIcon :component="SparklesOutline" class="text-primary-500" />
+          <iconpark-icon name="robot-two" size="18" class="text-primary-500" />
           <span class="text-tag text-sm">AI 驱动的智能工具平台</span>
         </div>
         <h1 class="title-glow mb-4 text-5xl font-bold">

@@ -31,7 +31,16 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
   return {
-    plugins: [vue()],
+    plugins: [
+      vue({
+        template: {
+          compilerOptions: {
+            // 告诉 Vue 编译器 iconpark-icon 是自定义元素，不需要解析
+            isCustomElement: (tag) => tag === 'iconpark-icon',
+          },
+        },
+      }),
+    ],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
