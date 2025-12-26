@@ -175,6 +175,41 @@ const formatFileSize = (bytes: number): string => {
 };
 
 /**
+ * 根据文件名获取图标类型
+ * 返回 iconpark 图标名称，如果是通用文件则返回 null
+ */
+const getFileIconName = (fileName: string): string | null => {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'doc':
+    case 'docx':
+      return 'file-word';
+    case 'pdf':
+      return 'file-pdf';
+    case 'xls':
+    case 'xlsx':
+      return 'file-excel';
+    case 'txt':
+    case 'log':
+    case 'md':
+    case 'markdown':
+    case 'json':
+    case 'yaml':
+    case 'yml':
+    case 'xml':
+    case 'csv':
+    case 'ini':
+    case 'toml':
+    case 'conf':
+    case 'config':
+    case 'env':
+      return 'file-text-jef5n3ke';
+    default:
+      return null;
+  }
+};
+
+/**
  * 验证文件
  */
 const validateFile = (file: File): string | null => {
@@ -345,7 +380,14 @@ const canSend = computed(() => {
         :key="file.filePath"
         class="flex items-center gap-2 rounded-lg bg-gray-100 px-2 py-1.5 dark:bg-gray-800"
       >
-        <NIcon :component="DocumentTextOutline" :size="16" class="text-gray-500" />
+        <!-- 根据文件类型显示不同图标 -->
+        <iconpark-icon
+          v-if="getFileIconName(file.originalName)"
+          :name="getFileIconName(file.originalName)"
+          size="16"
+          class="text-gray-500"
+        />
+        <NIcon v-else :component="DocumentTextOutline" :size="16" class="text-gray-500" />
         <span class="max-w-32 truncate text-sm">{{ file.originalName }}</span>
         <span class="text-xs text-gray-400">{{ formatFileSize(file.size) }}</span>
         <NButton quaternary circle size="tiny" @click="removeFile(index)">
