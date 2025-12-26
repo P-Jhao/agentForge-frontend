@@ -20,6 +20,7 @@ const loading = ref(false);
 
 const formData = ref({
   username: '',
+  nickname: '',
   password: '',
   confirmPassword: '',
 });
@@ -27,7 +28,7 @@ const formData = ref({
 // 切换模式
 function toggleMode() {
   mode.value = mode.value === 'login' ? 'register' : 'login';
-  formData.value = { username: '', password: '', confirmPassword: '' };
+  formData.value = { username: '', nickname: '', password: '', confirmPassword: '' };
 }
 
 // 登录
@@ -53,14 +54,18 @@ async function handleLogin() {
 
 // 注册（密码 RSA 加密传输）
 async function handleRegister() {
-  const { username, password, confirmPassword } = formData.value;
+  const { username, nickname, password, confirmPassword } = formData.value;
 
   if (!username || !password) {
-    message.warning('请输入用户名和密码');
+    message.warning('请输入账号和密码');
     return;
   }
   if (username.length < 3 || username.length > 20) {
-    message.warning('用户名长度需在 3-20 字符之间');
+    message.warning('账号长度需在 3-20 字符之间');
+    return;
+  }
+  if (nickname && nickname.length > 20) {
+    message.warning('名称长度不能超过 20 字符');
     return;
   }
   if (password.length < 6 || password.length > 32) {
@@ -78,6 +83,7 @@ async function handleRegister() {
 
     await http.post('/user/register', {
       username,
+      nickname: nickname || username, // 如果没填名称，默认使用账号
       encryptedPassword,
     });
     message.success('注册成功，请登录');
@@ -139,13 +145,26 @@ function handleSubmit() {
 
         <!-- 表单 -->
         <div class="space-y-4">
-          <!-- 用户名 -->
+          <!-- 账号 -->
           <div>
             <NInput
               v-model:value="formData.username"
-              placeholder="用户名"
+              :placeholder="mode === 'login' ? '账号' : '账号（登录用）'"
               size="large"
               :input-props="{ autocomplete: 'username' }"
+            >
+              <template #prefix>
+                <NIcon :component="PersonOutline" class="text-gray-400" />
+              </template>
+            </NInput>
+          </div>
+
+          <!-- 名称（注册时显示） -->
+          <div v-if="mode === 'register'">
+            <NInput
+              v-model:value="formData.nickname"
+              placeholder="名称（显示用，可选）"
+              size="large"
             >
               <template #prefix>
                 <NIcon :component="PersonOutline" class="text-gray-400" />

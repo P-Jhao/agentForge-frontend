@@ -11,7 +11,10 @@ export type UserRole = 'user' | 'root';
 // 用户信息类型
 export interface UserInfo {
   id: number;
-  username: string;
+  username: string; // 账号
+  nickname?: string; // 名称
+  avatar?: string | null;
+  email?: string | null;
   apiQuota?: number;
   role?: UserRole; // 用户角色：user 普通用户 / root 超级管理员
 }
@@ -63,6 +66,24 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('forgeToken');
   }
 
+  // 刷新用户信息
+  async function refreshUserInfo() {
+    if (!token.value) return;
+    try {
+      const res = await http.get<UserInfo>('/user/info');
+      userInfo.value = res.data;
+    } catch {
+      // 忽略错误
+    }
+  }
+
+  // 更新本地用户信息（不请求后端）
+  function updateLocalUserInfo(data: Partial<UserInfo>) {
+    if (userInfo.value) {
+      userInfo.value = { ...userInfo.value, ...data };
+    }
+  }
+
   return {
     token,
     userInfo,
@@ -72,5 +93,7 @@ export const useUserStore = defineStore('user', () => {
     init,
     login,
     logout,
+    refreshUserInfo,
+    updateLocalUserInfo,
   };
 });

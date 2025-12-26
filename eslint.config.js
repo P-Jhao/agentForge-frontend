@@ -39,6 +39,7 @@ export default [
         MouseEvent: 'readonly',
         Event: 'readonly',
         HTMLElement: 'readonly',
+        HTMLInputElement: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
