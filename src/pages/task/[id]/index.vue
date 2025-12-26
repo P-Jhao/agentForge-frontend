@@ -52,6 +52,7 @@ const {
   renderItems,
   inputValue,
   isLoading,
+  isStreaming,
   handleSend,
   init,
   clearMessages,
@@ -150,6 +151,7 @@ onBeforeUnmount(() => {
         :model-value="inputValue"
         placeholder="输入消息..."
         :loading="isLoading"
+        :show-stop-button="isStreaming"
         @update:model-value="inputValue = $event"
         @send="onSend"
         @cancel="onCancel"

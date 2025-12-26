@@ -109,6 +109,7 @@ export function useChat(options: UseChatOptions) {
   const currentTaskId = ref(options.taskId);
   const inputValue = ref('');
   const isLoading = ref(false);
+  const isStreaming = ref(false); // LLM 正在生成回复（区分于加载历史）
   const historyLoaded = ref(false);
 
   let abortCurrentRequest: (() => void) | null = null;
@@ -458,6 +459,7 @@ export function useChat(options: UseChatOptions) {
     await forceScrollToBottom();
 
     isLoading.value = true;
+    isStreaming.value = true; // LLM 正在生成
     currentStreamItem = null;
 
     // 优先使用传入的参数，否则从 localStorage 获取
@@ -490,6 +492,7 @@ export function useChat(options: UseChatOptions) {
       },
       onComplete: async () => {
         isLoading.value = false;
+        isStreaming.value = false;
         abortCurrentRequest = null;
         currentStreamItem = null;
         await scrollToBottom();
@@ -499,6 +502,7 @@ export function useChat(options: UseChatOptions) {
       onError: (error) => {
         addTextMessage('error', `请求失败：${error.message}`);
         isLoading.value = false;
+        isStreaming.value = false;
         abortCurrentRequest = null;
         currentStreamItem = null;
       },
@@ -604,6 +608,7 @@ export function useChat(options: UseChatOptions) {
 
     // 重置前端状态
     isLoading.value = false;
+    isStreaming.value = false;
     currentStreamItem = null;
   };
 
@@ -629,6 +634,7 @@ export function useChat(options: UseChatOptions) {
 
     // 重置状态
     isLoading.value = false;
+    isStreaming.value = false;
     currentStreamItem = null;
 
     // 调用后端 API 中断 LLM 调用（节省 token）
@@ -729,13 +735,18 @@ export function useChat(options: UseChatOptions) {
     await forceScrollToBottom();
 
     isLoading.value = true;
+    isStreaming.value = true; // LLM 正在生成
     currentStreamItem = null;
 
-    // 构建请求体，带上迭代上下文
+    // 从 localStorage 读取深度思考状态
+    const enableThinking = localStorage.getItem('enableThinking') === 'true';
+
+    // 构建请求体，带上迭代上下文和深度思考状态
     const body = {
       content: answer,
       enhanceMode: 'smart' as const,
       iterateContext,
+      enableThinking,
     };
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
@@ -748,6 +759,7 @@ export function useChat(options: UseChatOptions) {
       },
       onComplete: async () => {
         isLoading.value = false;
+        isStreaming.value = false;
         abortCurrentRequest = null;
         currentStreamItem = null;
         await scrollToBottom();
@@ -757,6 +769,7 @@ export function useChat(options: UseChatOptions) {
       onError: (error) => {
         addTextMessage('error', `请求失败：${error.message}`);
         isLoading.value = false;
+        isStreaming.value = false;
         abortCurrentRequest = null;
         currentStreamItem = null;
       },
@@ -771,6 +784,7 @@ export function useChat(options: UseChatOptions) {
     renderItems,
     inputValue,
     isLoading,
+    isStreaming,
     historyLoaded,
 
     // 方法

@@ -25,8 +25,10 @@ interface Props {
   placeholder?: string;
   // 是否禁用
   disabled?: boolean;
-  // 是否加载中
+  // 是否加载中（禁用输入）
   loading?: boolean;
+  // 是否显示停止按钮（LLM 正在生成时）
+  showStopButton?: boolean;
   // 是否高亮发送按钮
   highlightSend?: boolean;
   // 是否显示智能路由开关
@@ -37,6 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: '输入消息...',
   disabled: false,
   loading: false,
+  showStopButton: false,
   highlightSend: false,
   showSmartRouting: false,
 });
@@ -493,7 +496,7 @@ const canSend = computed(() => {
 
         <!-- 发送/停止按钮 -->
         <NButton
-          v-if="!loading"
+          v-if="!showStopButton"
           type="primary"
           size="large"
           round
@@ -506,7 +509,7 @@ const canSend = computed(() => {
             <NIcon :component="SendOutline" />
           </template>
         </NButton>
-        <!-- 停止按钮（加载中显示） -->
+        <!-- 停止按钮（LLM 正在生成时显示） -->
         <NTooltip v-else>
           <template #trigger>
             <NButton type="error" size="large" round class="stop-btn" @click="handleCancel">
