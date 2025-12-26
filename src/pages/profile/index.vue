@@ -419,7 +419,7 @@ onMounted(async () => {
       v-model:show="showPasswordModal"
       preset="card"
       title="修改密码"
-      class="w-96"
+      style="width: 400px"
       :bordered="false"
       :segmented="{ content: true }"
     >
