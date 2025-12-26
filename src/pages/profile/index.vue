@@ -222,7 +222,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen p-6">
+  <div class="p-6">
     <!-- 背景装饰 -->
     <div class="pointer-events-none fixed inset-0 overflow-hidden">
       <div class="bg-glow-blue absolute -top-40 -left-40 h-80 w-80 rounded-full blur-3xl"></div>
