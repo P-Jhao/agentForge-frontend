@@ -4,8 +4,7 @@
  * 控制是否启用智能意图路由功能
  */
 import { onMounted } from 'vue';
-import { NIcon, NTooltip } from 'naive-ui';
-import { FlashOutline } from '@vicons/ionicons5';
+import { NTooltip } from 'naive-ui';
 
 // Props
 interface Props {
@@ -50,7 +49,7 @@ const toggle = () => {
         :disabled="disabled"
         @click="toggle"
       >
-        <NIcon :component="FlashOutline" :size="16" />
+        <iconpark-icon name="circle-four" size="16" />
         <span>智能路由</span>
       </button>
     </template>

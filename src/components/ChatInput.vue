@@ -5,13 +5,7 @@
  */
 import { NInput, NButton, NIcon, NTooltip, NUpload, useMessage } from 'naive-ui';
 import type { UploadFileInfo } from 'naive-ui';
-import {
-  SendOutline,
-  SparklesOutline,
-  AttachOutline,
-  CloseCircle,
-  DocumentTextOutline,
-} from '@vicons/ionicons5';
+import { SendOutline, AttachOutline, CloseCircle, DocumentTextOutline } from '@vicons/ionicons5';
 import { ref, onMounted, computed } from 'vue';
 import { uploadChatFile } from '@/api/upload';
 import EnhanceModeSelector from './EnhanceModeSelector.vue';
@@ -404,7 +398,7 @@ const canSend = computed(() => {
               :class="enableThinking ? 'thinking-btn-active' : 'thinking-btn-inactive'"
               @click="handleThinkingChange(!enableThinking)"
             >
-              <NIcon :component="SparklesOutline" :size="16" />
+              <iconpark-icon name="smart-optimization" size="16" />
               <span>深度思考</span>
             </button>
           </template>

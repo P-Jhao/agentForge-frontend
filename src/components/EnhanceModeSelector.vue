@@ -6,7 +6,8 @@
  */
 import { ref, computed } from 'vue';
 import { NPopover, NIcon } from 'naive-ui';
-import { FlashOutline, CheckmarkOutline } from '@vicons/ionicons5';
+import { TrendingUpSharp } from '@vicons/ionicons5';
+import { CheckmarkOutline } from '@vicons/ionicons5';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 
 // Props
@@ -80,7 +81,7 @@ const selectOption = (value: EnhanceMode) => {
         :class="isActive ? 'enhance-btn-active' : 'enhance-btn-inactive'"
         :disabled="disabled"
       >
-        <NIcon :component="FlashOutline" :size="16" />
+        <NIcon :component="TrendingUpSharp" :size="16" />
         <span>{{ currentLabel }}</span>
       </button>
     </template>

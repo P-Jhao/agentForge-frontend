@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import './styles/tailwind.css';
+import './assets/icon/index.js'; // IconPark 图标库
 import App from './App.vue';
 import router from './router';
 import pinia from './stores';
