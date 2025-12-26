@@ -1,10 +1,11 @@
 /**
  * 用户设置 localStorage 存储工具
  * 将用户偏好设置统一存储在 userSettings-{userId} 中
+ * 注意：模型配置已迁移到数据库存储，不再使用 localStorage
  */
 import type { EnhanceMode } from './enhanceMode';
 
-// 用户设置类型
+// 用户设置类型（仅保留 localStorage 存储的设置）
 export interface UserSettings {
   // 深度思考开关
   enableThinking: boolean;
