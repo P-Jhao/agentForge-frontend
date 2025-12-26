@@ -57,6 +57,7 @@ const {
   clearMessages,
   setTaskId,
   cancelRequest,
+  disconnectStream,
   needsSmartIterateReply,
   sendSmartIterateReply,
 } = useChat({
@@ -93,8 +94,8 @@ watch(
   taskId,
   (newTaskId, oldTaskId) => {
     if (newTaskId && newTaskId !== oldTaskId) {
-      // 先取消当前正在进行的 SSE 请求
-      cancelRequest();
+      // 断开当前 SSE 连接（不中断后端 LLM，让它继续运行）
+      disconnectStream();
       // 清空当前消息，更新 taskId，重新初始化
       clearMessages();
       setTaskId(newTaskId);
@@ -104,9 +105,9 @@ watch(
   { immediate: true }
 );
 
-// 组件销毁前取消 SSE 请求
+// 组件销毁前断开 SSE 连接（不中断后端 LLM）
 onBeforeUnmount(() => {
-  cancelRequest();
+  disconnectStream();
 });
 </script>
 

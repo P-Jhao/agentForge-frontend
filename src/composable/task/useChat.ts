@@ -328,7 +328,19 @@ export function useChat(options: UseChatOptions) {
   const convertFlatMessage = (msg: FlatMessage): RenderItem => {
     const id = msg.id?.toString() || generateId();
 
+    // 处理用户消息（注意：user_original 和 user_answer 需要保留原始类型）
     if (msg.role === 'user') {
+      // 如果是增强相关的用户消息类型，保留原始类型
+      if (msg.type === 'user_original' || msg.type === 'user_answer') {
+        const data = reactive<TextMessageData>({
+          id,
+          type: msg.type,
+          content: msg.content,
+          aborted: msg.aborted,
+        });
+        return { id, type: msg.type, data };
+      }
+      // 普通用户消息
       const data = reactive<UserMessageData>({
         id,
         type: 'user',
@@ -571,8 +583,36 @@ export function useChat(options: UseChatOptions) {
     currentStreamItem = null;
   };
 
+  /**
+   * 断开前端 SSE 连接（不中断后端 LLM）
+   * 用于切换页面、组件销毁等场景
+   */
+  const disconnectStream = () => {
+    // 中断前端的流式请求
+    if (abortCurrentRequest) {
+      abortCurrentRequest();
+      abortCurrentRequest = null;
+    }
+
+    // 结束当前流式消息的状态（但不标记为已中断，因为后端还在运行）
+    if (currentStreamItem) {
+      const data = currentStreamItem.data as TextMessageData;
+      if (data && 'isStreaming' in data) {
+        data.isStreaming = false;
+      }
+    }
+
+    // 重置前端状态
+    isLoading.value = false;
+    currentStreamItem = null;
+  };
+
+  /**
+   * 取消请求并中断后端 LLM 调用
+   * 用于用户手动点击中断按钮
+   */
   const cancelRequest = async () => {
-    // 先中断前端的流式请求（如果还在进行中）
+    // 先中断前端的流式请求
     if (abortCurrentRequest) {
       abortCurrentRequest();
       abortCurrentRequest = null;
@@ -592,7 +632,6 @@ export function useChat(options: UseChatOptions) {
     currentStreamItem = null;
 
     // 调用后端 API 中断 LLM 调用（节省 token）
-    // 即使前端请求已结束，后端可能还在运行
     try {
       console.log('[useChat] 调用后端中断 API, taskId:', currentTaskId.value);
       const result = await abortTask(currentTaskId.value);
@@ -662,12 +701,20 @@ export function useChat(options: UseChatOptions) {
    * @param answer 用户对澄清问题的回复
    */
   const sendSmartIterateReply = async (answer: string) => {
-    if (!answer.trim() || isLoading.value) return;
+    console.log('[useChat] sendSmartIterateReply 被调用, answer:', answer);
+    if (!answer.trim() || isLoading.value) {
+      console.log('[useChat] 跳过发送: answer为空或正在加载', {
+        answer: answer.trim(),
+        isLoading: isLoading.value,
+      });
+      return;
+    }
 
     // 获取迭代上下文
     const iterateContext = getSmartIterateContext();
+    console.log('[useChat] 智能迭代上下文:', iterateContext);
     if (!iterateContext.originalPrompt) {
-      console.error('[useChat] 无法获取智能迭代上下文');
+      console.error('[useChat] 无法获取智能迭代上下文，originalPrompt 为空');
       return;
     }
 
@@ -734,6 +781,7 @@ export function useChat(options: UseChatOptions) {
     handleSend,
     clearMessages,
     cancelRequest,
+    disconnectStream,
     scrollToBottom,
     // 智能迭代相关
     needsSmartIterateReply,
