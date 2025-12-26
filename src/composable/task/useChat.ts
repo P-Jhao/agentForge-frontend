@@ -114,6 +114,9 @@ export function useChat(options: UseChatOptions) {
 
   let abortCurrentRequest: (() => void) | null = null;
 
+  // 保存当前任务的文件列表（用于智能迭代时传递给后端）
+  let currentFiles: UploadedFileInfo[] = [];
+
   // 渲染列表（每个元素包含响应式数据）
   const renderItems = ref<RenderItem[]>([]);
 
@@ -123,6 +126,7 @@ export function useChat(options: UseChatOptions) {
   const setTaskId = (newTaskId: string) => {
     currentTaskId.value = newTaskId;
     historyLoaded.value = false;
+    currentFiles = [];
   };
 
   const scrollToBottom = async () => {
@@ -329,10 +333,20 @@ export function useChat(options: UseChatOptions) {
   const convertFlatMessage = (msg: FlatMessage): RenderItem => {
     const id = msg.id?.toString() || generateId();
 
-    // 处理用户消息（注意：user_original 和 user_answer 需要保留原始类型）
+    // 处理用户消息（注意：user_original 需要保留文件信息）
     if (msg.role === 'user') {
-      // 如果是增强相关的用户消息类型，保留原始类型
-      if (msg.type === 'user_original' || msg.type === 'user_answer') {
+      // user_original 类型需要保留文件信息，使用 UserMessageData
+      if (msg.type === 'user_original') {
+        const data = reactive<UserMessageData>({
+          id,
+          type: 'user', // 使用 user 类型以便 UserMessage 组件正确渲染
+          content: msg.content,
+          files: msg.files,
+        });
+        return { id, type: 'user_original', data };
+      }
+      // user_answer 类型不需要文件
+      if (msg.type === 'user_answer') {
         const data = reactive<TextMessageData>({
           id,
           type: msg.type,
@@ -418,6 +432,17 @@ export function useChat(options: UseChatOptions) {
           // 历史消息（扁平格式）
           const historyMessages = chunk.data as FlatMessage[];
           renderItems.value = historyMessages.map(convertFlatMessage);
+
+          // 从历史消息中恢复文件信息（取最后一条用户消息的文件）
+          // 注意：增强模式下用户消息类型是 user_original，普通模式是 chat
+          for (let i = historyMessages.length - 1; i >= 0; i--) {
+            const msg = historyMessages[i];
+            if (msg && msg.role === 'user' && msg.files && msg.files.length > 0) {
+              currentFiles = msg.files;
+              break;
+            }
+          }
+
           await scrollToBottom();
         } else {
           // 处理流式消息（任务正在运行时）
@@ -453,6 +478,11 @@ export function useChat(options: UseChatOptions) {
     files?: UploadedFileInfo[]
   ) => {
     if (!content.trim() || isLoading.value) return;
+
+    // 保存文件列表（用于智能迭代时传递）
+    if (files && files.length > 0) {
+      currentFiles = files;
+    }
 
     // 添加用户消息（包含文件信息）
     addUserMessage(content, files);
@@ -741,13 +771,18 @@ export function useChat(options: UseChatOptions) {
     // 从 localStorage 读取深度思考状态
     const enableThinking = localStorage.getItem('enableThinking') === 'true';
 
-    // 构建请求体，带上迭代上下文和深度思考状态
-    const body = {
+    // 构建请求体，带上迭代上下文、深度思考状态和文件列表
+    const body: Record<string, unknown> = {
       content: answer,
       enhanceMode: 'smart' as const,
       iterateContext,
       enableThinking,
     };
+
+    // 如果有文件，添加到请求体
+    if (currentFiles && currentFiles.length > 0) {
+      body.files = currentFiles;
+    }
 
     const { abort, promise } = createStreamRequest<TaskSSEChunk>({
       url: `${API_BASE}/task/${currentTaskId.value}/message`,
@@ -785,7 +820,6 @@ export function useChat(options: UseChatOptions) {
     inputValue,
     isLoading,
     isStreaming,
-    historyLoaded,
 
     // 方法
     init,

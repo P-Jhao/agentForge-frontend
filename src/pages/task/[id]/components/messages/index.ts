@@ -15,7 +15,6 @@ import ErrorMessage from './ErrorMessage.vue';
 import EnhanceProcessCard from './EnhanceProcessCard.vue';
 import ExpertAnalysisCard from './ExpertAnalysisCard.vue';
 import EnhancedPromptBubble from './EnhancedPromptBubble.vue';
-import UserOriginalMessage from './UserOriginalMessage.vue';
 import UserAnswerMessage from './UserAnswerMessage.vue';
 
 // 消息类型到组件的映射
@@ -27,7 +26,7 @@ export const messageComponents: Record<MessageType, Component> = {
   summary: SummaryMessage,
   error: ErrorMessage,
   // 提示词增强相关类型
-  user_original: UserOriginalMessage,
+  user_original: UserMessage, // 使用 UserMessage 以显示文件
   user_answer: UserAnswerMessage,
   reviewer: EnhanceProcessCard,
   questioner: EnhanceProcessCard,
@@ -47,6 +46,5 @@ export {
   EnhanceProcessCard,
   ExpertAnalysisCard,
   EnhancedPromptBubble,
-  UserOriginalMessage,
   UserAnswerMessage,
 };
