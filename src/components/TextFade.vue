@@ -18,23 +18,10 @@ defineProps<{
       <slot></slot>
     </p>
     <!-- 右侧水平淡化遮罩 -->
-    <div class="text-fade-mask"></div>
+    <div class="text-fade-mask pointer-events-none absolute top-0 right-0 bottom-0 w-10"></div>
   </div>
 </template>
 
 <style scoped>
-.text-fade-mask {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 2.5rem;
-  pointer-events: none;
-  background: linear-gradient(to left, var(--text-fade-bg, white), transparent);
-}
-
-/* 暗色模式 */
-:root.dark .text-fade-mask {
-  --text-fade-bg: #1e1e1e;
-}
+/* 无需额外样式，使用全局 text-fade-mask 工具类 */
 </style>

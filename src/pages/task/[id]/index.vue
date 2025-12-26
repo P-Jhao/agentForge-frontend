@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
       <Transition name="fade">
         <button
           v-if="showScrollToBottomBtn"
-          class="scroll-to-bottom-btn"
+          class="scroll-to-bottom-btn absolute -top-12 left-1/2 z-10 flex h-10 w-10 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none shadow-lg transition-all"
           @click="handleScrollToBottomClick"
         >
           <NIcon :component="ArrowDownOutline" :size="20" />
@@ -163,41 +163,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* 滚动到底部按钮 */
-.scroll-to-bottom-btn {
-  position: absolute;
-  top: -48px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: white;
-  border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #374151;
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.scroll-to-bottom-btn:hover {
-  background: #f3f4f6;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-:global(.dark) .scroll-to-bottom-btn {
-  background: #374151;
-  color: #e5e7eb;
-}
-
-:global(.dark) .scroll-to-bottom-btn:hover {
-  background: #4b5563;
-}
-
 /* 淡入淡出动画 */
 .fade-enter-active,
 .fade-leave-active {

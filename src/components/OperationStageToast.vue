@@ -105,7 +105,7 @@ const handleCancel = () => {
     <Transition name="toast-fade">
       <div
         v-if="isActive && stageText"
-        class="operation-stage-toast fixed z-9999 flex items-center gap-3 rounded-xl shadow-2xl"
+        class="operation-stage-toast text-theme dark:bg-dark-700/98 fixed z-9999 flex items-center gap-3 rounded-xl border border-indigo-400/30 bg-white/98 shadow-2xl backdrop-blur-xl dark:border-violet-500/40"
         :class="[
           isInCorner
             ? 'is-corner top-4 right-4 px-5 py-3.5'
@@ -123,7 +123,7 @@ const handleCancel = () => {
         <!-- 取消按钮 -->
         <button
           type="button"
-          class="cancel-btn ml-1 rounded-full p-1.5 transition-colors"
+          class="ml-1 rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-500/15 hover:text-red-500 dark:hover:bg-white/10 dark:hover:text-red-400"
           title="点击取消"
           @click.stop="handleCancel"
         >
@@ -131,19 +131,15 @@ const handleCancel = () => {
         </button>
 
         <!-- 提示文字（始终显示） -->
-        <span class="hint-text text-xs opacity-50">点击任意处取消</span>
+        <span class="text-xs text-gray-500/80">点击任意处取消</span>
       </div>
     </Transition>
   </Teleport>
 </template>
 
 <style scoped>
-/* Toast 容器样式 */
+/* Toast 容器样式 - 位置过渡动画 */
 .operation-stage-toast {
-  background-color: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  backdrop-filter: blur(12px);
-  /* 位置过渡动画 */
   transition:
     top 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     left 0.5s cubic-bezier(0.4, 0, 0.2, 1),
@@ -167,7 +163,7 @@ const handleCancel = () => {
     0 0 0 1px rgba(99, 102, 241, 0.1);
 }
 
-/* 脉冲发光动画 */
+/* 脉冲发光动画 - 浅色模式 */
 @keyframes pulse-glow {
   0%,
   100% {
@@ -183,25 +179,21 @@ const handleCancel = () => {
   }
 }
 
-/* 暗色模式 */
-:global(.dark) .operation-stage-toast {
-  background-color: rgba(40, 40, 40, 0.98);
-  border-color: rgba(139, 92, 246, 0.4);
-}
-
-:global(.dark) .operation-stage-toast.is-center {
+/* 暗色模式阴影 */
+:root.dark .operation-stage-toast.is-center {
   box-shadow:
     0 12px 48px rgba(139, 92, 246, 0.3),
     0 0 0 2px rgba(139, 92, 246, 0.2);
   animation: pulse-glow-dark 1.5s ease-in-out infinite;
 }
 
-:global(.dark) .operation-stage-toast.is-corner {
+:root.dark .operation-stage-toast.is-corner {
   box-shadow:
     0 4px 20px rgba(139, 92, 246, 0.2),
     0 0 0 1px rgba(139, 92, 246, 0.15);
 }
 
+/* 脉冲发光动画 - 暗色模式 */
 @keyframes pulse-glow-dark {
   0%,
   100% {
@@ -215,26 +207,6 @@ const handleCancel = () => {
       0 0 0 4px rgba(139, 92, 246, 0.15),
       0 0 20px rgba(168, 85, 247, 0.35);
   }
-}
-
-/* 取消按钮 */
-.cancel-btn {
-  color: rgba(128, 128, 128, 0.8);
-}
-
-.cancel-btn:hover {
-  background-color: rgba(128, 128, 128, 0.15);
-  color: rgba(239, 68, 68, 0.9);
-}
-
-:global(.dark) .cancel-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(248, 113, 113, 0.9);
-}
-
-/* 提示文字 */
-.hint-text {
-  color: rgba(128, 128, 128, 0.8);
 }
 
 /* 淡入淡出动画 */
@@ -265,16 +237,5 @@ const handleCancel = () => {
     opacity: 0;
     transform: scale(0.95);
   }
-}
-
-/* 提示文字淡入 */
-.hint-fade-enter-active,
-.hint-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.hint-fade-enter-from,
-.hint-fade-leave-to {
-  opacity: 0;
 }
 </style>

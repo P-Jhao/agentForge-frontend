@@ -453,8 +453,8 @@ const canSend = computed(() => {
           <template #trigger>
             <button
               type="button"
-              class="thinking-btn flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all duration-200"
-              :class="enableThinking ? 'thinking-btn-active' : 'thinking-btn-inactive'"
+              class="flex cursor-pointer items-center gap-1.5 border-none whitespace-nowrap outline-none"
+              :class="enableThinking ? 'toggle-btn-active-blue' : 'toggle-btn-inactive'"
               @click="handleThinkingChange(!enableThinking)"
             >
               <iconpark-icon name="smart-optimization" size="16" />
@@ -534,62 +534,6 @@ const canSend = computed(() => {
 /* 容器相对定位，用于拖拽提示 */
 .chat-input-container {
   position: relative;
-}
-
-/* 深度思考按钮样式（DeepSeek 风格） */
-.thinking-btn {
-  cursor: pointer;
-  border: none;
-  outline: none;
-  font-weight: 500;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  white-space: nowrap;
-  transition:
-    background-color 0.25s ease,
-    color 0.25s ease;
-}
-
-/* 未选中状态 */
-.thinking-btn-inactive {
-  background-color: rgba(128, 128, 128, 0.1);
-  color: rgba(128, 128, 128, 0.8);
-}
-
-.thinking-btn-inactive:hover {
-  background-color: rgba(128, 128, 128, 0.15);
-  color: rgba(128, 128, 128, 1);
-}
-
-/* 选中状态 - 蓝色高亮 */
-.thinking-btn-active {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: rgb(59, 130, 246);
-}
-
-.thinking-btn-active:hover {
-  background-color: rgba(59, 130, 246, 0.2);
-}
-
-/* 暗色模式适配 */
-:global(.dark) .thinking-btn-inactive {
-  background-color: rgba(156, 163, 175, 0.15);
-  color: rgba(156, 163, 175, 0.8);
-}
-
-:global(.dark) .thinking-btn-inactive:hover {
-  background-color: rgba(156, 163, 175, 0.2);
-  color: rgba(156, 163, 175, 1);
-}
-
-:global(.dark) .thinking-btn-active {
-  background-color: rgba(96, 165, 250, 0.2);
-  color: rgb(96, 165, 250);
-}
-
-:global(.dark) .thinking-btn-active:hover {
-  background-color: rgba(96, 165, 250, 0.25);
 }
 
 /* 发送按钮发光动画效果 */
