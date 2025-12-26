@@ -4,7 +4,7 @@
  * 使用响应式数据驱动消息渲染
  */
 import { ref, reactive, nextTick } from 'vue';
-import { createStreamRequest, createTask } from '@/utils';
+import { createStreamRequest, createTask, abortTask } from '@/utils';
 import { useTaskStore } from '@/stores';
 import type { FlatMessage, TaskSSEChunk, ToolCallStartData, ToolCallResultData } from '@/types';
 import type { EnhanceMode } from '@/utils/enhanceMode';
@@ -568,12 +568,33 @@ export function useChat(options: UseChatOptions) {
     currentStreamItem = null;
   };
 
-  const cancelRequest = () => {
+  const cancelRequest = async () => {
+    // 先中断前端的流式请求（如果还在进行中）
     if (abortCurrentRequest) {
       abortCurrentRequest();
       abortCurrentRequest = null;
-      isLoading.value = false;
-      currentStreamItem = null;
+    }
+
+    // 结束当前流式消息的状态
+    if (currentStreamItem) {
+      const data = currentStreamItem.data as TextMessageData;
+      if (data && 'isStreaming' in data) {
+        data.isStreaming = false;
+      }
+    }
+
+    // 重置状态
+    isLoading.value = false;
+    currentStreamItem = null;
+
+    // 调用后端 API 中断 LLM 调用（节省 token）
+    // 即使前端请求已结束，后端可能还在运行
+    try {
+      console.log('[useChat] 调用后端中断 API, taskId:', currentTaskId.value);
+      const result = await abortTask(currentTaskId.value);
+      console.log('[useChat] 中断结果:', result);
+    } catch (error) {
+      console.warn('[useChat] 中断任务失败:', error);
     }
   };
 

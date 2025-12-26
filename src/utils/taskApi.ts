@@ -44,6 +44,15 @@ export async function deleteTask(uuid: string): Promise<void> {
 }
 
 /**
+ * 中断任务
+ * 中断正在运行的 LLM 调用，节省 token
+ */
+export async function abortTask(uuid: string): Promise<{ aborted: boolean }> {
+  const res = await http.post<{ aborted: boolean }>(`/task/${uuid}/abort`);
+  return res.data;
+}
+
+/**
  * 生成任务 UUID
  */
 export function generateTaskUuid(): string {

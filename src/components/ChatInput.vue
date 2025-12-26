@@ -5,7 +5,13 @@
  */
 import { NInput, NButton, NIcon, NTooltip, NUpload, useMessage } from 'naive-ui';
 import type { UploadFileInfo } from 'naive-ui';
-import { SendOutline, AttachOutline, CloseCircle, DocumentTextOutline } from '@vicons/ionicons5';
+import {
+  SendOutline,
+  AttachOutline,
+  CloseCircle,
+  DocumentTextOutline,
+  StopCircleOutline,
+} from '@vicons/ionicons5';
 import { ref, onMounted, computed } from 'vue';
 import { uploadChatFile } from '@/api/upload';
 import EnhanceModeSelector from './EnhanceModeSelector.vue';
@@ -140,7 +146,15 @@ const emit = defineEmits<{
     files?: { filePath: string; originalName: string; size: number; url: string }[],
     smartRouting?: boolean,
   ];
+  cancel: [];
 }>();
+
+/**
+ * 处理取消/中断
+ */
+const handleCancel = () => {
+  emit('cancel');
+};
 
 // 初始化深度思考状态和增强模式
 onMounted(() => {
@@ -477,13 +491,13 @@ const canSend = computed(() => {
           </NTooltip>
         </NUpload>
 
-        <!-- 发送按钮 -->
+        <!-- 发送/停止按钮 -->
         <NButton
+          v-if="!loading"
           type="primary"
           size="large"
           round
           :disabled="!canSend"
-          :loading="loading"
           :class="['btn-theme', { 'send-btn-glow': highlightSend && canSend }]"
           data-auto-send-btn
           @click="handleSend"
@@ -492,6 +506,17 @@ const canSend = computed(() => {
             <NIcon :component="SendOutline" />
           </template>
         </NButton>
+        <!-- 停止按钮（加载中显示） -->
+        <NTooltip v-else>
+          <template #trigger>
+            <NButton type="error" size="large" round class="stop-btn" @click="handleCancel">
+              <template #icon>
+                <NIcon :component="StopCircleOutline" />
+              </template>
+            </NButton>
+          </template>
+          停止生成
+        </NTooltip>
       </div>
     </div>
   </div>
@@ -581,6 +606,21 @@ const canSend = computed(() => {
       0 0 15px rgba(99, 102, 241, 0.8),
       0 0 25px rgba(139, 92, 246, 0.5),
       0 0 35px rgba(168, 85, 247, 0.3);
+  }
+}
+
+/* 停止按钮样式 */
+.stop-btn {
+  animation: stop-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes stop-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }
 </style>

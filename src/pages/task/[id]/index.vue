@@ -75,6 +75,11 @@ const onSend = (
   handleSend(content, enableThinking, enhanceMode, files);
 };
 
+// 处理取消/中断事件
+const onCancel = () => {
+  cancelRequest();
+};
+
 // 处理智能迭代回复
 const onSmartIterateReply = (answer: string) => {
   sendSmartIterateReply(answer);
@@ -146,6 +151,7 @@ onBeforeUnmount(() => {
         :loading="isLoading"
         @update:model-value="inputValue = $event"
         @send="onSend"
+        @cancel="onCancel"
       />
       <!-- 免责声明 -->
       <p class="mt-2 text-center text-xs text-gray-400">AI 生成，仅供参考</p>
