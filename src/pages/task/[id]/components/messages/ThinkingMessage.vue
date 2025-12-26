@@ -119,38 +119,22 @@ const containerClass = computed(() => {
   transition: all 0.2s ease;
 }
 
-.thinking-content .md-editor-preview-wrapper,
-.thinking-content .md-editor-preview,
-.thinking-content .md-preview-wrapper,
-.thinking-content .md-preview {
+.thinking-content
+  :is(.md-editor-preview-wrapper, .md-editor-preview, .md-preview-wrapper, .md-preview) {
   font-size: 12px !important;
   line-height: 1.6 !important;
   color: rgb(156 163 175) !important;
   transition: color 0.2s ease;
 }
 
-.thinking-content .md-editor-preview p,
-.thinking-content .md-editor-preview li,
-.thinking-content .md-preview p,
-.thinking-content .md-preview li {
+.thinking-content :is(.md-editor-preview, .md-preview) :is(p, li) {
   font-size: 12px !important;
   color: rgb(156 163 175) !important;
   margin: 6px 0 !important;
   transition: color 0.2s ease;
 }
 
-.thinking-content .md-editor-preview h1,
-.thinking-content .md-editor-preview h2,
-.thinking-content .md-editor-preview h3,
-.thinking-content .md-editor-preview h4,
-.thinking-content .md-editor-preview h5,
-.thinking-content .md-editor-preview h6,
-.thinking-content .md-preview h1,
-.thinking-content .md-preview h2,
-.thinking-content .md-preview h3,
-.thinking-content .md-preview h4,
-.thinking-content .md-preview h5,
-.thinking-content .md-preview h6 {
+.thinking-content :is(.md-editor-preview, .md-preview) :is(h1, h2, h3, h4, h5, h6) {
   font-size: 13px !important;
   color: rgb(107 114 128) !important;
   margin-top: 12px !important;
@@ -158,147 +142,88 @@ const containerClass = computed(() => {
   transition: color 0.2s ease;
 }
 
-.thinking-content .md-editor-preview strong,
-.thinking-content .md-preview strong {
+.thinking-content :is(.md-editor-preview, .md-preview) strong {
   color: rgb(107 114 128) !important;
   transition: color 0.2s ease;
 }
 
-.thinking-content .md-editor-preview code,
-.thinking-content .md-preview code {
+.thinking-content :is(.md-editor-preview, .md-preview) code {
   font-size: 11px !important;
   background: rgba(0, 0, 0, 0.05) !important;
   color: rgb(107 114 128) !important;
 }
 
-.thinking-content .md-editor-preview pre,
-.thinking-content .md-preview pre {
+.thinking-content :is(.md-editor-preview, .md-preview) pre {
   font-size: 11px !important;
   background: rgba(0, 0, 0, 0.03) !important;
 }
 
-.thinking-content .md-editor-preview hr,
-.thinking-content .md-preview hr {
+.thinking-content :is(.md-editor-preview, .md-preview) hr {
   border-color: rgb(229 231 235) !important;
   margin: 12px 0 !important;
 }
 
-.thinking-content .md-editor-preview blockquote,
-.thinking-content .md-preview blockquote {
+.thinking-content :is(.md-editor-preview, .md-preview) blockquote {
   font-size: 12px !important;
   color: rgb(156 163 175) !important;
   border-left-color: rgb(209 213 219) !important;
 }
 
 /* Hover 效果 - 变清晰 */
-.thinking-content:hover .md-editor-preview-wrapper,
-.thinking-content:hover .md-editor-preview,
-.thinking-content:hover .md-preview-wrapper,
-.thinking-content:hover .md-preview,
-.thinking-content:hover .md-editor-preview p,
-.thinking-content:hover .md-editor-preview li,
-.thinking-content:hover .md-preview p,
-.thinking-content:hover .md-preview li,
-.thinking-content:hover .md-editor-preview blockquote,
-.thinking-content:hover .md-preview blockquote {
+.thinking-content:hover
+  :is(.md-editor-preview-wrapper, .md-editor-preview, .md-preview-wrapper, .md-preview),
+.thinking-content:hover :is(.md-editor-preview, .md-preview) :is(p, li, blockquote) {
   color: rgb(75 85 99) !important;
 }
 
-.thinking-content:hover .md-editor-preview h1,
-.thinking-content:hover .md-editor-preview h2,
-.thinking-content:hover .md-editor-preview h3,
-.thinking-content:hover .md-editor-preview h4,
-.thinking-content:hover .md-editor-preview h5,
-.thinking-content:hover .md-editor-preview h6,
-.thinking-content:hover .md-preview h1,
-.thinking-content:hover .md-preview h2,
-.thinking-content:hover .md-preview h3,
-.thinking-content:hover .md-preview h4,
-.thinking-content:hover .md-preview h5,
-.thinking-content:hover .md-preview h6,
-.thinking-content:hover .md-editor-preview strong,
-.thinking-content:hover .md-preview strong {
+.thinking-content:hover :is(.md-editor-preview, .md-preview) :is(h1, h2, h3, h4, h5, h6, strong) {
   color: rgb(31 41 55) !important;
 }
 
 /* 深色模式 */
-html.dark .thinking-content .md-editor-preview-wrapper,
-html.dark .thinking-content .md-editor-preview,
-html.dark .thinking-content .md-preview-wrapper,
-html.dark .thinking-content .md-preview,
-html.dark .thinking-content .md-editor-preview p,
-html.dark .thinking-content .md-editor-preview li,
-html.dark .thinking-content .md-preview p,
-html.dark .thinking-content .md-preview li {
+html.dark
+  .thinking-content
+  :is(.md-editor-preview-wrapper, .md-editor-preview, .md-preview-wrapper, .md-preview),
+html.dark .thinking-content :is(.md-editor-preview, .md-preview) :is(p, li) {
   color: rgb(107 114 128) !important;
 }
 
-html.dark .thinking-content .md-editor-preview h1,
-html.dark .thinking-content .md-editor-preview h2,
-html.dark .thinking-content .md-editor-preview h3,
-html.dark .thinking-content .md-editor-preview h4,
-html.dark .thinking-content .md-editor-preview h5,
-html.dark .thinking-content .md-editor-preview h6,
-html.dark .thinking-content .md-preview h1,
-html.dark .thinking-content .md-preview h2,
-html.dark .thinking-content .md-preview h3,
-html.dark .thinking-content .md-preview h4,
-html.dark .thinking-content .md-preview h5,
-html.dark .thinking-content .md-preview h6,
-html.dark .thinking-content .md-editor-preview strong,
-html.dark .thinking-content .md-preview strong {
+html.dark
+  .thinking-content
+  :is(.md-editor-preview, .md-preview)
+  :is(h1, h2, h3, h4, h5, h6, strong) {
   color: rgb(156 163 175) !important;
 }
 
-html.dark .thinking-content .md-editor-preview code,
-html.dark .thinking-content .md-preview code {
+html.dark .thinking-content :is(.md-editor-preview, .md-preview) code {
   background: rgba(255, 255, 255, 0.05) !important;
   color: rgb(156 163 175) !important;
 }
 
-html.dark .thinking-content .md-editor-preview pre,
-html.dark .thinking-content .md-preview pre {
+html.dark .thinking-content :is(.md-editor-preview, .md-preview) pre {
   background: rgba(255, 255, 255, 0.03) !important;
 }
 
-html.dark .thinking-content .md-editor-preview hr,
-html.dark .thinking-content .md-preview hr {
+html.dark .thinking-content :is(.md-editor-preview, .md-preview) hr {
   border-color: rgb(55 65 81) !important;
 }
 
-html.dark .thinking-content .md-editor-preview blockquote,
-html.dark .thinking-content .md-preview blockquote {
+html.dark .thinking-content :is(.md-editor-preview, .md-preview) blockquote {
   border-left-color: rgb(75 85 99) !important;
 }
 
 /* 深色模式 Hover 效果 */
-html.dark .thinking-content:hover .md-editor-preview-wrapper,
-html.dark .thinking-content:hover .md-editor-preview,
-html.dark .thinking-content:hover .md-preview-wrapper,
-html.dark .thinking-content:hover .md-preview,
-html.dark .thinking-content:hover .md-editor-preview p,
-html.dark .thinking-content:hover .md-editor-preview li,
-html.dark .thinking-content:hover .md-preview p,
-html.dark .thinking-content:hover .md-preview li,
-html.dark .thinking-content:hover .md-editor-preview blockquote,
-html.dark .thinking-content:hover .md-preview blockquote {
+html.dark
+  .thinking-content:hover
+  :is(.md-editor-preview-wrapper, .md-editor-preview, .md-preview-wrapper, .md-preview),
+html.dark .thinking-content:hover :is(.md-editor-preview, .md-preview) :is(p, li, blockquote) {
   color: rgb(209 213 219) !important;
 }
 
-html.dark .thinking-content:hover .md-editor-preview h1,
-html.dark .thinking-content:hover .md-editor-preview h2,
-html.dark .thinking-content:hover .md-editor-preview h3,
-html.dark .thinking-content:hover .md-editor-preview h4,
-html.dark .thinking-content:hover .md-editor-preview h5,
-html.dark .thinking-content:hover .md-editor-preview h6,
-html.dark .thinking-content:hover .md-preview h1,
-html.dark .thinking-content:hover .md-preview h2,
-html.dark .thinking-content:hover .md-preview h3,
-html.dark .thinking-content:hover .md-preview h4,
-html.dark .thinking-content:hover .md-preview h5,
-html.dark .thinking-content:hover .md-preview h6,
-html.dark .thinking-content:hover .md-editor-preview strong,
-html.dark .thinking-content:hover .md-preview strong {
+html.dark
+  .thinking-content:hover
+  :is(.md-editor-preview, .md-preview)
+  :is(h1, h2, h3, h4, h5, h6, strong) {
   color: rgb(243 244 246) !important;
 }
 </style>
