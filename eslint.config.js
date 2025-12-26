@@ -8,7 +8,7 @@ import vue from 'eslint-plugin-vue';
 export default [
   // 忽略文件
   {
-    ignores: ['dist/**', 'node_modules/**'],
+    ignores: ['dist/**', 'node_modules/**', 'src/assets/icon/**'],
   },
 
   // JavaScript 基础规则
@@ -52,6 +52,8 @@ export default [
         IntersectionObserver: 'readonly',
         IntersectionObserverEntry: 'readonly',
         ResizeObserver: 'readonly',
+        // 自定义事件
+        CustomEvent: 'readonly',
       },
     },
     rules: {

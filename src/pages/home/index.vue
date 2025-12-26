@@ -197,7 +197,7 @@ function handleClone(options: CloneOptions) {
   }
 
   // 3. 通知 ChatInput 组件重新加载设置
-  window.dispatchEvent(new Event('userSettingsChanged'));
+  window.dispatchEvent(new CustomEvent('userSettingsChanged'));
 }
 
 // 处理推荐示例区域的点击事件（事件委托）
