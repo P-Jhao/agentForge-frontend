@@ -14,3 +14,4 @@ export * from './modules/task';
 export * from './modules/forge';
 export * from './modules/mcp';
 export * from './modules/autoOperation';
+export * from './modules/notification';

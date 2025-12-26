@@ -170,6 +170,8 @@ function getStatusText(status: string): string {
       return '任务已完成';
     case 'cancelled':
       return '任务已取消';
+    case 'waiting':
+      return '等待回复';
     default:
       return status;
   }

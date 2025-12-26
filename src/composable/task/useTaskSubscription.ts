@@ -3,7 +3,9 @@
  * 管理全局 SSE 连接，接收任务状态实时推送
  */
 import { ref, onBeforeUnmount } from 'vue';
+import { useRouter } from 'vue-router';
 import { useTaskStore } from '@/stores';
+import { useNotificationStore } from '@/stores/modules/notification';
 
 // API 基础路径
 const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -143,6 +145,13 @@ export function useTaskSubscription() {
    */
   const handleEvent = (event: TaskSSEEvent) => {
     const taskStore = useTaskStore();
+    const notificationStore = useNotificationStore();
+
+    // 检查当前是否在该任务页面（如果是则不弹通知）
+    const isOnTaskPage = (taskUuid: string) => {
+      const currentPath = window.location.pathname;
+      return currentPath === `/task/${taskUuid}`;
+    };
 
     switch (event.type) {
       case 'connected':
@@ -152,9 +161,36 @@ export function useTaskSubscription() {
       case 'status_change':
         if (event.taskUuid && event.data) {
           console.log(`[TaskSubscription] 任务 ${event.taskUuid} 状态变化:`, event.data);
+
+          const task = taskStore.tasks.find((t) => t.uuid === event.taskUuid);
+          const taskTitle = task?.title || '新会话';
+
+          // 如果用户当前在该任务页面，不弹出通知
+          const skipNotification = isOnTaskPage(event.taskUuid);
+
+          // 如果任务状态变为 completed，检查是否可以添加通知
+          if (event.data.status === 'completed' && !skipNotification) {
+            if (taskTitle !== '新会话') {
+              // 标题已生成，直接添加通知
+              notificationStore.addTaskCompletedNotification(event.taskUuid, taskTitle);
+            } else {
+              // 标题还是"新会话"，添加到待定通知
+              notificationStore.addPendingNotification(event.taskUuid, 'task_completed');
+            }
+          }
+
+          // 如果任务状态变为 waiting，添加等待回复通知
+          if (event.data.status === 'waiting' && !skipNotification) {
+            if (taskTitle !== '新会话') {
+              notificationStore.addTaskWaitingNotification(event.taskUuid, taskTitle);
+            } else {
+              notificationStore.addPendingNotification(event.taskUuid, 'task_waiting');
+            }
+          }
+
           // 更新本地任务状态
           taskStore.updateLocalTask(event.taskUuid, {
-            status: event.data.status as 'running' | 'completed' | 'cancelled',
+            status: event.data.status as 'running' | 'completed' | 'cancelled' | 'waiting',
             updatedAt: event.data.updatedAt || new Date().toISOString(),
           });
         }
@@ -168,7 +204,11 @@ export function useTaskSubscription() {
           if (event.data.title) updateData.title = event.data.title;
           if (event.data.updatedAt) updateData.updatedAt = event.data.updatedAt;
           if (event.data.status) {
-            updateData.status = event.data.status as 'running' | 'completed' | 'cancelled';
+            updateData.status = event.data.status as
+              | 'running'
+              | 'completed'
+              | 'cancelled'
+              | 'waiting';
           }
           taskStore.updateLocalTask(event.taskUuid, updateData);
         }
@@ -178,6 +218,33 @@ export function useTaskSubscription() {
         if (event.taskUuid && event.data?.title) {
           // 使用打字机效果更新标题
           taskStore.updateTaskTitleWithTypewriter(event.taskUuid, event.data.title);
+
+          // 标题生成完成后检查待定通知（需要等打字机效果结束）
+          // updateTaskTitleWithTypewriter 会在最后一个字符显示后将 uuid 从 titleGeneratingSet 中移除
+          // 这里我们监听标题生成完成，延迟检查
+          if (
+            event.data.title !== '新会话' &&
+            notificationStore.hasPendingNotification(event.taskUuid)
+          ) {
+            // 计算打字机效果的大致时长（每个字符 50-100ms，取平均 75ms）
+            const estimatedDuration = event.data.title.length * 75 + 100;
+            const taskUuidForCheck = event.taskUuid;
+            setTimeout(() => {
+              // 检查是否在当前任务页面
+              if (isOnTaskPage(taskUuidForCheck)) {
+                // 在当前页面，清除待定通知但不弹出
+                notificationStore.clearPendingNotification(taskUuidForCheck);
+                return;
+              }
+              // 再次确认标题生成完成
+              if (!taskStore.isTitleGenerating(taskUuidForCheck)) {
+                const task = taskStore.tasks.find((t) => t.uuid === taskUuidForCheck);
+                if (task && task.title !== '新会话') {
+                  notificationStore.checkPendingNotification(taskUuidForCheck, task.title);
+                }
+              }
+            }, estimatedDuration);
+          }
         }
         break;
 

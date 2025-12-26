@@ -1,24 +1,10 @@
 <script setup lang="ts">
 import { h, watch, type Component } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import {
-  NLayoutHeader,
-  NButton,
-  NSpace,
-  NAvatar,
-  NDropdown,
-  NIcon,
-  NBadge,
-  NTooltip,
-} from 'naive-ui';
-import {
-  PersonOutline,
-  LogOutOutline,
-  NotificationsOutline,
-  SunnyOutline,
-  MoonOutline,
-} from '@vicons/ionicons5';
+import { NLayoutHeader, NButton, NSpace, NAvatar, NDropdown, NIcon, NTooltip } from 'naive-ui';
+import { PersonOutline, LogOutOutline, SunnyOutline, MoonOutline } from '@vicons/ionicons5';
 import { useThemeStore, useUserStore, useTaskStore } from '@/stores';
+import NotificationPopover from '@/components/NotificationPopover.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -106,13 +92,7 @@ function goLogin() {
       </NTooltip>
 
       <!-- 通知 -->
-      <NBadge :value="3" :max="9">
-        <NButton quaternary circle>
-          <template #icon>
-            <NIcon :component="NotificationsOutline" :size="20" />
-          </template>
-        </NButton>
-      </NBadge>
+      <NotificationPopover />
 
       <!-- 用户（已登录） -->
       <NDropdown v-if="userStore.isLoggedIn" :options="userOptions" @select="handleUserSelect">
