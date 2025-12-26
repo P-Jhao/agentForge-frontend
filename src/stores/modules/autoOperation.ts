@@ -13,6 +13,7 @@ import type {
   ConfigFieldName,
   UploadedFileInfo,
 } from '@/types';
+import type { EnhanceMode } from '@/utils/enhanceMode';
 
 // 阶段文本映射（本地定义，避免循环依赖）
 const stageTextMap: Record<OperationStage, string> = {
@@ -45,6 +46,12 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
 
   // 用户上传的文件
   const originalFiles = ref<UploadedFileInfo[]>([]);
+
+  // 用户选择的深度思考设置
+  const enableThinking = ref<boolean>(false);
+
+  // 用户选择的增强模式
+  const enhanceMode = ref<EnhanceMode>('off');
 
   // 意图分析结果
   const intentResult = ref<IntentResult | null>(null);
@@ -93,9 +100,16 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
    * 开始自动操作
    * @param query 用户原始输入
    * @param files 用户上传的文件
+   * @param thinking 是否启用深度思考
+   * @param enhance 增强模式
    * @returns 生成的 sessionId
    */
-  function startOperation(query: string, files?: UploadedFileInfo[]): string {
+  function startOperation(
+    query: string,
+    files?: UploadedFileInfo[],
+    thinking?: boolean,
+    enhance?: EnhanceMode
+  ): string {
     // 生成唯一的 sessionId
     const newSessionId = uuidv4();
 
@@ -103,6 +117,8 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     stage.value = 'analyzing';
     originalQuery.value = query;
     originalFiles.value = files || [];
+    enableThinking.value = thinking ?? false;
+    enhanceMode.value = enhance ?? 'off';
     intentResult.value = null;
     forgeConfig.value = null;
     configGenerating.value = createInitialConfigState();
@@ -204,6 +220,8 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     stage.value = 'idle';
     originalQuery.value = '';
     originalFiles.value = [];
+    enableThinking.value = false;
+    enhanceMode.value = 'off';
     intentResult.value = null;
     forgeConfig.value = null;
     configGenerating.value = createInitialConfigState();
@@ -217,6 +235,8 @@ export const useAutoOperationStore = defineStore('autoOperation', () => {
     stage,
     originalQuery,
     originalFiles,
+    enableThinking,
+    enhanceMode,
     intentResult,
     forgeConfig,
     configGenerating,

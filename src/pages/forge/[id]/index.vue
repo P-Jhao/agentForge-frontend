@@ -168,11 +168,13 @@ watch(forgeId, () => {
 const handleAutoSend = async () => {
   const content = inputValue.value.trim();
   if (content) {
-    // 从 autoOperationStore 获取文件信息
+    // 从 autoOperationStore 获取文件信息和增强模式设置
     const { useAutoOperationStore } = await import('@/stores');
     const autoOperationStore = useAutoOperationStore();
     const files = autoOperationStore.originalFiles;
-    handleSend(content, undefined, undefined, files.length > 0 ? files : undefined);
+    const enableThinking = autoOperationStore.enableThinking;
+    const enhanceMode = autoOperationStore.enhanceMode;
+    handleSend(content, enableThinking, enhanceMode, files.length > 0 ? files : undefined);
   }
 };
 

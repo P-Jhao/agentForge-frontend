@@ -109,7 +109,7 @@ const handleSend = async (
     smartRoutingLoading.value = true;
 
     try {
-      await executeSmartRouting(message, files);
+      await executeSmartRouting(message, files, enableThinking, enhanceMode);
     } finally {
       // 清理加载状态
       smartRoutingLoading.value = false;
