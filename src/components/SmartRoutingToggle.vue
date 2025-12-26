@@ -2,8 +2,8 @@
 /**
  * 智能路由开关组件
  * 控制是否启用智能意图路由功能
+ * 状态由父组件通过 v-model 管理
  */
-import { onMounted } from 'vue';
 import { NTooltip } from 'naive-ui';
 
 // Props
@@ -16,26 +16,14 @@ withDefaults(defineProps<Props>(), {
   disabled: false,
 });
 
-// localStorage 存储键
-const STORAGE_KEY = 'smartRoutingEnabled';
-
-// 开关状态
+// 开关状态（由父组件管理）
 const enabled = defineModel<boolean>({ default: false });
-
-// 初始化状态
-onMounted(() => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored !== null) {
-    enabled.value = stored === 'true';
-  }
-});
 
 /**
  * 切换开关状态
  */
 const toggle = () => {
   enabled.value = !enabled.value;
-  localStorage.setItem(STORAGE_KEY, String(enabled.value));
 };
 </script>
 

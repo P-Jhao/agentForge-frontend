@@ -12,12 +12,13 @@ import {
   DocumentTextOutline,
   StopCircleOutline,
 } from '@vicons/ionicons5';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { uploadChatFile } from '@/api/upload';
 import EnhanceModeSelector from './EnhanceModeSelector.vue';
 import SmartRoutingToggle from './SmartRoutingToggle.vue';
 import type { EnhanceMode } from '@/utils/enhanceMode';
-import { getEnhanceMode, setEnhanceMode } from '@/utils/enhanceMode';
+import { getUserSettings, updateUserSetting } from '@/utils/userSettings';
+import { useUserStore } from '@/stores';
 
 // Props
 interface Props {
@@ -159,28 +160,57 @@ const handleCancel = () => {
   emit('cancel');
 };
 
-// 初始化深度思考状态和增强模式
+// 用户 store
+const userStore = useUserStore();
+
+// 初始化用户设置
 onMounted(() => {
-  // 深度思考状态
-  const stored = localStorage.getItem('enableThinking');
-  if (stored !== null) {
-    enableThinking.value = stored === 'true';
+  const userId = userStore.userInfo?.id;
+  if (userId) {
+    const settings = getUserSettings(userId);
+    enableThinking.value = settings.enableThinking;
+    enhanceMode.value = settings.enhanceMode;
+    smartRoutingEnabled.value = settings.smartRoutingEnabled;
   }
-  // 增强模式
-  enhanceMode.value = getEnhanceMode();
 });
+
+// 监听用户登录状态变化，重新加载设置
+watch(
+  () => userStore.userInfo?.id,
+  (userId) => {
+    if (userId) {
+      const settings = getUserSettings(userId);
+      enableThinking.value = settings.enableThinking;
+      enhanceMode.value = settings.enhanceMode;
+      smartRoutingEnabled.value = settings.smartRoutingEnabled;
+    }
+  }
+);
 
 // 监听深度思考状态变化，保存到 localStorage
 const handleThinkingChange = (value: boolean) => {
   enableThinking.value = value;
-  localStorage.setItem('enableThinking', String(value));
+  const userId = userStore.userInfo?.id;
+  if (userId) {
+    updateUserSetting(userId, 'enableThinking', value);
+  }
 };
 
 // 监听增强模式变化，保存到 localStorage
-const handleEnhanceModeChange = (value: EnhanceMode) => {
-  enhanceMode.value = value;
-  setEnhanceMode(value);
-};
+watch(enhanceMode, (value) => {
+  const userId = userStore.userInfo?.id;
+  if (userId) {
+    updateUserSetting(userId, 'enhanceMode', value);
+  }
+});
+
+// 监听智能路由状态变化，保存到 localStorage
+watch(smartRoutingEnabled, (value) => {
+  const userId = userStore.userInfo?.id;
+  if (userId) {
+    updateUserSetting(userId, 'smartRoutingEnabled', value);
+  }
+});
 
 /**
  * 格式化文件大小
@@ -465,11 +495,7 @@ const canSend = computed(() => {
         </NTooltip>
 
         <!-- 增强模式选择器 -->
-        <EnhanceModeSelector
-          v-model="enhanceMode"
-          :disabled="disabled"
-          @update:model-value="handleEnhanceModeChange"
-        />
+        <EnhanceModeSelector v-model="enhanceMode" :disabled="disabled" />
 
         <slot name="actions"></slot>
       </div>
