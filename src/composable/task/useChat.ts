@@ -65,6 +65,7 @@ export interface TextMessageData extends BaseMessageData {
     | 'enhancer';
   content: string;
   isStreaming?: boolean; // 是否正在流式输出
+  aborted?: boolean; // 是否因中断而不完整
 }
 
 // 工具调用消息数据
@@ -368,6 +369,7 @@ export function useChat(options: UseChatOptions) {
         id,
         type: msgType,
         content: msg.content,
+        aborted: msg.aborted,
       });
       return { id, type: msgType, data };
     }
@@ -378,6 +380,7 @@ export function useChat(options: UseChatOptions) {
       id,
       type: msgType,
       content: msg.content,
+      aborted: msg.aborted,
     });
     return { id, type: msgType, data };
   };
@@ -575,11 +578,12 @@ export function useChat(options: UseChatOptions) {
       abortCurrentRequest = null;
     }
 
-    // 结束当前流式消息的状态
+    // 结束当前流式消息的状态，并标记为已中断
     if (currentStreamItem) {
       const data = currentStreamItem.data as TextMessageData;
       if (data && 'isStreaming' in data) {
         data.isStreaming = false;
+        data.aborted = true; // 标记为已中断
       }
     }
 
@@ -641,12 +645,16 @@ export function useChat(options: UseChatOptions) {
 
   /**
    * 检查是否需要显示智能迭代回复输入框
-   * 条件：最后一条消息是 questioner 类型，且不在加载中
+   * 条件：最后一条消息是 questioner 类型，且不在加载中，且未被中断
    */
   const needsSmartIterateReply = () => {
     if (isLoading.value) return false;
     const lastItem = renderItems.value[renderItems.value.length - 1];
-    return lastItem?.type === 'questioner';
+    if (lastItem?.type !== 'questioner') return false;
+    // 检查是否被中断
+    const data = lastItem.data as TextMessageData;
+    if (data.aborted) return false;
+    return true;
   };
 
   /**

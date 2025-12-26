@@ -92,6 +92,8 @@ export interface FlatMessage {
   success?: boolean;
   // 用户上传的文件
   files?: UploadedFileInfo[];
+  // 中断标记（消息是否因用户中断而不完整）
+  aborted?: boolean;
   createdAt: string;
 }
 
