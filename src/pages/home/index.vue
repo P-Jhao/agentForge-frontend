@@ -13,8 +13,11 @@ import XScroll from '@/components/XScroll.vue';
 import { useAutoOperation } from '@/composable/intent';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 import type { FeaturedTask } from '@/types';
+import { useUserStore } from '@/stores';
+import { saveUserSettings } from '@/utils/userSettings';
 
 const router = useRouter();
+const userStore = useUserStore();
 const askInput = ref('');
 
 // 自动操作 composable
@@ -170,8 +173,31 @@ async function loadFeaturedTasks() {
 }
 
 // 处理一键做同款（事件委托）
-function handleClone(prompt: string) {
+interface CloneOptions {
+  prompt: string;
+  enableThinking: boolean;
+  enhanceMode: EnhanceMode;
+  smartRoutingEnabled: boolean;
+}
+
+function handleClone(options: CloneOptions) {
+  const { prompt, enableThinking, enhanceMode, smartRoutingEnabled } = options;
+
+  // 1. 填入输入框
   typeAskInput(prompt);
+
+  // 2. 保存设置到 localStorage
+  const userId = userStore.userInfo?.id;
+  if (userId) {
+    saveUserSettings(userId, {
+      enableThinking,
+      enhanceMode,
+      smartRoutingEnabled,
+    });
+  }
+
+  // 3. 通知 ChatInput 组件重新加载设置
+  window.dispatchEvent(new Event('userSettingsChanged'));
 }
 
 // 处理推荐示例区域的点击事件（事件委托）
@@ -182,7 +208,17 @@ function handleFeaturedClick(e: MouseEvent) {
   if (target.dataset.clone !== undefined) {
     const prompt = target.dataset.clone;
     if (prompt) {
-      handleClone(prompt);
+      // 解析设置选项
+      const enableThinking = target.dataset.enableThinking === 'true';
+      const enhanceMode = (target.dataset.enhanceMode || 'off') as EnhanceMode;
+      const smartRoutingEnabled = target.dataset.smartRouting === 'true';
+
+      handleClone({
+        prompt,
+        enableThinking,
+        enhanceMode,
+        smartRoutingEnabled,
+      });
     }
     return;
   }
@@ -283,12 +319,12 @@ onMounted(() => {
         <div class="mb-4 flex items-center justify-between">
           <h2 class="text-theme text-xl font-semibold">推荐示例</h2>
         </div>
-        <XScroll :height="220" :gap="16" loop @item-click="handleFeaturedClick">
+        <XScroll :height="260" :gap="16" loop @item-click="handleFeaturedClick">
           <FeaturedTaskCard
             v-for="featured in featuredTasks"
             :key="featured.id"
             :featured="featured"
-            class="w-56 shrink-0"
+            class="w-72 shrink-0"
           />
         </XScroll>
       </div>

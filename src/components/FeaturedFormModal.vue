@@ -1,13 +1,16 @@
 <script setup lang="ts">
 /**
  * 推荐示例表单弹窗
- * 用于设置推荐示例的封面图、标题、描述、一键做同款内容
+ * 用于设置推荐示例的封面图、标题、描述、一键做同款内容及选项
  */
 import { ref, watch } from 'vue';
-import { NModal, NForm, NFormItem, NInput, NButton, NUpload, useMessage } from 'naive-ui';
+import { NModal, NForm, NFormItem, NInput, NButton, NUpload, NTooltip, useMessage } from 'naive-ui';
 import type { UploadFileInfo } from 'naive-ui';
 import { setFeatured } from '@/utils';
 import type { Task } from '@/types';
+import type { EnhanceMode } from '@/utils/enhanceMode';
+import EnhanceModeSelector from './EnhanceModeSelector.vue';
+import SmartRoutingToggle from './SmartRoutingToggle.vue';
 
 const props = defineProps<{
   show: boolean;
@@ -31,6 +34,10 @@ const formData = ref({
   title: '',
   description: '',
   clonePrompt: '',
+  // 一键做同款选项
+  enableThinking: false,
+  enhanceMode: 'off' as EnhanceMode,
+  smartRoutingEnabled: false,
 });
 
 // 上传文件列表
@@ -46,6 +53,9 @@ watch(
         title: props.task.title,
         description: '',
         clonePrompt: '',
+        enableThinking: false,
+        enhanceMode: 'off',
+        smartRoutingEnabled: false,
       };
       fileList.value = [];
     }
@@ -122,6 +132,9 @@ async function handleSubmit() {
       title: formData.value.title.trim() || undefined,
       description: formData.value.description.trim() || undefined,
       clonePrompt: formData.value.clonePrompt.trim(),
+      enableThinking: formData.value.enableThinking,
+      enhanceMode: formData.value.enhanceMode,
+      smartRoutingEnabled: formData.value.smartRoutingEnabled,
     });
     message.success('设置推荐示例成功');
     emit('success');
@@ -199,6 +212,33 @@ function getToken() {
           show-count
           :rows="4"
         />
+      </NFormItem>
+
+      <!-- 一键做同款选项 -->
+      <NFormItem label="一键做同款选项">
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- 智能路由 -->
+          <SmartRoutingToggle v-model="formData.smartRoutingEnabled" />
+
+          <!-- 深度思考 -->
+          <NTooltip>
+            <template #trigger>
+              <button
+                type="button"
+                class="flex cursor-pointer items-center gap-1.5 border-none whitespace-nowrap outline-none"
+                :class="formData.enableThinking ? 'toggle-btn-active-blue' : 'toggle-btn-inactive'"
+                @click="formData.enableThinking = !formData.enableThinking"
+              >
+                <iconpark-icon name="smart-optimization" size="16" />
+                <span>深度思考</span>
+              </button>
+            </template>
+            {{ formData.enableThinking ? '已启用深度思考' : '点击启用深度思考' }}
+          </NTooltip>
+
+          <!-- 提示词增强 -->
+          <EnhanceModeSelector v-model="formData.enhanceMode" />
+        </div>
       </NFormItem>
     </NForm>
 

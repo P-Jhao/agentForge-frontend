@@ -5,6 +5,8 @@
  * 使用 data-* 属性 + 事件委托处理点击
  */
 import { computed } from 'vue';
+import { NIcon } from 'naive-ui';
+import { TrendingUpSharp } from '@vicons/ionicons5';
 import type { FeaturedTask } from '@/types';
 
 const props = defineProps<{
@@ -26,6 +28,18 @@ const coverUrl = computed(() => {
   }
   return props.featured.coverImage;
 });
+
+// 增强模式标签映射
+const enhanceModeLabels: Record<string, string> = {
+  quick: '快速增强',
+  smart: '智能迭代',
+  multi: '多角度增强',
+};
+
+// 增强模式显示标签
+const enhanceModeLabel = computed(() => {
+  return enhanceModeLabels[props.featured.enhanceMode] || null;
+});
 </script>
 
 <template>
@@ -33,7 +47,7 @@ const coverUrl = computed(() => {
     class="card-theme-gradient group relative cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
   >
     <!-- 封面图区域 -->
-    <div class="relative aspect-16/10 overflow-hidden">
+    <div class="relative aspect-2/1 overflow-hidden">
       <img
         :src="coverUrl"
         :alt="featured.title"
@@ -55,19 +69,46 @@ const coverUrl = computed(() => {
           type="button"
           class="bg-primary-500 hover:bg-primary-600 w-28 cursor-pointer rounded-full border-2 border-transparent px-4 py-2 text-center text-sm font-medium text-white transition-all hover:shadow-md"
           :data-clone="featured.clonePrompt || ''"
+          :data-enable-thinking="featured.enableThinking"
+          :data-enhance-mode="featured.enhanceMode"
+          :data-smart-routing="featured.smartRoutingEnabled"
         >
           一键做同款
         </button>
       </div>
     </div>
     <!-- 内容区域 -->
-    <div class="p-4">
+    <div class="flex h-32 flex-col p-4">
       <h3 class="text-theme mb-1 truncate text-base font-medium">
         {{ featured.title }}
       </h3>
-      <p v-if="featured.description" class="text-theme-secondary truncate text-sm">
+      <p v-if="featured.description" class="text-theme-secondary mb-2 truncate text-sm">
         {{ featured.description }}
       </p>
+      <!-- 启用的选项标签 -->
+      <div class="flex flex-wrap gap-1.5">
+        <span
+          v-if="featured.smartRoutingEnabled"
+          class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-600 dark:bg-violet-400/15 dark:text-violet-400"
+        >
+          <iconpark-icon name="circle-four" size="12" />
+          智能路由
+        </span>
+        <span
+          v-if="featured.enableThinking"
+          class="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-400/15 dark:text-blue-400"
+        >
+          <iconpark-icon name="smart-optimization" size="12" />
+          深度思考
+        </span>
+        <span
+          v-if="enhanceModeLabel"
+          class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-600 dark:bg-violet-400/15 dark:text-violet-400"
+        >
+          <NIcon :component="TrendingUpSharp" :size="12" />
+          {{ enhanceModeLabel }}
+        </span>
+      </div>
     </div>
   </div>
 </template>

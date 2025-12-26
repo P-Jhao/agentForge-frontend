@@ -22,6 +22,10 @@ export interface FeaturedTask {
   title: string;
   description: string | null;
   clonePrompt: string | null;
+  // 一键做同款时的设置选项
+  enableThinking: boolean;
+  enhanceMode: string;
+  smartRoutingEnabled: boolean;
   sortOrder: number;
   createdAt: string;
   task: FeaturedTaskInfo | null;
@@ -34,6 +38,9 @@ export interface SetFeaturedParams {
   title?: string;
   description?: string;
   clonePrompt?: string;
+  enableThinking?: boolean;
+  enhanceMode?: string;
+  smartRoutingEnabled?: boolean;
   sortOrder?: number;
 }
 

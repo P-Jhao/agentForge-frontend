@@ -12,7 +12,7 @@ import {
   DocumentTextOutline,
   StopCircleOutline,
 } from '@vicons/ionicons5';
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { uploadChatFile } from '@/api/upload';
 import EnhanceModeSelector from './EnhanceModeSelector.vue';
 import SmartRoutingToggle from './SmartRoutingToggle.vue';
@@ -163,8 +163,8 @@ const handleCancel = () => {
 // 用户 store
 const userStore = useUserStore();
 
-// 初始化用户设置
-onMounted(() => {
+// 加载用户设置
+function loadUserSettings() {
   const userId = userStore.userInfo?.id;
   if (userId) {
     const settings = getUserSettings(userId);
@@ -172,6 +172,19 @@ onMounted(() => {
     enhanceMode.value = settings.enhanceMode;
     smartRoutingEnabled.value = settings.smartRoutingEnabled;
   }
+}
+
+// 初始化用户设置
+onMounted(() => {
+  loadUserSettings();
+
+  // 监听设置变更事件（用于一键做同款同步设置）
+  window.addEventListener('userSettingsChanged', loadUserSettings);
+});
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('userSettingsChanged', loadUserSettings);
 });
 
 // 监听用户登录状态变化，重新加载设置
@@ -179,10 +192,7 @@ watch(
   () => userStore.userInfo?.id,
   (userId) => {
     if (userId) {
-      const settings = getUserSettings(userId);
-      enableThinking.value = settings.enableThinking;
-      enhanceMode.value = settings.enhanceMode;
-      smartRoutingEnabled.value = settings.smartRoutingEnabled;
+      loadUserSettings();
     }
   }
 );
