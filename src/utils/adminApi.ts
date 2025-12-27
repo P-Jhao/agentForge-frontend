@@ -8,7 +8,7 @@ export interface AdminTaskItem {
   id: number;
   uuid: string;
   title: string;
-  status: 'running' | 'completed' | 'cancelled' | 'waiting';
+  status: 'running' | 'completed' | 'cancelled' | 'waiting' | 'deleted';
   creator: {
     id: number;
     username: string;

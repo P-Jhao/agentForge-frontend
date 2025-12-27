@@ -3,7 +3,7 @@
  */
 
 // 任务状态枚举
-export type TaskStatus = 'running' | 'completed' | 'cancelled' | 'waiting';
+export type TaskStatus = 'running' | 'completed' | 'cancelled' | 'waiting' | 'deleted';
 
 // 消息类型枚举（新格式，不再包含 tool）
 export type MessageType =

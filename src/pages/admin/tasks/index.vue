@@ -12,6 +12,7 @@ import {
   NSpace,
   NIcon,
   NPopconfirm,
+  NTag,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
@@ -50,6 +51,24 @@ const dateRange = ref<[number, number] | null>(null);
 // Token 排序
 const tokenSortOrder = ref<'asc' | 'desc' | null>(null);
 
+// 获取状态标签配置
+const getStatusTag = (status: string) => {
+  switch (status) {
+    case 'running':
+      return { type: 'info' as const, text: '运行中' };
+    case 'completed':
+      return { type: 'success' as const, text: '已完成' };
+    case 'cancelled':
+      return { type: 'warning' as const, text: '已取消' };
+    case 'waiting':
+      return { type: 'default' as const, text: '等待中' };
+    case 'deleted':
+      return { type: 'error' as const, text: '已删除' };
+    default:
+      return { type: 'default' as const, text: status };
+  }
+};
+
 // 表格列定义
 const columns = computed<DataTableColumns<AdminTaskItem>>(() => [
   {
@@ -61,8 +80,17 @@ const columns = computed<DataTableColumns<AdminTaskItem>>(() => [
   {
     title: '创建者',
     key: 'creator',
-    width: 120,
+    width: 100,
     render: (row) => row.creator.nickname || row.creator.username,
+  },
+  {
+    title: '状态',
+    key: 'status',
+    width: 80,
+    render: (row) => {
+      const { type, text } = getStatusTag(row.status);
+      return h(NTag, { type, size: 'small' }, () => text);
+    },
   },
   {
     title: 'Token 消耗',
