@@ -125,10 +125,10 @@ const columns: DataTableColumns<Task> = [
     },
   },
   {
-    title: '创建时间',
-    key: 'createdAt',
+    title: '更新时间',
+    key: 'updatedAt',
     width: 180,
-    render: (row) => h('span', { class: 'text-gray-500 text-sm' }, formatDate(row.createdAt)),
+    render: (row) => h('span', { class: 'text-gray-500 text-sm' }, formatDate(row.updatedAt)),
   },
   {
     title: '操作',
