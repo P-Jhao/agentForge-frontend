@@ -8,7 +8,7 @@ import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import ChatMessage from './ChatMessage.vue';
 import ChatLoadingState from './ChatLoadingState.vue';
 import type { TaskForge } from '@/types';
-import type { RenderItem } from '@/composable/task/useChat';
+import type { RenderItem, TextMessageData } from '@/composable/task/useChat';
 
 interface Props {
   renderItems: RenderItem[];
@@ -91,6 +91,41 @@ const showLoadingState = computed(() => {
   if (lastItem && lastItem.type !== 'user') return false;
   return true;
 });
+
+/**
+ * 获取指定 turn_end 消息对应的 chat 内容
+ * 从当前 turn_end 往前找，收集所有 chat 类型的消息内容，直到遇到上一个 turn_end 或列表开头
+ */
+const getChatContentForTurnEnd = (turnEndIndex: number): string => {
+  const chatContents: string[] = [];
+
+  // 从 turn_end 前一个位置开始往前遍历
+  for (let i = turnEndIndex - 1; i >= 0; i--) {
+    const item = props.renderItems[i];
+    if (!item) continue;
+
+    // 遇到上一个 turn_end，停止
+    if (item.type === 'turn_end') break;
+
+    // 只收集 chat 类型的内容
+    if (item.type === 'chat') {
+      const data = item.data as TextMessageData;
+      if (data.content) {
+        chatContents.unshift(data.content); // 插入到开头，保持顺序
+      }
+    }
+  }
+
+  return chatContents.join('\n\n');
+};
+
+// 为每个消息计算 chatContent（仅 turn_end 类型需要）
+const getItemChatContent = (item: RenderItem, index: number): string => {
+  if (item.type === 'turn_end') {
+    return getChatContentForTurnEnd(index);
+  }
+  return '';
+};
 </script>
 
 <template>
@@ -104,7 +139,13 @@ const showLoadingState = computed(() => {
     </div>
 
     <!-- 消息列表 -->
-    <ChatMessage v-for="item in renderItems" :key="item.id" :data="item.data" :forge="forge" />
+    <ChatMessage
+      v-for="(item, index) in renderItems"
+      :key="item.id"
+      :data="item.data"
+      :forge="forge"
+      :chat-content="getItemChatContent(item, index)"
+    />
 
     <!-- 加载状态（仅在没有 assistant 消息时显示） -->
     <ChatLoadingState v-if="showLoadingState" :forge="forge" />

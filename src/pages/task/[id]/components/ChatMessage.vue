@@ -14,10 +14,13 @@ interface Props {
   data: MessageData;
   // 关联的 Forge 信息（用于显示 AI 头像）
   forge?: TaskForge | null;
+  // 当前轮次的 chat 内容（用于 turn_end 消息的复制功能）
+  chatContent?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   forge: null,
+  chatContent: '',
 });
 
 const userStore = useUserStore();
@@ -83,7 +86,7 @@ const userInitial = computed(() => {
     <div class="w-8 shrink-0"></div>
     <!-- 操作栏内容 -->
     <div class="flex-1">
-      <component :is="MessageComponent" :data="data" />
+      <component :is="MessageComponent" :data="data" :chat-content="chatContent" />
     </div>
   </div>
 

@@ -277,6 +277,7 @@ onBeforeUnmount(() => {
         :render-items="displayRenderItems"
         :is-loading="displayIsLoading"
         :forge="currentForge"
+        :is-own-task="taskStore.isOwnTask && !isShareMode"
       />
 
       <!-- 输入区域（固定在底部，非分享模式显示） -->

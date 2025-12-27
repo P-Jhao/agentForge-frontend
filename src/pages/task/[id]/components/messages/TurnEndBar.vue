@@ -4,13 +4,26 @@
  * 显示复制、点赞/踩、完成时间、累积 token 消耗
  */
 import { computed } from 'vue';
-import { NButton, NTooltip, NIcon } from 'naive-ui';
+import { useRoute } from 'vue-router';
+import { NButton, NTooltip, NIcon, useMessage } from 'naive-ui';
 import { CopyOutline, ThumbsUpOutline, ThumbsDownOutline } from '@vicons/ionicons5';
+import { useTaskStore } from '@/stores';
 import type { TurnEndMessageData } from '@/composable/task/useChat';
 
 const props = defineProps<{
   data: TurnEndMessageData;
+  chatContent?: string; // 当前轮次的 chat 内容
 }>();
+
+const route = useRoute();
+const taskStore = useTaskStore();
+const message = useMessage();
+
+// 是否为分享模式
+const isShareMode = computed(() => !!route.query.shareSign);
+
+// 是否显示点赞/踩按钮（自己的任务且非分享模式）
+const showFeedbackButtons = computed(() => taskStore.isOwnTask && !isShareMode.value);
 
 // 格式化时间（MM-DD HH:mm:ss）
 const formattedTime = computed(() => {
@@ -38,10 +51,19 @@ const hasTokenData = computed(() => {
   return props.data.accumulatedTokens && props.data.accumulatedTokens.totalTokens > 0;
 });
 
-// 复制功能（占位）
-const handleCopy = () => {
-  console.log('[TurnEndBar] 复制按钮点击');
-  // TODO: 实现复制此次对话所有内容
+// 复制功能
+const handleCopy = async () => {
+  if (!props.chatContent) {
+    message.warning('没有可复制的内容');
+    return;
+  }
+  try {
+    await window.navigator.clipboard.writeText(props.chatContent);
+    message.success('已复制到剪贴板');
+  } catch (error) {
+    console.error('[TurnEndBar] 复制失败:', error);
+    message.error('复制失败');
+  }
 };
 
 // 点赞功能（占位）
@@ -73,27 +95,30 @@ const handleThumbsDown = () => {
       复制对话
     </NTooltip>
 
-    <NTooltip trigger="hover">
-      <template #trigger>
-        <NButton quaternary size="tiny" class="action-btn" @click="handleThumbsUp">
-          <template #icon>
-            <NIcon :component="ThumbsUpOutline" :size="14" />
-          </template>
-        </NButton>
-      </template>
-      有帮助
-    </NTooltip>
+    <!-- 点赞/踩按钮（仅自己的任务且非分享模式显示） -->
+    <template v-if="showFeedbackButtons">
+      <NTooltip trigger="hover">
+        <template #trigger>
+          <NButton quaternary size="tiny" class="action-btn" @click="handleThumbsUp">
+            <template #icon>
+              <NIcon :component="ThumbsUpOutline" :size="14" />
+            </template>
+          </NButton>
+        </template>
+        有帮助
+      </NTooltip>
 
-    <NTooltip trigger="hover">
-      <template #trigger>
-        <NButton quaternary size="tiny" class="action-btn" @click="handleThumbsDown">
-          <template #icon>
-            <NIcon :component="ThumbsDownOutline" :size="14" />
-          </template>
-        </NButton>
-      </template>
-      没帮助
-    </NTooltip>
+      <NTooltip trigger="hover">
+        <template #trigger>
+          <NButton quaternary size="tiny" class="action-btn" @click="handleThumbsDown">
+            <template #icon>
+              <NIcon :component="ThumbsDownOutline" :size="14" />
+            </template>
+          </NButton>
+        </template>
+        没帮助
+      </NTooltip>
+    </template>
 
     <!-- 分隔符 -->
     <span class="separator">|</span>
