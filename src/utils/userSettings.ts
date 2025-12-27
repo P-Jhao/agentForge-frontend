@@ -13,6 +13,8 @@ export interface UserSettings {
   enhanceMode: EnhanceMode;
   // 智能路由开关
   smartRoutingEnabled: boolean;
+  // 任务列表每页条数
+  taskListPageSize: number;
 }
 
 // 默认设置
@@ -20,6 +22,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   enableThinking: false,
   enhanceMode: 'off',
   smartRoutingEnabled: false,
+  taskListPageSize: 10,
 };
 
 // 有效的增强模式值
@@ -55,6 +58,10 @@ export function getUserSettings(userId: number): UserSettings {
           typeof parsed.smartRoutingEnabled === 'boolean'
             ? parsed.smartRoutingEnabled
             : DEFAULT_SETTINGS.smartRoutingEnabled,
+        taskListPageSize:
+          typeof parsed.taskListPageSize === 'number' && parsed.taskListPageSize > 0
+            ? parsed.taskListPageSize
+            : DEFAULT_SETTINGS.taskListPageSize,
       };
     }
   } catch {

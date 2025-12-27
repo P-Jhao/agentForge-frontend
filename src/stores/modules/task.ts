@@ -9,6 +9,8 @@ import {
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
 } from '@/utils';
+import { getUserSettings } from '@/utils/userSettings';
+import { useUserStore } from './user';
 import type { Task, GroupedTasks, UpdateTaskParams } from '@/types';
 
 // 分页信息
@@ -24,7 +26,7 @@ export const useTaskStore = defineStore('task', () => {
   // 任务列表
   const tasks = ref<Task[]>([]);
 
-  // 分页信息
+  // 分页信息（初始值，会在初始化时从 localStorage 读取）
   const pagination = ref<Pagination>({
     total: 0,
     page: 1,
@@ -36,6 +38,22 @@ export const useTaskStore = defineStore('task', () => {
 
   // 加载状态
   const loading = ref(false);
+
+  // 是否已初始化分页设置
+  let pageSizeInitialized = false;
+
+  /**
+   * 初始化分页设置（从 localStorage 读取）
+   */
+  function initPageSize() {
+    if (pageSizeInitialized) return;
+    const userStore = useUserStore();
+    if (userStore.userInfo?.id) {
+      const settings = getUserSettings(userStore.userInfo.id);
+      pagination.value.pageSize = settings.taskListPageSize;
+      pageSizeInitialized = true;
+    }
+  }
 
   // ========== 计算属性 ==========
 
@@ -93,6 +111,9 @@ export const useTaskStore = defineStore('task', () => {
     page?: number;
     pageSize?: number;
   }) {
+    // 初始化分页设置
+    initPageSize();
+
     loading.value = true;
     try {
       const params: Record<string, unknown> = {};

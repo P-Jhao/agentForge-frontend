@@ -18,12 +18,14 @@ import {
   type DataTableColumns,
 } from 'naive-ui';
 import { SearchOutline, StarOutline, Star, TrashOutline, TimeOutline } from '@vicons/ionicons5';
-import { useTaskStore } from '@/stores';
+import { useTaskStore, useUserStore } from '@/stores';
+import { updateUserSetting } from '@/utils/userSettings';
 import type { Task } from '@/types';
 
 const router = useRouter();
 const message = useMessage();
 const taskStore = useTaskStore();
+const userStore = useUserStore();
 
 // 搜索关键词
 const searchKeyword = ref('');
@@ -194,6 +196,10 @@ function handlePageChange(page: number) {
 // 处理每页数量变化
 function handlePageSizeChange(pageSize: number) {
   taskStore.pagination.pageSize = pageSize;
+  // 保存到 localStorage
+  if (userStore.userInfo?.id) {
+    updateUserSetting(userStore.userInfo.id, 'taskListPageSize', pageSize);
+  }
   fetchData(1);
 }
 
