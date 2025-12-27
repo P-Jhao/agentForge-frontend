@@ -16,6 +16,8 @@ import EnhanceProcessCard from './EnhanceProcessCard.vue';
 import ExpertAnalysisCard from './ExpertAnalysisCard.vue';
 import EnhancedPromptBubble from './EnhancedPromptBubble.vue';
 import UserAnswerMessage from './UserAnswerMessage.vue';
+// 轮次结束统计组件
+import TurnEndBar from './TurnEndBar.vue';
 
 // 消息类型到组件的映射
 export const messageComponents: Record<MessageType, Component> = {
@@ -32,6 +34,8 @@ export const messageComponents: Record<MessageType, Component> = {
   questioner: EnhanceProcessCard,
   expert: ExpertAnalysisCard,
   enhancer: EnhancedPromptBubble,
+  // 轮次结束统计
+  turn_end: TurnEndBar,
 };
 
 // 导出所有消息组件
@@ -47,4 +51,6 @@ export {
   ExpertAnalysisCard,
   EnhancedPromptBubble,
   UserAnswerMessage,
+  // 轮次结束统计组件
+  TurnEndBar,
 };

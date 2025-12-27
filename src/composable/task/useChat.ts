@@ -6,7 +6,14 @@
 import { ref, reactive, nextTick } from 'vue';
 import { createStreamRequest, createTask, abortTask } from '@/utils';
 import { useTaskStore } from '@/stores';
-import type { FlatMessage, TaskSSEChunk, ToolCallStartData, ToolCallResultData } from '@/types';
+import type {
+  FlatMessage,
+  TaskSSEChunk,
+  ToolCallStartData,
+  ToolCallResultData,
+  TurnEndData,
+  TokenUsage,
+} from '@/types';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 
 // 工具调用状态类型
@@ -26,7 +33,9 @@ export type MessageType =
   | 'reviewer' // 审查者输出
   | 'questioner' // 提问者输出
   | 'expert' // 专家分析输出
-  | 'enhancer'; // 增强后的提示词
+  | 'enhancer' // 增强后的提示词
+  // 轮次结束统计
+  | 'turn_end'; // 对话轮次结束统计信息
 
 // 基础消息数据
 interface BaseMessageData {
@@ -78,8 +87,19 @@ export interface ToolCallMessageData extends BaseMessageData {
   status: ToolCallStatus;
 }
 
+// 轮次结束消息数据
+export interface TurnEndMessageData extends BaseMessageData {
+  type: 'turn_end';
+  completedAt: string; // ISO 8601 格式
+  accumulatedTokens: TokenUsage;
+}
+
 // 消息数据联合类型
-export type MessageData = UserMessageData | TextMessageData | ToolCallMessageData;
+export type MessageData =
+  | UserMessageData
+  | TextMessageData
+  | ToolCallMessageData
+  | TurnEndMessageData;
 
 // 渲染项（包含响应式数据）
 export interface RenderItem {
@@ -224,6 +244,22 @@ export function useChat(options: UseChatOptions) {
   };
 
   /**
+   * 添加轮次结束消息
+   */
+  const addTurnEndMessage = (turnEndData: TurnEndData): RenderItem => {
+    const id = generateId();
+    const data = reactive<TurnEndMessageData>({
+      id,
+      type: 'turn_end',
+      completedAt: turnEndData.completedAt,
+      accumulatedTokens: turnEndData.accumulatedTokens,
+    });
+    const item: RenderItem = { id, type: 'turn_end', data };
+    renderItems.value.push(item);
+    return item;
+  };
+
+  /**
    * 处理 SSE 消息（核心逻辑）
    * 根据 type 决定是追加到当前消息还是创建新消息
    */
@@ -301,6 +337,19 @@ export function useChat(options: UseChatOptions) {
       const errorData = data as { message: string };
       currentStreamItem = null;
       addTextMessage('error', errorData.message);
+      return true;
+    }
+
+    // 轮次结束消息
+    if (type === 'turn_end' && data) {
+      const turnEndData = data as TurnEndData;
+      // 结束当前流式消息
+      if (currentStreamItem) {
+        (currentStreamItem.data as TextMessageData).isStreaming = false;
+      }
+      currentStreamItem = null;
+      // 添加轮次结束消息
+      addTurnEndMessage(turnEndData);
       return true;
     }
 
@@ -388,6 +437,29 @@ export function useChat(options: UseChatOptions) {
         aborted: msg.aborted,
       });
       return { id, type: msgType, data };
+    }
+
+    // 处理轮次结束消息
+    if (msg.type === 'turn_end') {
+      try {
+        const turnEndContent = JSON.parse(msg.content) as TurnEndData;
+        const data = reactive<TurnEndMessageData>({
+          id,
+          type: 'turn_end',
+          completedAt: turnEndContent.completedAt,
+          accumulatedTokens: turnEndContent.accumulatedTokens,
+        });
+        return { id, type: 'turn_end', data };
+      } catch {
+        // 解析失败，返回空的 turn_end 消息
+        const data = reactive<TurnEndMessageData>({
+          id,
+          type: 'turn_end',
+          completedAt: new Date().toISOString(),
+          accumulatedTokens: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        });
+        return { id, type: 'turn_end', data };
+      }
     }
 
     // chat/thinking/error/summary

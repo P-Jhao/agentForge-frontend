@@ -18,7 +18,9 @@ export type MessageType =
   | 'reviewer' // 审查者输出
   | 'questioner' // 提问者输出
   | 'expert' // 专家分析输出
-  | 'enhancer'; // 增强后的提示词
+  | 'enhancer' // 增强后的提示词
+  // 轮次结束统计
+  | 'turn_end'; // 对话轮次结束统计信息
 
 // 基础消息段落（thinking/chat/error 及增强相关类型）
 export interface BaseMessageSegment {
@@ -33,7 +35,9 @@ export interface BaseMessageSegment {
     | 'reviewer'
     | 'questioner'
     | 'expert'
-    | 'enhancer';
+    | 'enhancer'
+    // 轮次结束统计
+    | 'turn_end';
   content: string;
 }
 
@@ -63,6 +67,19 @@ export interface ToolCallResultData {
   success: boolean;
   summarizedResult?: string; // Markdown 格式摘要
   error?: string;
+}
+
+// Token 使用统计
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+// 轮次结束数据（SSE 推送）
+export interface TurnEndData {
+  completedAt: string; // ISO 8601 格式
+  accumulatedTokens: TokenUsage;
 }
 
 // 消息角色
@@ -167,12 +184,20 @@ export type TaskSSEChunkType =
   | 'reviewer' // 审查者输出
   | 'questioner' // 提问者输出
   | 'expert' // 专家分析输出
-  | 'enhancer'; // 增强后的提示词
+  | 'enhancer' // 增强后的提示词
+  // 轮次结束统计
+  | 'turn_end'; // 对话轮次结束统计信息
 
 // SSE 消息结构
 export interface TaskSSEChunk {
   type: TaskSSEChunkType;
-  data?: Message[] | string | { message: string } | ToolCallStartData | ToolCallResultData;
+  data?:
+    | Message[]
+    | string
+    | { message: string }
+    | ToolCallStartData
+    | ToolCallResultData
+    | TurnEndData;
 }
 
 // 类型守卫函数
@@ -192,4 +217,8 @@ export function isErrorChunk(
 
 export function isDoneChunk(chunk: TaskSSEChunk): boolean {
   return chunk.type === 'done';
+}
+
+export function isTurnEndChunk(chunk: TaskSSEChunk): chunk is TaskSSEChunk & { data: TurnEndData } {
+  return chunk.type === 'turn_end';
 }

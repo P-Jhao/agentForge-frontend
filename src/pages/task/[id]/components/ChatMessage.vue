@@ -40,6 +40,9 @@ const isEnhanceProcessMessage = computed(() =>
   ['reviewer', 'questioner', 'expert'].includes(props.data.type)
 );
 
+// 是否为轮次结束消息（不需要头像，独立显示）
+const isTurnEndMessage = computed(() => props.data.type === 'turn_end');
+
 // 是否需要气泡样式（user、chat、user_original、user_answer 需要）
 const needsBubble = computed(() =>
   ['user', 'chat', 'user_original', 'user_answer'].includes(props.data.type)
@@ -74,7 +77,18 @@ const userInitial = computed(() => {
 </script>
 
 <template>
-  <div class="flex gap-3" :class="{ 'flex-row-reverse': isUserMessage }">
+  <!-- 轮次结束消息：独立显示，不需要头像，但左边留出头像空间保持对齐 -->
+  <div v-if="isTurnEndMessage" class="flex gap-3">
+    <!-- 占位空间，与头像宽度一致 -->
+    <div class="w-8 shrink-0"></div>
+    <!-- 操作栏内容 -->
+    <div class="flex-1">
+      <component :is="MessageComponent" :data="data" />
+    </div>
+  </div>
+
+  <!-- 其他消息：带头像的布局 -->
+  <div v-else class="flex gap-3" :class="{ 'flex-row-reverse': isUserMessage }">
     <!-- 头像 -->
     <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
       <!-- 用户头像：显示用户名首字母 -->
