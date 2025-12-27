@@ -214,12 +214,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-3">
     <!-- 页面标题 -->
-    <div>
-      <h1 class="text-theme text-2xl font-bold">任务管理</h1>
-      <p class="text-theme-secondary mt-1 text-sm">管理所有对话任务</p>
-    </div>
+    <h1 class="text-theme text-xl font-bold">任务管理</h1>
 
     <!-- 筛选栏 -->
     <div class="flex items-center justify-between gap-4">
@@ -228,6 +225,7 @@ onMounted(() => {
         v-model:value="searchKeyword"
         placeholder="搜索任务..."
         clearable
+        size="small"
         style="max-width: 300px"
         @keyup.enter="handleSearch"
         @clear="handleSearch"
@@ -238,14 +236,19 @@ onMounted(() => {
       </NInput>
 
       <!-- 筛选按钮 -->
-      <NSpace>
-        <NButton :type="filterMode === 'all' ? 'primary' : 'default'" @click="filterMode = 'all'">
+      <NSpace size="small">
+        <NButton
+          size="small"
+          :type="filterMode === 'all' ? 'primary' : 'default'"
+          @click="filterMode = 'all'"
+        >
           <template #icon>
             <NIcon :component="TimeOutline" />
           </template>
           全部
         </NButton>
         <NButton
+          size="small"
           :type="filterMode === 'favorite' ? 'primary' : 'default'"
           @click="filterMode = 'favorite'"
         >
@@ -273,12 +276,13 @@ onMounted(() => {
         onUpdatePage: handlePageChange,
         onUpdatePageSize: handlePageSizeChange,
       }"
+      size="small"
       remote
       striped
     />
 
     <!-- 空状态 -->
-    <div v-if="!loading && tasks.length === 0" class="text-empty py-12 text-center">
+    <div v-if="!loading && tasks.length === 0" class="text-empty py-8 text-center text-sm">
       {{ filterMode === 'favorite' ? '暂无收藏任务' : '暂无任务' }}
     </div>
   </div>

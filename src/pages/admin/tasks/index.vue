@@ -35,7 +35,7 @@ const tasks = ref<AdminTaskItem[]>([]);
 // 分页信息
 const pagination = ref({
   page: 1,
-  pageSize: 20,
+  pageSize: 10,
   total: 0,
   showSizePicker: true,
   pageSizes: [10, 20, 50, 100],
@@ -247,17 +247,15 @@ onMounted(() => {
 <template>
   <div class="flex h-full flex-col">
     <!-- 页面标题 -->
-    <div class="mb-4">
-      <h1 class="text-theme text-xl font-bold">任务管理</h1>
-      <p class="text-theme-secondary mt-1 text-sm">查看和管理所有用户的任务</p>
-    </div>
+    <h1 class="text-theme mb-3 text-xl font-bold">任务管理</h1>
 
     <!-- 筛选栏 -->
-    <div class="mb-4 flex flex-wrap items-center gap-3">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
       <NInput
         v-model:value="keyword"
         placeholder="搜索任务名称、创建者..."
         style="width: 240px"
+        size="small"
         clearable
         @keyup.enter="handleSearch"
       >
@@ -270,19 +268,20 @@ onMounted(() => {
         v-model:value="dateRange"
         type="daterange"
         clearable
+        size="small"
         style="width: 280px"
         start-placeholder="开始日期"
         end-placeholder="结束日期"
       />
 
-      <NButton type="primary" @click="handleSearch">
+      <NButton type="primary" size="small" @click="handleSearch">
         <template #icon>
           <NIcon :component="SearchOutline" />
         </template>
         搜索
       </NButton>
 
-      <NButton @click="handleReset">
+      <NButton size="small" @click="handleReset">
         <template #icon>
           <NIcon :component="RefreshOutline" />
         </template>
@@ -306,7 +305,8 @@ onMounted(() => {
           onUpdatePageSize: handlePageSizeChange,
         }"
         :scroll-x="900"
-        :max-height="'calc(100vh - 320px)'"
+        :max-height="'calc(100vh - 280px)'"
+        size="small"
         remote
         @update:sorter="handleSorterChange"
       />
