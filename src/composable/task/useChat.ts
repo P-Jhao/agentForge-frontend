@@ -73,8 +73,7 @@ export interface ToolCallMessageData extends BaseMessageData {
   type: 'tool_call';
   callId: string;
   toolName: string;
-  arguments: Record<string, unknown>;
-  result?: unknown;
+  summarizedResult?: string; // Markdown 格式摘要
   success: boolean;
   status: ToolCallStatus;
 }
@@ -209,18 +208,13 @@ export function useChat(options: UseChatOptions) {
   /**
    * 添加工具调用消息
    */
-  const addToolCallMessage = (
-    callId: string,
-    toolName: string,
-    args: Record<string, unknown> = {}
-  ): RenderItem => {
+  const addToolCallMessage = (callId: string, toolName: string): RenderItem => {
     const id = generateId();
     const data = reactive<ToolCallMessageData>({
       id,
       type: 'tool_call',
       callId,
       toolName,
-      arguments: args,
       success: false,
       status: 'running',
     });
@@ -258,12 +252,8 @@ export function useChat(options: UseChatOptions) {
       if (toolItem) {
         const toolData = toolItem.data as ToolCallMessageData;
         toolData.success = resultData.success;
-        toolData.result = resultData.result;
+        toolData.summarizedResult = resultData.summarizedResult;
         toolData.status = resultData.success ? 'success' : 'failed';
-        // 从 tool_call_result 中获取参数（工具 LLM 决定的参数）
-        if (resultData.args) {
-          toolData.arguments = resultData.args;
-        }
       }
       return true;
     }
@@ -371,8 +361,7 @@ export function useChat(options: UseChatOptions) {
         type: 'tool_call',
         callId: msg.callId || '',
         toolName: msg.toolName || '',
-        arguments: msg.arguments || {},
-        result: msg.result,
+        summarizedResult: msg.summarizedResult,
         success: msg.success ?? false,
         status: msg.success ? 'success' : 'failed',
       });

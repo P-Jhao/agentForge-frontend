@@ -1,12 +1,13 @@
 <script setup lang="ts">
 /**
  * 工具调用展示组件
- * 显示工具调用的状态和结果
+ * 显示工具调用的状态，点击可查看 Markdown 格式的结果摘要
  */
 import { ref, computed } from 'vue';
 import { NIcon, NSpin } from 'naive-ui';
-import { CheckmarkCircle, CloseCircle, ChevronDown, ChevronUp } from '@vicons/ionicons5';
+import { CheckmarkCircle, CloseCircle } from '@vicons/ionicons5';
 import { useThemeStore } from '@/stores';
+import ToolResultModal from './ToolResultModal.vue';
 
 // 工具调用状态
 export type ToolCallStatus = 'running' | 'success' | 'failed';
@@ -15,23 +16,22 @@ interface Props {
   callId: string;
   toolName: string;
   status: ToolCallStatus;
-  arguments?: Record<string, unknown>;
-  result?: unknown;
-  error?: string;
+  success: boolean;
+  summarizedResult?: string;
 }
 
 const props = defineProps<Props>();
 
 const themeStore = useThemeStore();
 
-// 是否展开详情
-const expanded = ref(false);
+// 弹窗显示状态
+const showModal = ref(false);
 
-// 切换展开状态
-const toggleExpand = () => {
-  // 只有完成状态才能展开
+// 点击打开结果弹窗
+const handleClick = () => {
+  // 只有完成状态才能打开弹窗
   if (props.status !== 'running') {
-    expanded.value = !expanded.value;
+    showModal.value = true;
   }
 };
 
@@ -56,40 +56,10 @@ const statusColor = computed(() => {
       return undefined;
   }
 });
-
-// 格式化结果显示
-const formattedResult = computed(() => {
-  if (props.error) {
-    return props.error;
-  }
-  if (props.result === undefined || props.result === null) {
-    return '无返回结果';
-  }
-  if (typeof props.result === 'string') {
-    return props.result;
-  }
-  try {
-    return JSON.stringify(props.result, null, 2);
-  } catch {
-    return String(props.result);
-  }
-});
-
-// 格式化参数显示
-const formattedArgs = computed(() => {
-  if (!props.arguments || Object.keys(props.arguments).length === 0) {
-    return '无参数';
-  }
-  try {
-    return JSON.stringify(props.arguments, null, 2);
-  } catch {
-    return String(props.arguments);
-  }
-});
 </script>
 
 <template>
-  <div :class="containerClass" @click="toggleExpand">
+  <div :class="containerClass" @click="handleClick">
     <!-- 头部：状态图标 + 工具名 -->
     <div class="flex items-center gap-2">
       <!-- 状态图标 -->
@@ -108,37 +78,18 @@ const formattedArgs = computed(() => {
       <!-- 运行中提示 -->
       <span v-if="status === 'running'" class="text-xs opacity-60">运行中...</span>
 
-      <!-- 展开/收起图标 -->
-      <NIcon
-        v-if="status !== 'running'"
-        :component="expanded ? ChevronUp : ChevronDown"
-        :size="14"
-        class="ml-auto opacity-50"
-      />
-    </div>
-
-    <!-- 详情区域（展开时显示） -->
-    <div v-if="expanded && status !== 'running'" class="mt-2 space-y-2">
-      <!-- 参数 -->
-      <div v-if="arguments && Object.keys(arguments).length > 0">
-        <div class="mb-1 text-xs opacity-60">参数:</div>
-        <pre
-          class="overflow-x-auto rounded bg-black/10 p-2 text-xs whitespace-pre-wrap dark:bg-white/10"
-        >{{ formattedArgs }}</pre
-        >
-      </div>
-
-      <!-- 结果 -->
-      <div>
-        <div class="mb-1 text-xs opacity-60">{{ error ? '错误:' : '结果:' }}</div>
-        <pre
-          class="max-h-40 overflow-x-auto overflow-y-auto rounded p-2 text-xs whitespace-pre-wrap"
-          :class="error ? 'bg-red-500/10 text-red-500' : 'bg-black/10 dark:bg-white/10'"
-        >{{ formattedResult }}</pre
-        >
-      </div>
+      <!-- 点击查看提示 -->
+      <span v-else class="ml-auto text-xs opacity-50">点击查看结果</span>
     </div>
   </div>
+
+  <!-- 结果弹窗 -->
+  <ToolResultModal
+    v-model:show="showModal"
+    :tool-name="toolName"
+    :success="success"
+    :summarized-result="summarizedResult"
+  />
 </template>
 
 <style scoped>

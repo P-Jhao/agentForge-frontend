@@ -114,8 +114,7 @@ function convertToRenderItem(msg: FlatMessage, emptyContent = false): RenderItem
       type: 'tool_call',
       callId: msg.callId || '',
       toolName: msg.toolName || '',
-      arguments: msg.arguments || {},
-      result: msg.result,
+      summarizedResult: msg.summarizedResult,
       success: msg.success ?? false,
       status: msg.success ? 'success' : 'failed',
     });

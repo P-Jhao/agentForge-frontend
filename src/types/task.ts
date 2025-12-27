@@ -42,8 +42,7 @@ export interface ToolCallSegment {
   type: 'tool_call';
   callId: string;
   toolName: string;
-  arguments: Record<string, unknown>;
-  result?: unknown;
+  summarizedResult?: string; // Markdown 格式摘要
   error?: string;
   success: boolean;
 }
@@ -62,9 +61,8 @@ export interface ToolCallResultData {
   callId: string;
   toolName: string;
   success: boolean;
-  result?: unknown;
+  summarizedResult?: string; // Markdown 格式摘要
   error?: string;
-  args?: Record<string, unknown>; // 工具 LLM 决定的参数
 }
 
 // 消息角色
@@ -87,8 +85,7 @@ export interface FlatMessage {
   // 工具调用专用字段
   callId?: string;
   toolName?: string;
-  arguments?: Record<string, unknown>;
-  result?: unknown;
+  summarizedResult?: string; // Markdown 格式摘要
   success?: boolean;
   // 用户上传的文件
   files?: UploadedFileInfo[];

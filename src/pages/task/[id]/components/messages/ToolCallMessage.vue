@@ -16,7 +16,7 @@ defineProps<{
     :call-id="data.callId"
     :tool-name="data.toolName"
     :status="data.status"
-    :arguments="data.arguments"
-    :result="data.result"
+    :success="data.success"
+    :summarized-result="data.summarizedResult"
   />
 </template>

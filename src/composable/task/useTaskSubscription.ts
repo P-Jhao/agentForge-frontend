@@ -3,7 +3,6 @@
  * 管理全局 SSE 连接，接收任务状态实时推送
  */
 import { ref, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
 import { useTaskStore } from '@/stores';
 import { useNotificationStore } from '@/stores/modules/notification';
 
