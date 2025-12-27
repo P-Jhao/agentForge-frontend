@@ -4,6 +4,16 @@
 import { http } from './http';
 import type { Task, CreateTaskParams, UpdateTaskParams, GetTasksParams } from '@/types';
 
+// 任务列表响应
+interface TaskListResponse {
+  tasks: Task[];
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
 /**
  * 创建任务
  */
@@ -13,10 +23,10 @@ export async function createTask(params: CreateTaskParams): Promise<Task> {
 }
 
 /**
- * 获取任务列表
+ * 获取任务列表（支持分页）
  */
-export async function getTasks(params?: GetTasksParams): Promise<Task[]> {
-  const res = await http.get<Task[]>('/task/list', params as Record<string, unknown>);
+export async function getTasks(params?: GetTasksParams): Promise<TaskListResponse> {
+  const res = await http.get<TaskListResponse>('/task/list', params as Record<string, unknown>);
   return res.data;
 }
 

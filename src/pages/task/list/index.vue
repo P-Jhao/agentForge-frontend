@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /**
  * 任务列表页面
- * 任务列表 + 筛选 + 批量操作
+ * 任务列表 + 筛选 + 分页
  * 使用 CSS 类自动适配深浅主题
  */
-import { ref, computed, onMounted, h } from 'vue';
+import { ref, computed, onMounted, h, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   NDataTable,
@@ -34,23 +34,11 @@ const filterMode = ref<'all' | 'favorite'>('all');
 // 加载状态
 const loading = computed(() => taskStore.loading);
 
-// 筛选后的任务列表
-const filteredTasks = computed(() => {
-  let tasks = taskStore.tasks;
+// 任务列表
+const tasks = computed(() => taskStore.tasks);
 
-  // 收藏筛选
-  if (filterMode.value === 'favorite') {
-    tasks = tasks.filter((t) => t.favorite);
-  }
-
-  // 关键词搜索（本地过滤）
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase();
-    tasks = tasks.filter((t) => t.title.toLowerCase().includes(keyword));
-  }
-
-  return tasks;
-});
+// 分页信息
+const pagination = computed(() => taskStore.pagination);
 
 // 格式化日期
 const formatDate = (dateStr: string) => {
@@ -102,6 +90,8 @@ const handleDelete = async (task: Task, e: MouseEvent) => {
   try {
     await taskStore.deleteTask(task.uuid);
     message.success('删除成功');
+    // 删除后重新获取当前页数据
+    fetchData();
   } catch {
     message.error('删除失败');
   }
@@ -182,13 +172,44 @@ const rowProps = (row: Task) => ({
   onClick: () => handleRowClick(row),
 });
 
-// 组件挂载时获取任务列表
-onMounted(async () => {
+// 获取数据
+async function fetchData(page?: number) {
   try {
-    await taskStore.fetchTasks();
+    await taskStore.fetchTasks({
+      keyword: searchKeyword.value || undefined,
+      favorite: filterMode.value === 'favorite' ? true : undefined,
+      page: page ?? pagination.value.page,
+      pageSize: pagination.value.pageSize,
+    });
   } catch {
     message.error('获取任务列表失败');
   }
+}
+
+// 处理分页变化
+function handlePageChange(page: number) {
+  fetchData(page);
+}
+
+// 处理每页数量变化
+function handlePageSizeChange(pageSize: number) {
+  taskStore.pagination.pageSize = pageSize;
+  fetchData(1);
+}
+
+// 搜索
+function handleSearch() {
+  fetchData(1);
+}
+
+// 监听筛选模式变化
+watch(filterMode, () => {
+  fetchData(1);
+});
+
+// 组件挂载时获取任务列表
+onMounted(() => {
+  fetchData(1);
 });
 </script>
 
@@ -208,6 +229,8 @@ onMounted(async () => {
         placeholder="搜索任务..."
         clearable
         style="max-width: 300px"
+        @keyup.enter="handleSearch"
+        @clear="handleSearch"
       >
         <template #prefix>
           <NIcon :component="SearchOutline" />
@@ -237,15 +260,25 @@ onMounted(async () => {
     <!-- 任务表格 -->
     <NDataTable
       :columns="columns"
-      :data="filteredTasks"
+      :data="tasks"
       :loading="loading"
       :row-props="rowProps"
       :bordered="false"
+      :pagination="{
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        pageCount: Math.ceil(pagination.total / pagination.pageSize),
+        showSizePicker: true,
+        pageSizes: [10, 20, 50, 100],
+        onUpdatePage: handlePageChange,
+        onUpdatePageSize: handlePageSizeChange,
+      }"
+      remote
       striped
     />
 
     <!-- 空状态 -->
-    <div v-if="!loading && filteredTasks.length === 0" class="text-empty py-12 text-center">
+    <div v-if="!loading && tasks.length === 0" class="text-empty py-12 text-center">
       {{ filterMode === 'favorite' ? '暂无收藏任务' : '暂无任务' }}
     </div>
   </div>

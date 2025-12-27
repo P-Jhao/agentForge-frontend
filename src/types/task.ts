@@ -166,6 +166,8 @@ export interface UpdateTaskParams {
 export interface GetTasksParams {
   keyword?: string;
   favorite?: boolean;
+  page?: number;
+  pageSize?: number;
 }
 
 // SSE 消息类型

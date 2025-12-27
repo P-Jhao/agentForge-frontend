@@ -11,11 +11,25 @@ import {
 } from '@/utils';
 import type { Task, GroupedTasks, UpdateTaskParams } from '@/types';
 
+// 分页信息
+interface Pagination {
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export const useTaskStore = defineStore('task', () => {
   // ========== 状态 ==========
 
   // 任务列表
   const tasks = ref<Task[]>([]);
+
+  // 分页信息
+  const pagination = ref<Pagination>({
+    total: 0,
+    page: 1,
+    pageSize: 10,
+  });
 
   // 当前选中的任务 UUID
   const currentTaskUuid = ref<string | null>(null);
@@ -71,16 +85,25 @@ export const useTaskStore = defineStore('task', () => {
   // ========== 方法 ==========
 
   /**
-   * 获取任务列表
+   * 获取任务列表（支持分页）
    */
-  async function fetchTasks(keyword?: string, favorite?: boolean) {
+  async function fetchTasks(options?: {
+    keyword?: string;
+    favorite?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) {
     loading.value = true;
     try {
       const params: Record<string, unknown> = {};
-      if (keyword) params.keyword = keyword;
-      if (favorite !== undefined) params.favorite = favorite;
+      if (options?.keyword) params.keyword = options.keyword;
+      if (options?.favorite !== undefined) params.favorite = options.favorite;
+      params.page = options?.page ?? pagination.value.page;
+      params.pageSize = options?.pageSize ?? pagination.value.pageSize;
 
-      tasks.value = await fetchTasksApi(params);
+      const result = await fetchTasksApi(params);
+      tasks.value = result.tasks;
+      pagination.value = result.pagination;
     } catch (error) {
       console.error('获取任务列表失败:', error);
       throw error;
@@ -269,6 +292,7 @@ export const useTaskStore = defineStore('task', () => {
   return {
     // 状态
     tasks,
+    pagination,
     currentTaskUuid,
     loading,
 
