@@ -299,7 +299,7 @@ onMounted(() => {
         :pagination="{
           page: pagination.page,
           pageSize: pagination.pageSize,
-          itemCount: pagination.total,
+          pageCount: Math.ceil(pagination.total / pagination.pageSize),
           showSizePicker: pagination.showSizePicker,
           pageSizes: pagination.pageSizes,
           onUpdatePage: handlePageChange,
@@ -307,6 +307,7 @@ onMounted(() => {
         }"
         :scroll-x="900"
         :max-height="'calc(100vh - 320px)'"
+        remote
         @update:sorter="handleSorterChange"
       />
     </div>
