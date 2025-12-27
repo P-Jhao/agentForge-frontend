@@ -44,7 +44,10 @@ export interface AdminTaskListParams {
  * 获取所有任务列表（管理员）
  */
 export async function getAdminTaskList(params: AdminTaskListParams = {}) {
-  const res = await http.get<AdminTaskListResponse>('/admin/task/list', { params });
+  const res = await http.get<AdminTaskListResponse>(
+    '/admin/task/list',
+    params as Record<string, unknown>
+  );
   return res.data;
 }
 
