@@ -9,14 +9,13 @@ import {
   NInput,
   NDatePicker,
   NButton,
-  NSpace,
   NIcon,
   NPopconfirm,
   NTag,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
-import { SearchOutline, RefreshOutline, EyeOutline, TrashOutline } from '@vicons/ionicons5';
+import { SearchOutline, RefreshOutline } from '@vicons/ionicons5';
 import {
   getAdminTaskList,
   deleteAdminTask,
@@ -123,18 +122,15 @@ const columns = computed<DataTableColumns<AdminTaskItem>>(() => [
     width: 120,
     fixed: 'right',
     render: (row) =>
-      h(NSpace, { size: 'small' }, () => [
+      h('div', { style: 'display: flex; gap: 12px;' }, [
         h(
           NButton,
           {
-            size: 'small',
-            quaternary: true,
+            text: true,
+            type: 'primary',
             onClick: () => handleView(row),
           },
-          {
-            icon: () => h(NIcon, { component: EyeOutline }),
-            default: () => '查看',
-          }
+          () => '查看'
         ),
         h(
           NPopconfirm,
@@ -146,14 +142,10 @@ const columns = computed<DataTableColumns<AdminTaskItem>>(() => [
               h(
                 NButton,
                 {
-                  size: 'small',
-                  quaternary: true,
-                  type: 'error',
+                  text: true,
+                  type: 'primary',
                 },
-                {
-                  icon: () => h(NIcon, { component: TrashOutline }),
-                  default: () => '删除',
-                }
+                () => '删除'
               ),
             default: () => '确定要删除这个任务吗？',
           }
@@ -273,7 +265,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
+  <div>
     <!-- 页面标题 -->
     <h1 class="text-theme mb-3 text-xl font-bold">任务管理</h1>
 
@@ -283,7 +275,6 @@ onMounted(() => {
         v-model:value="keyword"
         placeholder="搜索任务名称、创建者..."
         style="width: 240px"
-        size="small"
         clearable
         @keyup.enter="handleSearch"
       >
@@ -296,20 +287,19 @@ onMounted(() => {
         v-model:value="dateRange"
         type="daterange"
         clearable
-        size="small"
         style="width: 280px"
         start-placeholder="开始日期"
         end-placeholder="结束日期"
       />
 
-      <NButton type="primary" size="small" @click="handleSearch">
+      <NButton type="primary" @click="handleSearch">
         <template #icon>
           <NIcon :component="SearchOutline" />
         </template>
         搜索
       </NButton>
 
-      <NButton size="small" @click="handleReset">
+      <NButton @click="handleReset">
         <template #icon>
           <NIcon :component="RefreshOutline" />
         </template>
@@ -318,26 +308,22 @@ onMounted(() => {
     </div>
 
     <!-- 任务表格 -->
-    <div class="min-h-0 flex-1">
-      <NDataTable
-        :columns="columns"
-        :data="tasks"
-        :loading="loading"
-        :pagination="{
-          page: pagination.page,
-          pageSize: pagination.pageSize,
-          pageCount: Math.ceil(pagination.total / pagination.pageSize),
-          showSizePicker: pagination.showSizePicker,
-          pageSizes: pagination.pageSizes,
-          onUpdatePage: handlePageChange,
-          onUpdatePageSize: handlePageSizeChange,
-        }"
-        :scroll-x="900"
-        :max-height="'calc(100vh - 280px)'"
-        size="small"
-        remote
-        @update:sorter="handleSorterChange"
-      />
-    </div>
+    <NDataTable
+      :columns="columns"
+      :data="tasks"
+      :loading="loading"
+      :pagination="{
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        pageCount: Math.ceil(pagination.total / pagination.pageSize),
+        showSizePicker: pagination.showSizePicker,
+        pageSizes: pagination.pageSizes,
+        onUpdatePage: handlePageChange,
+        onUpdatePageSize: handlePageSizeChange,
+      }"
+      :scroll-x="900"
+      remote
+      @update:sorter="handleSorterChange"
+    />
   </div>
 </template>
