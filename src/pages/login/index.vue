@@ -41,9 +41,21 @@ async function handleLogin() {
   try {
     await userStore.login(formData.value.username, formData.value.password);
     message.success('登录成功');
-    // 获取重定向路径，默认跳转首页
-    const redirect = (router.currentRoute.value.query.redirect as string) || '/';
-    router.push(redirect);
+
+    // 根据角色决定跳转路径
+    if (userStore.isOperator) {
+      // operator 登录后跳转到后台管理
+      router.push('/admin');
+    } else {
+      // 其他用户获取重定向路径，默认跳转首页
+      const redirect = (router.currentRoute.value.query.redirect as string) || '/';
+      // 如果重定向路径是 /admin，普通用户跳转首页
+      if (redirect.startsWith('/admin')) {
+        router.push('/');
+      } else {
+        router.push(redirect);
+      }
+    }
   } catch (error: unknown) {
     const err = error as { message?: string };
     message.error(err.message || '登录失败');

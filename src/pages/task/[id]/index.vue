@@ -4,11 +4,12 @@
  * 展示与 AI 的对话过程
  */
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
-import { useRoute } from 'vue-router';
-import { NIcon } from 'naive-ui';
+import { useRoute, useRouter } from 'vue-router';
+import { NIcon, useMessage } from 'naive-ui';
 import { ArrowDownOutline } from '@vicons/ionicons5';
 import { useChat } from '@/composable/task';
-import { useTaskStore } from '@/stores';
+import { useTaskStore, useUserStore } from '@/stores';
+import { getTask } from '@/utils';
 import ChatInput from '@/components/ChatInput.vue';
 import SmartIterateReplyInput from '@/components/SmartIterateReplyInput.vue';
 import TaskHeader from './components/TaskHeader.vue';
@@ -16,7 +17,10 @@ import ChatMessageList from './components/ChatMessageList.vue';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 
 const route = useRoute();
+const router = useRouter();
+const message = useMessage();
 const taskStore = useTaskStore();
+const userStore = useUserStore();
 
 // 任务 UUID
 const taskId = computed(() => route.params.id as string);
@@ -45,6 +49,42 @@ const scrollToBottom = () => {
 // 强制滚动到底部（用户发送消息后使用，忽略用户滚动状态）
 const forceScrollToBottom = () => {
   messageListRef.value?.forceScrollToBottom();
+};
+
+// 检查任务访问权限
+const checkTaskPermission = async (uuid: string) => {
+  try {
+    await getTask(uuid);
+    return true;
+  } catch (error) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 403) {
+      message.error('此任务您无权限查看');
+      // 延迟后跳转
+      setTimeout(() => {
+        // operator 跳转到 /admin，其他用户跳转到首页
+        if (userStore.isOperator) {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
+      }, 2000);
+      return false;
+    }
+    // 其他错误（如 404）也处理
+    if (err.status === 404) {
+      message.error('任务不存在');
+      setTimeout(() => {
+        if (userStore.isOperator) {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
+      }, 2000);
+      return false;
+    }
+    return true;
+  }
 };
 
 // 使用 chat composable
@@ -93,8 +133,12 @@ const showSmartIterateReply = computed(() => needsSmartIterateReply());
 // 监听 taskId 变化，切换任务时重新初始化
 watch(
   taskId,
-  (newTaskId, oldTaskId) => {
+  async (newTaskId, oldTaskId) => {
     if (newTaskId && newTaskId !== oldTaskId) {
+      // 先检查权限
+      const hasPermission = await checkTaskPermission(newTaskId);
+      if (!hasPermission) return;
+
       // 断开当前 SSE 连接（不中断后端 LLM，让它继续运行）
       disconnectStream();
       // 清空当前消息，更新 taskId，重新初始化
