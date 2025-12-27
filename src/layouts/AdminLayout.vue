@@ -27,7 +27,7 @@ import AdminSidebar from './components/AdminSidebar.vue';
         content-class="flex-1"
         content-style="height: calc(100vh - 64px); overflow: hidden;"
       >
-        <div class="main-content-bg h-full overflow-y-auto p-6">
+        <div class="main-content-bg flex h-full flex-col overflow-hidden p-6">
           <RouterView />
         </div>
       </NLayoutContent>
