@@ -1,15 +1,24 @@
 <script setup lang="ts">
 /**
  * 任务对话页面头部
- * 展示 Forge 信息或默认信息，以及收藏按钮
+ * 展示 Forge 信息或默认信息，以及分享和收藏按钮
  */
-import { computed } from 'vue';
-import { NAvatar, NButton, NIcon } from 'naive-ui';
-import { StarOutline, Star } from '@vicons/ionicons5';
+import { ref, computed } from 'vue';
+import { NAvatar, NButton, NIcon, NTooltip } from 'naive-ui';
+import { StarOutline, Star, ShareSocialOutline } from '@vicons/ionicons5';
 import { useThemeStore, useTaskStore } from '@/stores';
+import ShareModal from './ShareModal.vue';
 
 const themeStore = useThemeStore();
 const taskStore = useTaskStore();
+
+// 分享弹窗显示状态
+const showShareModal = ref(false);
+
+// 打开分享弹窗
+const handleShare = () => {
+  showShareModal.value = true;
+};
 
 // 当前任务
 const currentTask = computed(() => taskStore.currentTask);
@@ -64,14 +73,39 @@ const titleClass = computed(() => ({
       <span class="font-medium" :class="titleClass">{{ displayName }}</span>
     </div>
 
-    <!-- 右侧：收藏按钮 -->
-    <NButton v-if="currentTask" quaternary circle @click="handleToggleFavorite">
-      <template #icon>
-        <NIcon :size="20" :class="isFavorite ? 'text-yellow-500' : ''">
-          <Star v-if="isFavorite" />
-          <StarOutline v-else />
-        </NIcon>
-      </template>
-    </NButton>
+    <!-- 右侧：分享和收藏按钮 -->
+    <div v-if="currentTask" class="flex items-center gap-1">
+      <!-- 分享按钮 -->
+      <NTooltip trigger="hover">
+        <template #trigger>
+          <NButton quaternary circle @click="handleShare">
+            <template #icon>
+              <NIcon :size="20">
+                <ShareSocialOutline />
+              </NIcon>
+            </template>
+          </NButton>
+        </template>
+        分享
+      </NTooltip>
+
+      <!-- 收藏按钮 -->
+      <NTooltip trigger="hover">
+        <template #trigger>
+          <NButton quaternary circle @click="handleToggleFavorite">
+            <template #icon>
+              <NIcon :size="20" :class="isFavorite ? 'text-yellow-500' : ''">
+                <Star v-if="isFavorite" />
+                <StarOutline v-else />
+              </NIcon>
+            </template>
+          </NButton>
+        </template>
+        {{ isFavorite ? '取消收藏' : '收藏' }}
+      </NTooltip>
+    </div>
+
+    <!-- 分享弹窗 -->
+    <ShareModal v-model:show="showShareModal" :task-id="currentTask?.uuid || ''" />
   </div>
 </template>

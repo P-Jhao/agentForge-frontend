@@ -2,17 +2,19 @@
 /**
  * 任务对话页面
  * 展示与 AI 的对话过程
+ * 支持分享链接访问（无需登录）
  */
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NIcon, NButton, useMessage } from 'naive-ui';
+import { NIcon, NButton, useMessage, NResult } from 'naive-ui';
 import { ArrowDownOutline } from '@vicons/ionicons5';
-import { useChat } from '@/composable/task';
+import { useChat, useShareChat } from '@/composable/task';
 import { useTaskStore, useUserStore } from '@/stores';
-import { getTask } from '@/utils';
+import { getTask, getSharedTask } from '@/utils';
 import ChatInput from '@/components/ChatInput.vue';
 import SmartIterateReplyInput from '@/components/SmartIterateReplyInput.vue';
 import TaskHeader from './components/TaskHeader.vue';
+import ShareHeader from './components/ShareHeader.vue';
 import ChatMessageList from './components/ChatMessageList.vue';
 import type { EnhanceMode } from '@/utils/enhanceMode';
 
@@ -25,8 +27,34 @@ const userStore = useUserStore();
 // 任务 UUID
 const taskId = computed(() => route.params.id as string);
 
+// 分享签名（如果有则为分享模式）
+const shareSign = computed(() => route.query.shareSign as string | undefined);
+
+// 是否为分享模式
+const isShareMode = computed(() => !!shareSign.value);
+
+// 分享模式下的任务信息
+const sharedTask = ref<{
+  title: string;
+  agent?: { displayName: string; avatar?: string };
+  ownerName?: string;
+} | null>(null);
+
+// 分享模式下的错误信息
+const shareError = ref<string | null>(null);
+
 // 当前任务关联的 Forge 信息
-const currentForge = computed(() => taskStore.currentTask?.agent || null);
+const currentForge = computed(() => {
+  if (isShareMode.value && sharedTask.value?.agent) {
+    // 分享模式下，构造一个兼容的 Forge 对象
+    return {
+      id: 0, // 分享模式下没有 id，使用 0 作为占位
+      displayName: sharedTask.value.agent.displayName,
+      avatar: sharedTask.value.agent.avatar || null,
+    };
+  }
+  return taskStore.currentTask?.agent || null;
+});
 
 // 消息列表组件引用
 const messageListRef = ref<InstanceType<typeof ChatMessageList> | null>(null);
@@ -51,7 +79,7 @@ const forceScrollToBottom = () => {
   messageListRef.value?.forceScrollToBottom();
 };
 
-// 检查任务访问权限
+// 检查任务访问权限（普通模式）
 const checkTaskPermission = async (uuid: string) => {
   try {
     const task = await getTask(uuid);
@@ -90,7 +118,33 @@ const checkTaskPermission = async (uuid: string) => {
   }
 };
 
-// 使用 chat composable
+// 加载分享任务信息
+const loadSharedTask = async (uuid: string, sign: string) => {
+  try {
+    const task = await getSharedTask(uuid, sign);
+    sharedTask.value = {
+      title: task.title,
+      agent: task.agent,
+      ownerName: task.ownerName,
+    };
+    // 分享模式下不是自己的任务
+    taskStore.isOwnTask = false;
+    shareError.value = null;
+    return true;
+  } catch (error) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 403) {
+      shareError.value = '分享链接已失效或无效';
+    } else if (err.status === 404) {
+      shareError.value = '任务不存在';
+    } else {
+      shareError.value = err.message || '加载失败';
+    }
+    return false;
+  }
+};
+
+// 使用 chat composable（普通模式）
 const {
   renderItems,
   inputValue,
@@ -108,6 +162,27 @@ const {
   taskId: taskId.value,
   onScrollToBottom: scrollToBottom,
   onForceScrollToBottom: forceScrollToBottom,
+});
+
+// 使用分享 chat composable（分享模式）
+const shareChat = shareSign.value
+  ? useShareChat({ taskId: taskId.value, shareSign: shareSign.value })
+  : null;
+
+// 根据模式选择渲染项
+const displayRenderItems = computed(() => {
+  if (isShareMode.value && shareChat) {
+    return shareChat.renderItems.value;
+  }
+  return renderItems.value;
+});
+
+// 根据模式选择加载状态
+const displayIsLoading = computed(() => {
+  if (isShareMode.value && shareChat) {
+    return shareChat.isLoading.value;
+  }
+  return isLoading.value;
 });
 
 // 处理发送事件
@@ -135,9 +210,21 @@ const showSmartIterateReply = computed(() => needsSmartIterateReply());
 
 // 监听 taskId 变化，切换任务时重新初始化
 watch(
-  taskId,
-  async (newTaskId, oldTaskId) => {
-    if (newTaskId && newTaskId !== oldTaskId) {
+  [taskId, shareSign],
+  async ([newTaskId, newShareSign], [oldTaskId]) => {
+    if (!newTaskId) return;
+
+    // 分享模式
+    if (newShareSign) {
+      const success = await loadSharedTask(newTaskId, newShareSign);
+      if (success && shareChat) {
+        await shareChat.loadMessages();
+      }
+      return;
+    }
+
+    // 普通模式
+    if (newTaskId !== oldTaskId) {
       // 先检查权限
       const hasPermission = await checkTaskPermission(newTaskId);
       if (!hasPermission) return;
@@ -155,68 +242,101 @@ watch(
 
 // 组件销毁前断开 SSE 连接（不中断后端 LLM）
 onBeforeUnmount(() => {
-  disconnectStream();
+  if (!isShareMode.value) {
+    disconnectStream();
+  }
 });
 </script>
 
 <template>
   <div class="-m-6 flex h-[calc(100%+48px)] flex-col overflow-hidden text-sm">
-    <!-- 头部（固定不滚动） -->
-    <TaskHeader />
+    <!-- 分享模式错误提示 -->
+    <div v-if="isShareMode && shareError" class="flex h-full items-center justify-center">
+      <NResult status="error" title="链接已失效" :description="shareError">
+        <template #footer>
+          <NButton @click="router.push('/')">返回首页</NButton>
+        </template>
+      </NResult>
+    </div>
 
-    <!-- 消息列表（可滚动区域） -->
-    <ChatMessageList
-      ref="messageListRef"
-      class="min-h-0 flex-1"
-      :render-items="renderItems"
-      :is-loading="isLoading"
-      :forge="currentForge"
-    />
+    <!-- 正常内容 -->
+    <template v-else>
+      <!-- 头部（固定不滚动） -->
+      <ShareHeader
+        v-if="isShareMode && sharedTask"
+        :title="sharedTask.title"
+        :forge="sharedTask.agent"
+        :owner-name="sharedTask.ownerName"
+      />
+      <TaskHeader v-else />
 
-    <!-- 输入区域（固定在底部） -->
-    <div class="relative shrink-0 px-4 pb-2">
-      <!-- 查看他人任务时的提示栏 -->
-      <div
-        v-if="!taskStore.isOwnTask"
-        class="mb-3 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3 text-sm dark:bg-blue-900/30"
-      >
-        <span class="text-gray-600 dark:text-gray-300">当前任务为他人任务，仅支持预览</span>
-        <NButton text type="primary" size="small" @click="router.push('/')">返回首页</NButton>
+      <!-- 消息列表（可滚动区域） -->
+      <ChatMessageList
+        ref="messageListRef"
+        class="min-h-0 flex-1"
+        :render-items="displayRenderItems"
+        :is-loading="displayIsLoading"
+        :forge="currentForge"
+      />
+
+      <!-- 输入区域（固定在底部，非分享模式显示） -->
+      <div v-if="!isShareMode" class="relative shrink-0 px-4 pb-2">
+        <!-- 查看他人任务时的提示栏 -->
+        <div
+          v-if="!taskStore.isOwnTask"
+          class="mb-3 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3 text-sm dark:bg-blue-900/30"
+        >
+          <span class="text-gray-600 dark:text-gray-300">当前任务为他人任务，仅支持预览</span>
+          <NButton text type="primary" size="small" @click="router.push('/')">返回首页</NButton>
+        </div>
+
+        <!-- 滚动到底部按钮 -->
+        <Transition name="fade">
+          <button
+            v-if="showScrollToBottomBtn"
+            class="scroll-to-bottom-btn absolute -top-12 left-1/2 z-10 flex h-10 w-10 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none shadow-lg transition-all"
+            @click="handleScrollToBottomClick"
+          >
+            <NIcon :component="ArrowDownOutline" :size="20" />
+          </button>
+        </Transition>
+
+        <!-- 智能迭代回复输入框（当需要回复澄清问题时显示） -->
+        <SmartIterateReplyInput
+          v-if="showSmartIterateReply && taskStore.isOwnTask"
+          :loading="isLoading"
+          @submit="onSmartIterateReply"
+        />
+        <!-- 普通输入框（仅自己的任务显示） -->
+        <ChatInput
+          v-else-if="taskStore.isOwnTask"
+          :model-value="inputValue"
+          placeholder="输入消息..."
+          :loading="isLoading"
+          :show-stop-button="isStreaming"
+          @update:model-value="inputValue = $event"
+          @send="onSend"
+          @cancel="onCancel"
+        />
+        <!-- 免责声明（仅自己的任务显示） -->
+        <p v-if="taskStore.isOwnTask" class="mt-2 text-center text-xs text-gray-400">
+          AI 生成，仅供参考
+        </p>
       </div>
 
-      <!-- 滚动到底部按钮 -->
-      <Transition name="fade">
-        <button
-          v-if="showScrollToBottomBtn"
-          class="scroll-to-bottom-btn absolute -top-12 left-1/2 z-10 flex h-10 w-10 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-none shadow-lg transition-all"
-          @click="handleScrollToBottomClick"
-        >
-          <NIcon :component="ArrowDownOutline" :size="20" />
-        </button>
-      </Transition>
-
-      <!-- 智能迭代回复输入框（当需要回复澄清问题时显示） -->
-      <SmartIterateReplyInput
-        v-if="showSmartIterateReply && taskStore.isOwnTask"
-        :loading="isLoading"
-        @submit="onSmartIterateReply"
-      />
-      <!-- 普通输入框（仅自己的任务显示） -->
-      <ChatInput
-        v-else-if="taskStore.isOwnTask"
-        :model-value="inputValue"
-        placeholder="输入消息..."
-        :loading="isLoading"
-        :show-stop-button="isStreaming"
-        @update:model-value="inputValue = $event"
-        @send="onSend"
-        @cancel="onCancel"
-      />
-      <!-- 免责声明（仅自己的任务显示） -->
-      <p v-if="taskStore.isOwnTask" class="mt-2 text-center text-xs text-gray-400">
-        AI 生成，仅供参考
-      </p>
-    </div>
+      <!-- 分享模式底部提示 -->
+      <div
+        v-if="isShareMode"
+        class="shrink-0 border-t border-gray-200 px-4 py-3 text-center dark:border-gray-700"
+      >
+        <p class="text-theme-muted text-xs">
+          当前正在查看他人任务，无法发送消息 ·
+          <button class="text-primary-500 hover:underline" @click="router.push('/')">
+            回到首页
+          </button>
+        </p>
+      </div>
+    </template>
   </div>
 </template>
 

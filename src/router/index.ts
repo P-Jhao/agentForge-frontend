@@ -31,8 +31,17 @@ router.beforeEach(async (to, _from, next) => {
 
   const token = localStorage.getItem('forgeToken');
 
+  // 检查是否是分享链接访问（带有 shareSign 参数）
+  const isShareAccess = !!to.query.shareSign;
+
   // 检查是否需要登录
   if (to.meta.requiresAuth || to.meta.requiresOperator) {
+    // 分享链接访问任务详情或回放页面时，跳过登录验证
+    if (isShareAccess && (to.name === 'TaskDetail' || to.name === 'TaskReplay')) {
+      next();
+      return;
+    }
+
     if (!token) {
       // 未登录，跳转到登录页，并记录原目标路径
       next({

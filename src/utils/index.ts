@@ -11,3 +11,4 @@ export * from './enhanceMode';
 export * from './featuredApi';
 export * from './intentApi';
 export * from './crypto';
+export * from './shareApi';

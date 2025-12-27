@@ -2,10 +2,11 @@
 /**
  * 任务回放页面
  * 以动画效果重新播放历史对话
+ * 支持分享链接访问（无需登录）
  */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NIcon, NButton, NSpace, NSpin, NDropdown } from 'naive-ui';
+import { NIcon, NButton, NSpace, NSpin, NDropdown, NResult, NTag } from 'naive-ui';
 import {
   PlayOutline,
   PauseOutline,
@@ -13,7 +14,7 @@ import {
   ArrowBackOutline,
   SpeedometerOutline,
 } from '@vicons/ionicons5';
-import { createStreamRequest } from '@/utils';
+import { createStreamRequest, getSharedMessages, getSharedTask } from '@/utils';
 import { useTaskStore } from '@/stores';
 import ChatMessageList from './components/ChatMessageList.vue';
 import type { FlatMessage, TaskSSEChunk } from '@/types';
@@ -34,13 +35,43 @@ const taskStore = useTaskStore();
 // 任务 UUID
 const taskId = computed(() => route.params.id as string);
 
+// 分享签名（如果有则为分享模式）
+const shareSign = computed(() => route.query.shareSign as string | undefined);
+
+// 是否为分享模式
+const isShareMode = computed(() => !!shareSign.value);
+
+// 分享模式下的任务信息
+const sharedTask = ref<{
+  title: string;
+  agent?: { displayName: string; avatar?: string };
+} | null>(null);
+
+// 分享模式下的错误信息
+const shareError = ref<string | null>(null);
+
 // 当前任务信息
 const currentTask = computed(() => {
+  if (isShareMode.value && sharedTask.value) {
+    return sharedTask.value;
+  }
   return taskStore.tasks.find((t) => t.uuid === taskId.value);
 });
 
 // 当前任务关联的 Forge 信息
-const currentForge = computed(() => currentTask.value?.agent || null);
+const currentForge = computed(() => {
+  if (isShareMode.value && sharedTask.value?.agent) {
+    // 分享模式下，构造一个兼容的 Forge 对象
+    return {
+      id: 0, // 分享模式下没有 id，使用 0 作为占位
+      displayName: sharedTask.value.agent.displayName,
+      avatar: sharedTask.value.agent.avatar || null,
+    };
+  }
+  // 普通模式下，从 taskStore 获取
+  const task = taskStore.tasks.find((t) => t.uuid === taskId.value);
+  return task?.agent || null;
+});
 
 // 加载状态
 const loading = ref(true);
@@ -88,6 +119,32 @@ const speedOptions = [
  */
 function getToken() {
   return localStorage.getItem('forgeToken') || '';
+}
+
+/**
+ * 加载分享任务信息
+ */
+async function loadSharedTask() {
+  if (!shareSign.value) return false;
+  try {
+    const task = await getSharedTask(taskId.value, shareSign.value);
+    sharedTask.value = {
+      title: task.title,
+      agent: task.agent,
+    };
+    shareError.value = null;
+    return true;
+  } catch (error) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 403) {
+      shareError.value = '分享链接已失效或无效';
+    } else if (err.status === 404) {
+      shareError.value = '任务不存在';
+    } else {
+      shareError.value = err.message || '加载失败';
+    }
+    return false;
+  }
 }
 
 /**
@@ -157,9 +214,9 @@ function convertToRenderItem(msg: FlatMessage, emptyContent = false): RenderItem
 }
 
 /**
- * 通过 SSE 加载历史消息
+ * 通过 SSE 加载历史消息（普通模式）
  */
-async function loadHistory() {
+async function loadHistorySSE() {
   loading.value = true;
   error.value = null;
 
@@ -189,6 +246,42 @@ async function loadHistory() {
 
   abortRequest = abort;
   await promise;
+}
+
+/**
+ * 通过分享 API 加载历史消息（分享模式）
+ */
+async function loadHistoryShare() {
+  if (!shareSign.value) return;
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const result = await getSharedMessages(taskId.value, shareSign.value);
+    historyMessages.value = result.messages as FlatMessage[];
+  } catch (err) {
+    const e = err as { message?: string; status?: number };
+    if (e.status === 403) {
+      error.value = '分享链接已失效或无效';
+    } else if (e.status === 404) {
+      error.value = '任务不存在';
+    } else {
+      error.value = e.message || '加载失败';
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
+/**
+ * 加载历史消息（根据模式选择）
+ */
+async function loadHistory() {
+  if (isShareMode.value) {
+    await loadHistoryShare();
+  } else {
+    await loadHistorySSE();
+  }
 }
 
 /**
@@ -394,10 +487,17 @@ function handleSpeedSelect(key: number) {
 
 // 组件挂载时加载历史消息并自动播放
 onMounted(async () => {
-  // 确保任务列表已加载
-  if (taskStore.tasks.length === 0) {
-    await taskStore.fetchTasks();
+  // 分享模式：先加载任务信息
+  if (isShareMode.value) {
+    const success = await loadSharedTask();
+    if (!success) return;
+  } else {
+    // 普通模式：确保任务列表已加载
+    if (taskStore.tasks.length === 0) {
+      await taskStore.fetchTasks();
+    }
   }
+
   await loadHistory();
   // 加载完成后自动开始播放
   if (historyMessages.value.length > 0) {
@@ -424,95 +524,110 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="-m-6 flex h-[calc(100%+48px)] flex-col overflow-hidden text-sm">
-    <!-- 头部 -->
-    <div
-      class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700"
-    >
-      <div class="flex items-center gap-3">
-        <NButton quaternary circle size="small" @click="goBack">
-          <template #icon>
-            <NIcon :component="ArrowBackOutline" />
-          </template>
-        </NButton>
-        <div>
-          <h1 class="text-base font-medium">
-            {{ currentTask?.title || '任务回放' }}
-          </h1>
-          <p class="text-theme-muted text-xs">回放模式 · 只读</p>
-        </div>
-      </div>
-
-      <!-- 播放控制 -->
-      <NSpace align="center" :size="12">
-        <!-- 速度控制（下拉菜单） -->
-        <NDropdown :options="speedOptions" trigger="click" @select="handleSpeedSelect">
-          <NButton quaternary size="small">
-            <template #icon>
-              <NIcon :component="SpeedometerOutline" />
-            </template>
-            {{ playbackSpeed }}x
-          </NButton>
-        </NDropdown>
-
-        <!-- 重置按钮 -->
-        <NButton quaternary circle size="small" :disabled="currentIndex === 0" @click="resetPlay">
-          <template #icon>
-            <NIcon :component="RefreshOutline" />
-          </template>
-        </NButton>
-
-        <!-- 播放/暂停按钮 -->
-        <NButton
-          type="primary"
-          circle
-          :disabled="loading || historyMessages.length === 0"
-          @click="togglePlay"
-        >
-          <template #icon>
-            <NIcon :component="isPlaying && !isPaused ? PauseOutline : PlayOutline" />
-          </template>
-        </NButton>
-      </NSpace>
+    <!-- 分享模式错误提示 -->
+    <div v-if="isShareMode && shareError" class="flex h-full items-center justify-center">
+      <NResult status="error" title="链接已失效" :description="shareError">
+        <template #footer>
+          <NButton @click="router.push('/')">返回首页</NButton>
+        </template>
+      </NResult>
     </div>
 
-    <!-- 消息列表 -->
-    <div class="relative min-h-0 flex-1">
-      <!-- 加载状态 -->
-      <div v-if="loading" class="flex h-full items-center justify-center">
-        <NSpin size="large" />
-      </div>
-
-      <!-- 错误状态 -->
-      <div v-else-if="error" class="flex h-full flex-col items-center justify-center gap-4">
-        <p class="text-red-500">{{ error }}</p>
-        <NButton @click="loadHistory">重试</NButton>
-      </div>
-
-      <!-- 空状态 -->
+    <!-- 正常内容 -->
+    <template v-else>
+      <!-- 头部 -->
       <div
-        v-else-if="historyMessages.length === 0"
-        class="text-theme-muted flex h-full items-center justify-center"
+        class="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700"
       >
-        暂无历史消息
+        <div class="flex items-center gap-3">
+          <NButton quaternary circle size="small" @click="goBack">
+            <template #icon>
+              <NIcon :component="ArrowBackOutline" />
+            </template>
+          </NButton>
+          <div>
+            <h1 class="text-base font-medium">
+              {{ currentTask?.title || '任务回放' }}
+            </h1>
+            <p class="text-theme-muted flex items-center gap-2 text-xs">
+              回放模式 · 只读
+              <NTag v-if="isShareMode" type="info" size="tiny" round>分享链接</NTag>
+            </p>
+          </div>
+        </div>
+
+        <!-- 播放控制 -->
+        <NSpace align="center" :size="12">
+          <!-- 速度控制（下拉菜单） -->
+          <NDropdown :options="speedOptions" trigger="click" @select="handleSpeedSelect">
+            <NButton quaternary size="small">
+              <template #icon>
+                <NIcon :component="SpeedometerOutline" />
+              </template>
+              {{ playbackSpeed }}x
+            </NButton>
+          </NDropdown>
+
+          <!-- 重置按钮 -->
+          <NButton quaternary circle size="small" :disabled="currentIndex === 0" @click="resetPlay">
+            <template #icon>
+              <NIcon :component="RefreshOutline" />
+            </template>
+          </NButton>
+
+          <!-- 播放/暂停按钮 -->
+          <NButton
+            type="primary"
+            circle
+            :disabled="loading || historyMessages.length === 0"
+            @click="togglePlay"
+          >
+            <template #icon>
+              <NIcon :component="isPlaying && !isPaused ? PauseOutline : PlayOutline" />
+            </template>
+          </NButton>
+        </NSpace>
       </div>
 
       <!-- 消息列表 -->
-      <ChatMessageList
-        v-else
-        ref="messageListRef"
-        class="h-full"
-        :render-items="renderItems"
-        :is-loading="false"
-        :forge="currentForge"
-      />
-    </div>
+      <div class="relative min-h-0 flex-1">
+        <!-- 加载状态 -->
+        <div v-if="loading" class="flex h-full items-center justify-center">
+          <NSpin size="large" />
+        </div>
 
-    <!-- 底部提示 -->
-    <div class="shrink-0 border-t border-gray-200 px-4 py-3 text-center dark:border-gray-700">
-      <p class="text-theme-muted text-xs">
-        回放模式下无法发送消息 ·
-        <button class="text-primary-500 hover:underline" @click="goBack">回到首页</button>
-      </p>
-    </div>
+        <!-- 错误状态 -->
+        <div v-else-if="error" class="flex h-full flex-col items-center justify-center gap-4">
+          <p class="text-red-500">{{ error }}</p>
+          <NButton @click="loadHistory">重试</NButton>
+        </div>
+
+        <!-- 空状态 -->
+        <div
+          v-else-if="historyMessages.length === 0"
+          class="text-theme-muted flex h-full items-center justify-center"
+        >
+          暂无历史消息
+        </div>
+
+        <!-- 消息列表 -->
+        <ChatMessageList
+          v-else
+          ref="messageListRef"
+          class="h-full"
+          :render-items="renderItems"
+          :is-loading="false"
+          :forge="currentForge"
+        />
+      </div>
+
+      <!-- 底部提示 -->
+      <div class="shrink-0 border-t border-gray-200 px-4 py-3 text-center dark:border-gray-700">
+        <p class="text-theme-muted text-xs">
+          回放模式下无法发送消息 ·
+          <button class="text-primary-500 hover:underline" @click="goBack">回到首页</button>
+        </p>
+      </div>
+    </template>
   </div>
 </template>
