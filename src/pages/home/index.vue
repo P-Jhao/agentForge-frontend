@@ -6,7 +6,6 @@
  */
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { NTag } from 'naive-ui';
 import ChatInput from '@/components/ChatInput.vue';
 import FeaturedTaskCard from '@/components/FeaturedTaskCard.vue';
 import XScroll from '@/components/XScroll.vue';
@@ -138,18 +137,6 @@ const handleSend = async (
   }
   router.push(`/task/${taskId}`);
 };
-
-// 快速分类标签
-const categories = [
-  '推荐',
-  '渗透测试',
-  '代码审计',
-  '应急响应',
-  '安全咨询',
-  '数字教师',
-  'MSS运营',
-  '主机安全',
-];
 
 // 统计数据
 const stats = [
@@ -298,20 +285,6 @@ onMounted(() => {
           @send="handleSend"
           @update:model-value="handleInputChange"
         />
-      </div>
-
-      <!-- 快速分类 -->
-      <div class="flex flex-wrap gap-2">
-        <NTag
-          v-for="(category, index) in categories"
-          :key="category"
-          :type="index === 0 ? 'primary' : 'default'"
-          round
-          :bordered="false"
-          class="cursor-pointer"
-        >
-          {{ category }}
-        </NTag>
       </div>
 
       <!-- 推荐示例 -->
