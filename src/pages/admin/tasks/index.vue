@@ -75,8 +75,7 @@ const columns = computed<DataTableColumns<AdminTaskItem>>(() => [
         : tokenSortOrder.value === 'desc'
           ? 'descend'
           : false,
-    render: (row) =>
-      row.totalTokens > 0 ? `累积 ${row.totalTokens.toLocaleString()} tokens` : '-',
+    render: (row) => (row.totalTokens > 0 ? `${row.totalTokens.toLocaleString()} tokens` : '-'),
   },
   {
     title: '创建时间',
