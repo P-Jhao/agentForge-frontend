@@ -33,6 +33,11 @@ const formattedTokens = computed(() => {
   return total.toLocaleString('zh-CN');
 });
 
+// 是否有 token 数据（totalTokens > 0 才显示）
+const hasTokenData = computed(() => {
+  return props.data.accumulatedTokens && props.data.accumulatedTokens.totalTokens > 0;
+});
+
 // 复制功能（占位）
 const handleCopy = () => {
   console.log('[TurnEndBar] 复制按钮点击');
@@ -97,10 +102,10 @@ const handleThumbsDown = () => {
     <span>{{ formattedTime }}</span>
 
     <!-- 分隔符 -->
-    <span class="separator">|</span>
+    <span v-if="hasTokenData" class="separator">|</span>
 
-    <!-- Token 消耗 -->
-    <span>累积 {{ formattedTokens }} tokens</span>
+    <!-- Token 消耗（仅在有数据时显示） -->
+    <span v-if="hasTokenData">累积 {{ formattedTokens }} tokens</span>
   </div>
 </template>
 

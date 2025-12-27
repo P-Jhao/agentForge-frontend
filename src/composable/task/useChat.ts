@@ -91,7 +91,7 @@ export interface ToolCallMessageData extends BaseMessageData {
 export interface TurnEndMessageData extends BaseMessageData {
   type: 'turn_end';
   completedAt: string; // ISO 8601 格式
-  accumulatedTokens: TokenUsage;
+  accumulatedTokens?: TokenUsage; // 可选，中断时可能没有
 }
 
 // 消息数据联合类型
@@ -722,6 +722,20 @@ export function useChat(options: UseChatOptions) {
         data.aborted = true; // 标记为已中断
       }
     }
+
+    // 插入模拟的 turn_end 消息（不含 token 数据，等用户刷新后从数据库加载真实数据）
+    const turnEndId = `turn_end_${++idCounter}`;
+    const turnEndData: TurnEndMessageData = {
+      id: turnEndId,
+      type: 'turn_end',
+      completedAt: new Date().toISOString(),
+      // 不设置 accumulatedTokens，前端会隐藏 token 显示
+    };
+    renderItems.value.push({
+      id: turnEndId,
+      type: 'turn_end',
+      data: turnEndData,
+    });
 
     // 重置状态
     isLoading.value = false;
