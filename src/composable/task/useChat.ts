@@ -651,6 +651,8 @@ export function useChat(options: UseChatOptions) {
         const taskStore = useTaskStore();
         taskStore.addTask(task);
         taskStore.setCurrentTask(taskId);
+        // 新创建的任务是自己的
+        taskStore.isOwnTask = true;
       } catch {
         console.log('任务可能已存在，继续发送消息');
         const taskStore = useTaskStore();

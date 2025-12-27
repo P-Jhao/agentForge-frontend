@@ -39,6 +39,9 @@ export const useTaskStore = defineStore('task', () => {
   // 加载状态
   const loading = ref(false);
 
+  // 当前任务是否为自己的任务（用于判断是否显示查看他人任务的提示）
+  const isOwnTask = ref(true);
+
   // 是否已初始化分页设置
   let pageSizeInitialized = false;
 
@@ -316,6 +319,7 @@ export const useTaskStore = defineStore('task', () => {
     pagination,
     currentTaskUuid,
     loading,
+    isOwnTask,
 
     // 计算属性
     currentTask,

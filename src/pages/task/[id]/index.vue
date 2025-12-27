@@ -5,7 +5,7 @@
  */
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NIcon, useMessage } from 'naive-ui';
+import { NIcon, NButton, useMessage } from 'naive-ui';
 import { ArrowDownOutline } from '@vicons/ionicons5';
 import { useChat } from '@/composable/task';
 import { useTaskStore, useUserStore } from '@/stores';
@@ -54,7 +54,10 @@ const forceScrollToBottom = () => {
 // 检查任务访问权限
 const checkTaskPermission = async (uuid: string) => {
   try {
-    await getTask(uuid);
+    const task = await getTask(uuid);
+    // 检查是否为自己的任务
+    const isOwnTask = task.userId === userStore.userInfo?.id;
+    taskStore.isOwnTask = isOwnTask;
     return true;
   } catch (error) {
     const err = error as { status?: number; message?: string };
@@ -171,7 +174,16 @@ onBeforeUnmount(() => {
     />
 
     <!-- 输入区域（固定在底部） -->
-    <div class="relative shrink-0 px-4 pt-4 pb-2">
+    <div class="relative shrink-0 px-4 pb-2">
+      <!-- 查看他人任务时的提示栏 -->
+      <div
+        v-if="!taskStore.isOwnTask"
+        class="mb-3 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3 text-sm dark:bg-blue-900/30"
+      >
+        <span class="text-gray-600 dark:text-gray-300">当前任务为他人任务，仅支持预览</span>
+        <NButton text type="primary" size="small" @click="router.push('/')">返回首页</NButton>
+      </div>
+
       <!-- 滚动到底部按钮 -->
       <Transition name="fade">
         <button
@@ -185,13 +197,13 @@ onBeforeUnmount(() => {
 
       <!-- 智能迭代回复输入框（当需要回复澄清问题时显示） -->
       <SmartIterateReplyInput
-        v-if="showSmartIterateReply"
+        v-if="showSmartIterateReply && taskStore.isOwnTask"
         :loading="isLoading"
         @submit="onSmartIterateReply"
       />
-      <!-- 普通输入框 -->
+      <!-- 普通输入框（仅自己的任务显示） -->
       <ChatInput
-        v-else
+        v-else-if="taskStore.isOwnTask"
         :model-value="inputValue"
         placeholder="输入消息..."
         :loading="isLoading"
@@ -200,8 +212,10 @@ onBeforeUnmount(() => {
         @send="onSend"
         @cancel="onCancel"
       />
-      <!-- 免责声明 -->
-      <p class="mt-2 text-center text-xs text-gray-400">AI 生成，仅供参考</p>
+      <!-- 免责声明（仅自己的任务显示） -->
+      <p v-if="taskStore.isOwnTask" class="mt-2 text-center text-xs text-gray-400">
+        AI 生成，仅供参考
+      </p>
     </div>
   </div>
 </template>
