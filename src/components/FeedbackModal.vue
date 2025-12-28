@@ -4,7 +4,7 @@
  * 用于用户对 AI 回复进行点赞或踩的反馈
  */
 import { ref, computed, watch } from 'vue';
-import { NModal, NButton, NInput, NTag, useMessage } from 'naive-ui';
+import { NModal, NButton, NInput, useMessage } from 'naive-ui';
 import { submitFeedback } from '@/utils/feedbackApi';
 
 // 点赞标签选项
@@ -117,56 +117,73 @@ async function handleSubmit() {
     :show="show"
     preset="card"
     :title="modalTitle"
-    style="width: 420px"
-    :mask-closable="false"
+    :mask-closable="true"
+    :bordered="false"
+    :segmented="{ content: true, footer: true }"
+    style="width: 640px"
+    :content-style="{ minHeight: '360px', display: 'flex', flexDirection: 'column' }"
     @update:show="emit('update:show', $event)"
   >
-    <!-- 标签选择区域 -->
-    <div class="mb-4">
-      <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-        {{ type === 'like' ? '哪些方面让您满意？' : '哪些方面需要改进？' }}
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <NTag
-          v-for="tag in tagOptions"
-          :key="tag"
-          :type="selectedTags.includes(tag) ? 'primary' : 'default'"
-          :bordered="!selectedTags.includes(tag)"
-          checkable
-          :checked="selectedTags.includes(tag)"
-          class="cursor-pointer"
-          @click="toggleTag(tag)"
-        >
-          {{ tag }}
-        </NTag>
-      </div>
-    </div>
+    <div style="display: flex; flex-direction: column; flex: 1">
+      <!-- 副标题 -->
+      <div class="mb-6 text-sm text-gray-500 dark:text-gray-400">您的反馈将帮助我们持续改进</div>
 
-    <!-- 详细内容输入 -->
-    <div class="mb-2">
-      <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">详细说明（选填）</div>
-      <NInput
-        v-model:value="content"
-        type="textarea"
-        placeholder="请输入您的具体反馈..."
-        :maxlength="500"
-        show-count
-        :rows="3"
-      />
+      <!-- 标签选择区域 -->
+      <div class="mb-6">
+        <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ type === 'like' ? '哪些方面让您满意？' : '哪些方面需要改进？' }}
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="tag in tagOptions"
+            :key="tag"
+            class="cursor-pointer rounded-md border px-3 py-1.5 text-sm transition-all duration-200 select-none hover:scale-105"
+            :class="
+              selectedTags.includes(tag)
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-gray-300 bg-gray-50 text-gray-600 hover:border-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
+            "
+            @click="toggleTag(tag)"
+          >
+            {{ tag }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 详细内容输入 -->
+      <div style="flex: 1; display: flex; flex-direction: column">
+        <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          详细说明（选填）
+        </div>
+        <NInput
+          v-model:value="content"
+          type="textarea"
+          placeholder="请输入您的具体反馈，帮助我们更好地改进..."
+          :maxlength="500"
+          show-count
+          :autosize="{ minRows: 6, maxRows: 10 }"
+          style="flex: 1"
+        />
+      </div>
     </div>
 
     <template #footer>
       <div class="flex justify-end gap-3">
-        <NButton @click="handleClose">取消</NButton>
+        <NButton size="medium" @click="handleClose">取消</NButton>
         <NButton
           type="primary"
+          size="medium"
           :loading="loading"
           :disabled="isSubmitDisabled"
           @click="handleSubmit"
         >
-          提交
+          提交反馈
         </NButton>
       </div>
     </template>
   </NModal>
 </template>
+
+<style scoped>
+/* 无需额外样式 */
+</style>
