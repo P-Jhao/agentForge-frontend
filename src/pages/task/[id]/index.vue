@@ -153,6 +153,8 @@ const loadSharedTask = async (uuid: string, sign: string) => {
     };
     // 分享模式下不是自己的任务
     taskStore.isOwnTask = false;
+    // 设置分享任务标题，供 LayoutHeader 显示
+    taskStore.setSharedTaskTitle(task.title);
     shareError.value = null;
     return true;
   } catch (error) {

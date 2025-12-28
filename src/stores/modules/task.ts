@@ -42,6 +42,9 @@ export const useTaskStore = defineStore('task', () => {
   // 当前任务是否为自己的任务（用于判断是否显示查看他人任务的提示）
   const isOwnTask = ref(true);
 
+  // 分享模式下的任务标题（用于 LayoutHeader 显示）
+  const sharedTaskTitle = ref<string | null>(null);
+
   // 是否已初始化分页设置
   let pageSizeInitialized = false;
 
@@ -67,10 +70,10 @@ export const useTaskStore = defineStore('task', () => {
   });
 
   // 是否有选中的任务
-  const hasCurrentTask = computed(() => !!currentTask.value);
+  const hasCurrentTask = computed(() => !!currentTask.value || !!sharedTaskTitle.value);
 
   // 当前任务名称
-  const currentTaskName = computed(() => currentTask.value?.title || '');
+  const currentTaskName = computed(() => currentTask.value?.title || sharedTaskTitle.value || '');
 
   // 收藏的任务
   const favoriteTasks = computed(() => tasks.value.filter((t) => t.favorite));
@@ -192,6 +195,14 @@ export const useTaskStore = defineStore('task', () => {
    */
   function clearCurrentTask() {
     currentTaskUuid.value = null;
+    sharedTaskTitle.value = null;
+  }
+
+  /**
+   * 设置分享任务标题（分享模式下使用）
+   */
+  function setSharedTaskTitle(title: string) {
+    sharedTaskTitle.value = title;
   }
 
   /**
@@ -320,6 +331,7 @@ export const useTaskStore = defineStore('task', () => {
     currentTaskUuid,
     loading,
     isOwnTask,
+    sharedTaskTitle,
 
     // 计算属性
     currentTask,
@@ -335,6 +347,7 @@ export const useTaskStore = defineStore('task', () => {
     deleteTask,
     setCurrentTask,
     clearCurrentTask,
+    setSharedTaskTitle,
     toggleFavorite,
     updateLocalTask,
     touchTask,
