@@ -439,7 +439,12 @@ watch(searchKeyword, (keyword) => {
                           "
                         />
                       </button>
-                      <div class="truncate pr-5 text-sm">{{ task.title }}</div>
+                      <NTooltip :delay="500">
+                        <template #trigger>
+                          <div class="truncate pr-5 text-sm">{{ task.title }}</div>
+                        </template>
+                        {{ task.title }}
+                      </NTooltip>
                       <div class="mt-1 flex h-6 items-center text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
                         <span class="ml-auto flex items-center">
@@ -493,7 +498,12 @@ watch(searchKeyword, (keyword) => {
                           "
                         />
                       </button>
-                      <div class="truncate pr-5 text-sm">{{ task.title }}</div>
+                      <NTooltip :delay="500">
+                        <template #trigger>
+                          <div class="truncate pr-5 text-sm">{{ task.title }}</div>
+                        </template>
+                        {{ task.title }}
+                      </NTooltip>
                       <div class="mt-1 flex h-6 items-center text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
                         <span class="ml-auto flex items-center">
@@ -547,7 +557,12 @@ watch(searchKeyword, (keyword) => {
                           "
                         />
                       </button>
-                      <div class="truncate pr-5 text-sm">{{ task.title }}</div>
+                      <NTooltip :delay="500">
+                        <template #trigger>
+                          <div class="truncate pr-5 text-sm">{{ task.title }}</div>
+                        </template>
+                        {{ task.title }}
+                      </NTooltip>
                       <div class="mt-1 flex h-6 items-center text-xs opacity-60">
                         <span>{{ getStatusText(task.status) }}</span>
                         <span class="ml-auto flex items-center">

@@ -63,14 +63,22 @@ const titleClass = computed(() => ({
 <template>
   <div class="flex items-center justify-between border-b px-6 py-3" :class="headerClass">
     <!-- 左侧：头像和名称 -->
-    <div class="flex items-center gap-3">
+    <div class="flex min-w-0 flex-1 items-center gap-3">
       <NAvatar
         :src="forgeAvatarUrl || '/favicon660x660nobackground.png'"
         :size="36"
         round
         object-fit="cover"
+        class="shrink-0"
       />
-      <span class="font-medium" :class="titleClass">{{ displayName }}</span>
+      <NTooltip :delay="500">
+        <template #trigger>
+          <span class="max-w-[400px] truncate font-medium" :class="titleClass">
+            {{ displayName }}
+          </span>
+        </template>
+        {{ displayName }}
+      </NTooltip>
     </div>
 
     <!-- 右侧：分享和收藏按钮 -->

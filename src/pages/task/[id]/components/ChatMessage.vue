@@ -82,6 +82,11 @@ const userInitial = computed(() => {
   return userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U';
 });
 
+// 获取用户头像 URL
+const userAvatarUrl = computed(() => {
+  return userStore.userInfo?.avatar || '';
+});
+
 // 处理反馈变更事件
 const handleFeedbackChange = (type: 'like' | 'dislike' | null) => {
   // 从 data 中获取 messageId（仅 turn_end 类型有）
@@ -112,9 +117,16 @@ const handleFeedbackChange = (type: 'like' | 'dislike' | null) => {
   <div v-else class="flex gap-3" :class="{ 'flex-row-reverse': isUserMessage }">
     <!-- 头像 -->
     <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
-      <!-- 用户头像：显示用户名首字母 -->
+      <!-- 用户头像：有头像显示图片，否则显示首字母 -->
       <NAvatar
-        v-if="isUserMessage"
+        v-if="isUserMessage && userAvatarUrl"
+        round
+        :size="32"
+        :src="userAvatarUrl"
+        class="user-avatar"
+      />
+      <NAvatar
+        v-else-if="isUserMessage"
         round
         :size="32"
         class="from-primary-500 to-accent-purple bg-linear-to-br text-white"
@@ -134,3 +146,10 @@ const handleFeedbackChange = (type: 'like' | 'dislike' | null) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 用户头像图片保持比例裁剪 */
+.user-avatar :deep(img) {
+  object-fit: cover;
+}
+</style>
