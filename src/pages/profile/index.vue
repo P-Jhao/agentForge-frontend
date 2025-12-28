@@ -131,20 +131,34 @@ function startEditNickname() {
   editingNickname.value = true;
 }
 
+// 名称最大长度
+const NICKNAME_MAX_LENGTH = 20;
+
 // 保存名称
 async function saveNickname() {
-  if (!nicknameForm.value.nickname.trim()) {
+  const nickname = nicknameForm.value.nickname.trim();
+
+  if (!nickname) {
     message.warning('名称不能为空');
     return;
   }
+
+  // 前端长度校验
+  if (nickname.length > NICKNAME_MAX_LENGTH) {
+    message.warning(`名称长度不能超过 ${NICKNAME_MAX_LENGTH} 字符`);
+    return;
+  }
+
   savingNickname.value = true;
   try {
-    await http.put('/user/profile', { nickname: nicknameForm.value.nickname });
-    userStore.updateLocalUserInfo({ nickname: nicknameForm.value.nickname });
+    await http.put('/user/profile', { nickname });
+    userStore.updateLocalUserInfo({ nickname });
     editingNickname.value = false;
     message.success('名称更新成功');
-  } catch {
-    message.error('名称更新失败');
+  } catch (error) {
+    // 显示后端返回的具体错误信息
+    const err = error as Error & { response?: { data?: { message?: string } } };
+    message.error(err.response?.data?.message || '名称更新失败');
   } finally {
     savingNickname.value = false;
   }
@@ -328,6 +342,8 @@ onMounted(async () => {
                         placeholder="请输入名称"
                         size="small"
                         class="flex-1"
+                        :maxlength="NICKNAME_MAX_LENGTH"
+                        show-count
                       />
                       <NButton
                         type="primary"

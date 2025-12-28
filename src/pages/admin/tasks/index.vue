@@ -3,7 +3,6 @@
  * 后台管理 - 任务管理页面
  */
 import { ref, computed, onMounted, h } from 'vue';
-import { useRouter } from 'vue-router';
 import {
   NDataTable,
   NInput,
@@ -23,7 +22,6 @@ import {
   type AdminTaskListParams,
 } from '@/utils/adminApi';
 
-const router = useRouter();
 const message = useMessage();
 
 // 加载状态
@@ -241,9 +239,9 @@ function handleReset() {
   fetchTasks();
 }
 
-// 查看任务
+// 查看任务（新标签页打开）
 function handleView(task: AdminTaskItem) {
-  router.push(`/task/${task.uuid}`);
+  window.open(`/task/${task.uuid}`, '_blank');
 }
 
 // 删除任务

@@ -23,11 +23,10 @@ import AdminSidebar from './components/AdminSidebar.vue';
       <!-- 内容区域 -->
       <NLayoutContent
         :native-scrollbar="false"
-        content-style="padding: 24px; height: calc(100vh - 64px);"
+        content-style="padding: 24px;"
+        class="main-content-bg"
       >
-        <div class="main-content-bg min-h-full">
-          <RouterView />
-        </div>
+        <RouterView />
       </NLayoutContent>
     </NLayout>
   </NLayout>

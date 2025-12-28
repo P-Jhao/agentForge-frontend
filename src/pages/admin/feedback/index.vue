@@ -3,7 +3,6 @@
  * 后台管理 - 反馈管理页面
  */
 import { ref, computed, onMounted, h } from 'vue';
-import { useRouter } from 'vue-router';
 import {
   NDataTable,
   NInput,
@@ -29,7 +28,6 @@ import {
   type AdminFeedbackListParams,
 } from '@/utils/adminApi';
 
-const router = useRouter();
 const message = useMessage();
 
 // 加载状态
@@ -102,7 +100,26 @@ const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
     title: '反馈人',
     key: 'user',
     width: 100,
-    render: (row) => row.user.nickname || row.user.username,
+    ellipsis: { tooltip: false },
+    render: (row) => {
+      const name = row.user.nickname || row.user.username;
+      return h(
+        NTooltip,
+        { trigger: 'hover' },
+        {
+          trigger: () =>
+            h(
+              'span',
+              {
+                style:
+                  'cursor: pointer; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;',
+              },
+              name
+            ),
+          default: () => name,
+        }
+      );
+    },
   },
   {
     title: '反馈类型',
@@ -255,9 +272,9 @@ function handleReset() {
   fetchFeedbacks();
 }
 
-// 查看任务
+// 查看任务（新标签页打开）
 function handleViewTask(feedback: AdminFeedbackItem) {
-  router.push(`/task/${feedback.task.uuid}`);
+  window.open(`/task/${feedback.task.uuid}`, '_blank');
 }
 
 // 组件挂载时获取数据
