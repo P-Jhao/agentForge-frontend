@@ -140,6 +140,9 @@ export interface Task {
   updatedAt: string;
   // 关联的 Forge 信息（从 Forge 创建的任务才有）
   agent?: TaskForge | null;
+  // 任务创建者信息（查看他人任务时返回）
+  ownerName?: string;
+  ownerAvatar?: string | null;
 }
 
 // 分组任务类型（侧边栏使用）

@@ -45,6 +45,8 @@ const isShareMode = computed(() => !!shareSign.value);
 const sharedTask = ref<{
   title: string;
   agent?: { displayName: string; avatar?: string };
+  ownerName?: string;
+  ownerAvatar?: string | null;
 } | null>(null);
 
 // 分享模式下的错误信息
@@ -131,6 +133,8 @@ async function loadSharedTask() {
     sharedTask.value = {
       title: task.title,
       agent: task.agent,
+      ownerName: task.ownerName,
+      ownerAvatar: task.ownerAvatar,
     };
     shareError.value = null;
     return true;
@@ -618,6 +622,8 @@ onBeforeUnmount(() => {
           :render-items="renderItems"
           :is-loading="false"
           :forge="currentForge"
+          :owner-avatar="isShareMode ? sharedTask?.ownerAvatar : null"
+          :owner-name="isShareMode ? sharedTask?.ownerName : null"
         />
       </div>
 

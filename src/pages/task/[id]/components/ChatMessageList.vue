@@ -15,10 +15,16 @@ interface Props {
   isLoading: boolean;
   // 关联的 Forge 信息（用于显示 AI 头像）
   forge?: TaskForge | null;
+  // 任务创建者头像（分享模式下使用）
+  ownerAvatar?: string | null;
+  // 任务创建者名称（分享模式下使用）
+  ownerName?: string | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   forge: null,
+  ownerAvatar: null,
+  ownerName: null,
 });
 
 const emit = defineEmits<{
@@ -154,6 +160,8 @@ const handleFeedbackChange = (messageId: number, type: 'like' | 'dislike' | null
       :data="item.data"
       :forge="forge"
       :chat-content="getItemChatContent(item, index)"
+      :owner-avatar="ownerAvatar"
+      :owner-name="ownerName"
       @feedback-change="handleFeedbackChange"
     />
 

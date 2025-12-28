@@ -42,6 +42,7 @@ export interface SharedTaskResponse {
     avatar?: string;
   };
   ownerName: string; // 任务所有者名称
+  ownerAvatar?: string | null; // 任务所有者头像
   shareMode: 'detail' | 'replay';
 }
 

@@ -38,6 +38,7 @@ const sharedTask = ref<{
   title: string;
   agent?: { displayName: string; avatar?: string };
   ownerName?: string;
+  ownerAvatar?: string | null;
 } | null>(null);
 
 // 分享模式下的错误信息
@@ -96,6 +97,18 @@ const checkTaskPermission = async (uuid: string) => {
     // 检查是否为自己的任务
     const isOwnTask = task.userId === userStore.userInfo?.id;
     taskStore.isOwnTask = isOwnTask;
+
+    // 如果是查看他人任务，将任务数据添加到 store 中
+    // 这样 taskStore.currentTask 才能正确获取到任务信息
+    if (!isOwnTask) {
+      // 检查任务是否已在列表中，避免重复添加
+      const existingTask = taskStore.tasks.find((t) => t.uuid === uuid);
+      if (!existingTask) {
+        taskStore.addTask(task);
+      }
+      // 设置当前任务
+      taskStore.setCurrentTask(uuid);
+    }
     return true;
   } catch (error) {
     const err = error as { status?: number; message?: string };
@@ -136,6 +149,7 @@ const loadSharedTask = async (uuid: string, sign: string) => {
       title: task.title,
       agent: task.agent,
       ownerName: task.ownerName,
+      ownerAvatar: task.ownerAvatar,
     };
     // 分享模式下不是自己的任务
     taskStore.isOwnTask = false;
@@ -278,11 +292,18 @@ onBeforeUnmount(() => {
     <!-- 正常内容 -->
     <template v-else>
       <!-- 头部（固定不滚动） -->
+      <!-- 分享模式或查看他人任务时使用 ShareHeader -->
       <ShareHeader
         v-if="isShareMode && sharedTask"
         :title="sharedTask.title"
         :forge="sharedTask.agent"
         :owner-name="sharedTask.ownerName"
+      />
+      <ShareHeader
+        v-else-if="!taskStore.isOwnTask && taskStore.currentTask"
+        :title="taskStore.currentTask.title"
+        :forge="currentForge"
+        :owner-name="taskStore.currentTask.ownerName"
       />
       <TaskHeader v-else />
 
@@ -294,20 +315,13 @@ onBeforeUnmount(() => {
         :is-loading="displayIsLoading"
         :forge="currentForge"
         :is-own-task="taskStore.isOwnTask && !isShareMode"
+        :owner-avatar="isShareMode ? sharedTask?.ownerAvatar : taskStore.currentTask?.ownerAvatar"
+        :owner-name="isShareMode ? sharedTask?.ownerName : taskStore.currentTask?.ownerName"
         @feedback-change="handleFeedbackChange"
       />
 
-      <!-- 输入区域（固定在底部，非分享模式显示） -->
-      <div v-if="!isShareMode" class="relative shrink-0 px-4 pb-2">
-        <!-- 查看他人任务时的提示栏 -->
-        <div
-          v-if="!taskStore.isOwnTask"
-          class="mb-3 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3 text-sm dark:bg-blue-900/30"
-        >
-          <span class="text-gray-600 dark:text-gray-300">当前任务为他人任务，仅支持预览</span>
-          <NButton text type="primary" size="small" @click="router.push('/')">返回首页</NButton>
-        </div>
-
+      <!-- 输入区域（固定在底部，自己的任务且非分享模式显示） -->
+      <div v-if="!isShareMode && taskStore.isOwnTask" class="relative shrink-0 px-4 pb-2">
         <!-- 滚动到底部按钮 -->
         <Transition name="fade">
           <button
@@ -342,13 +356,20 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <!-- 分享模式底部提示 -->
+      <!-- 查看他人任务底部提示（分享模式或管理员查看他人任务） -->
       <div
-        v-if="isShareMode"
+        v-if="isShareMode || !taskStore.isOwnTask"
         class="shrink-0 border-t border-gray-200 px-4 py-3 text-center dark:border-gray-700"
       >
         <p class="text-theme-muted text-xs">
-          当前正在查看他人任务，无法发送消息 ·
+          当前正在查看他人任务，无法发送消息
+          <template v-if="isShareMode && sharedTask?.ownerName">
+            · 来自 {{ sharedTask.ownerName }} 的分享
+          </template>
+          <template v-else-if="taskStore.currentTask?.ownerName">
+            · 来自 {{ taskStore.currentTask.ownerName }}
+          </template>
+          ·
           <button class="text-primary-500 hover:underline" @click="router.push('/')">
             回到首页
           </button>

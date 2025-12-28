@@ -5,7 +5,7 @@
  */
 import { computed } from 'vue';
 import { NAvatar } from 'naive-ui';
-import { useUserStore } from '@/stores';
+import { useUserStore, useTaskStore } from '@/stores';
 import { messageComponents } from './messages';
 import type { TaskForge } from '@/types';
 import type { MessageData } from '@/composable/task/useChat';
@@ -16,11 +16,17 @@ interface Props {
   forge?: TaskForge | null;
   // 当前轮次的 chat 内容（用于 turn_end 消息的复制功能）
   chatContent?: string;
+  // 任务创建者头像（分享模式下使用）
+  ownerAvatar?: string | null;
+  // 任务创建者名称（分享模式下使用）
+  ownerName?: string | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   forge: null,
   chatContent: '',
+  ownerAvatar: null,
+  ownerName: null,
 });
 
 const emit = defineEmits<{
@@ -28,6 +34,7 @@ const emit = defineEmits<{
 }>();
 
 const userStore = useUserStore();
+const taskStore = useTaskStore();
 
 // 动态获取消息组件
 const MessageComponent = computed(() => {
@@ -78,13 +85,39 @@ const aiAvatarUrl = computed(() => {
 });
 
 // 获取用户名首字母（大写）
+// 分享模式或查看他人任务时使用任务创建者名称，否则使用当前用户名称
 const userInitial = computed(() => {
-  return userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U';
+  // 分享模式下使用 props.ownerName
+  if (props.ownerName) {
+    return props.ownerName.charAt(0).toUpperCase();
+  }
+  // 查看他人任务时，使用任务创建者名称
+  if (!taskStore.isOwnTask && taskStore.currentTask?.ownerName) {
+    return taskStore.currentTask.ownerName.charAt(0).toUpperCase();
+  }
+  // 自己的任务，使用当前用户名称
+  if (taskStore.isOwnTask) {
+    return userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U';
+  }
+  return 'U';
 });
 
 // 获取用户头像 URL
+// 分享模式或查看他人任务时使用任务创建者头像，否则使用当前用户头像
 const userAvatarUrl = computed(() => {
-  return userStore.userInfo?.avatar || '';
+  // 分享模式下使用 props.ownerAvatar
+  if (props.ownerAvatar) {
+    return props.ownerAvatar;
+  }
+  // 查看他人任务时，使用任务创建者头像
+  if (!taskStore.isOwnTask && taskStore.currentTask?.ownerAvatar) {
+    return taskStore.currentTask.ownerAvatar;
+  }
+  // 自己的任务，使用当前用户头像
+  if (taskStore.isOwnTask) {
+    return userStore.userInfo?.avatar || '';
+  }
+  return '';
 });
 
 // 处理反馈变更事件

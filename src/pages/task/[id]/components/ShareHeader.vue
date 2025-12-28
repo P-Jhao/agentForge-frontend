@@ -11,7 +11,7 @@ const props = defineProps<{
   title: string;
   forge?: {
     displayName: string;
-    avatar?: string;
+    avatar?: string | null;
   } | null;
   ownerName?: string;
 }>();
