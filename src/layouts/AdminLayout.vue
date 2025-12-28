@@ -3,31 +3,27 @@
  * 后台管理布局组件
  * 包含顶部导航栏和左侧边栏
  */
-import { NLayout, NLayoutContent } from 'naive-ui';
+import { NLayoutContent } from 'naive-ui';
 import { LayoutHeader } from './components';
 import AdminSidebar from './components/AdminSidebar.vue';
 </script>
 
 <template>
-  <NLayout has-sider class="overflow-hidden" style="height: 100vh; max-height: 100vh">
+  <div class="flex h-screen">
     <!-- 左侧边栏 -->
     <AdminSidebar />
 
     <!-- 右侧主体 -->
-    <NLayout class="relative">
-      <!-- 顶部导航栏（复用现有 Header） -->
-      <div class="h-16">
+    <div class="flex flex-1 flex-col overflow-hidden">
+      <!-- 顶部导航栏 -->
+      <div class="h-16 shrink-0">
         <LayoutHeader />
       </div>
 
       <!-- 内容区域 -->
-      <NLayoutContent
-        :native-scrollbar="false"
-        content-style="padding: 24px;"
-        class="main-content-bg"
-      >
+      <div class="main-content-bg flex-1 overflow-auto p-6">
         <RouterView />
-      </NLayoutContent>
-    </NLayout>
-  </NLayout>
+      </div>
+    </div>
+  </div>
 </template>
