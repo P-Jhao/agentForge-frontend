@@ -117,3 +117,61 @@ export async function getAdminFeedbackList(params: AdminFeedbackListParams = {})
   );
   return res.data;
 }
+
+// Forge 列表项
+export interface AdminForgeItem {
+  id: number;
+  displayName: string;
+  description: string | null;
+  avatar: string | null;
+  isPublic: boolean;
+  isActive: boolean;
+  usageCount: number;
+  creator: {
+    id: number;
+    username: string;
+    nickname: string | null;
+  };
+  mcps: Array<{
+    id: number;
+    name: string;
+  }>;
+  createdAt: string;
+}
+
+// Forge 列表响应
+export interface AdminForgeListResponse {
+  forges: AdminForgeItem[];
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+// Forge 列表请求参数
+export interface AdminForgeListParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  status?: 'all' | 'active' | 'deleted';
+  permission?: 'all' | 'public' | 'private';
+}
+
+/**
+ * 获取所有 Forge 列表（管理员）
+ */
+export async function getAdminForgeList(params: AdminForgeListParams = {}) {
+  const res = await http.get<AdminForgeListResponse>(
+    '/admin/forge/list',
+    params as Record<string, unknown>
+  );
+  return res.data;
+}
+
+/**
+ * 删除 Forge（管理员，软删除）
+ */
+export async function deleteAdminForge(id: number) {
+  await http.delete(`/admin/forge/${id}`);
+}
