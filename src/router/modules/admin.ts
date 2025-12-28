@@ -37,6 +37,13 @@ const adminRoutes: RouteRecordRaw = {
       component: () => import('@/pages/admin/forge/index.vue'),
       meta: { title: 'Forge 管理', requiresAuth: true, requiresOperator: true },
     },
+    // 成员管理
+    {
+      path: 'members',
+      name: 'AdminMembers',
+      component: () => import('@/pages/admin/members/index.vue'),
+      meta: { title: '成员管理', requiresAuth: true, requiresOperator: true },
+    },
   ],
 };
 

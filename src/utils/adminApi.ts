@@ -175,3 +175,87 @@ export async function getAdminForgeList(params: AdminForgeListParams = {}) {
 export async function deleteAdminForge(id: number) {
   await http.delete(`/admin/forge/${id}`);
 }
+
+// ==================== 成员管理 ====================
+
+// 成员列表项
+export interface AdminMemberItem {
+  id: number;
+  username: string;
+  nickname: string;
+  avatar: string | null;
+  email: string | null;
+  role: 'user' | 'premium' | 'root' | 'operator';
+  adminNote: string | null;
+  isDeleted: boolean;
+  taskCount: number;
+  totalTokens: number;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+// 成员列表响应
+export interface AdminMemberListResponse {
+  members: AdminMemberItem[];
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+// 成员列表请求参数
+export interface AdminMemberListParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  role?: 'all' | 'user' | 'premium' | 'root' | 'operator';
+  status?: 'all' | 'active' | 'deleted';
+}
+
+/**
+ * 获取成员列表（管理员）
+ */
+export async function getAdminMemberList(params: AdminMemberListParams = {}) {
+  const res = await http.get<AdminMemberListResponse>(
+    '/admin/member/list',
+    params as Record<string, unknown>
+  );
+  return res.data;
+}
+
+// 更新成员请求参数
+export interface UpdateMemberParams {
+  username?: string;
+  email?: string | null;
+  role?: 'user' | 'premium' | 'root' | 'operator';
+  adminNote?: string | null;
+}
+
+/**
+ * 更新成员信息（管理员）
+ */
+export async function updateAdminMember(id: number, params: UpdateMemberParams) {
+  await http.put(`/admin/member/${id}`, params);
+}
+
+/**
+ * 重置成员密码（管理员）
+ */
+export async function resetAdminMemberPassword(id: number, encryptedPassword: string) {
+  await http.put(`/admin/member/${id}/password`, { encryptedPassword });
+}
+
+/**
+ * 删除成员（管理员，软删除）
+ */
+export async function deleteAdminMember(id: number) {
+  await http.delete(`/admin/member/${id}`);
+}
+
+/**
+ * 恢复已删除的成员（管理员）
+ */
+export async function restoreAdminMember(id: number) {
+  await http.put(`/admin/member/${id}/restore`);
+}

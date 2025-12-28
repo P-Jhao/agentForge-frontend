@@ -5,7 +5,13 @@
 import { computed } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { NLayoutSider, NIcon } from 'naive-ui';
-import { GridOutline, ListOutline, ChatbubblesOutline, HammerOutline } from '@vicons/ionicons5';
+import {
+  GridOutline,
+  ListOutline,
+  ChatbubblesOutline,
+  HammerOutline,
+  PeopleOutline,
+} from '@vicons/ionicons5';
 
 const route = useRoute();
 
@@ -14,6 +20,7 @@ const menuItems = [
   { key: 'dashboard', label: '控制台', icon: GridOutline, path: '/admin' },
   { key: 'tasks', label: '任务管理', icon: ListOutline, path: '/admin/tasks' },
   { key: 'forge', label: 'Forge 管理', icon: HammerOutline, path: '/admin/forge' },
+  { key: 'members', label: '成员管理', icon: PeopleOutline, path: '/admin/members' },
   { key: 'feedback', label: '反馈管理', icon: ChatbubblesOutline, path: '/admin/feedback' },
 ];
 
@@ -23,6 +30,7 @@ const activeKey = computed(() => {
   if (path === '/admin') return 'dashboard';
   if (path === '/admin/tasks') return 'tasks';
   if (path === '/admin/forge') return 'forge';
+  if (path === '/admin/members') return 'members';
   if (path === '/admin/feedback') return 'feedback';
   return '';
 });

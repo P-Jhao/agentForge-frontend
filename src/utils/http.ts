@@ -60,17 +60,18 @@ service.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // 提取后端返回的错误信息
+    const message = error.response?.data?.message || error.message || '请求失败';
+    console.error(`[HTTP Error] ${message}`);
+
     // 401 未授权，跳转登录
     if (error.response?.status === 401) {
       localStorage.removeItem('forgeToken');
       router.push('/login');
-      return Promise.reject(error);
     }
 
-    // 其他错误
-    const message = error.response?.data?.message || error.message || '请求失败';
-    console.error(`[HTTP Error] ${message}`);
-    return Promise.reject(error);
+    // 返回包含正确 message 的错误对象
+    return Promise.reject({ message, status: error.response?.status });
   }
 );
 

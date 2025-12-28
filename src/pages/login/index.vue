@@ -64,6 +64,11 @@ async function handleLogin() {
   }
 }
 
+// 验证账号/密码格式：只允许英文字母和数字
+function isValidAlphanumeric(str: string): boolean {
+  return /^[a-zA-Z0-9]+$/.test(str);
+}
+
 // 注册（密码 RSA 加密传输）
 async function handleRegister() {
   const { username, nickname, password, confirmPassword } = formData.value;
@@ -72,12 +77,20 @@ async function handleRegister() {
     message.warning('请输入账号和密码');
     return;
   }
+  if (!isValidAlphanumeric(username)) {
+    message.warning('账号只能包含英文字母和数字');
+    return;
+  }
   if (username.length < 3 || username.length > 20) {
     message.warning('账号长度需在 3-20 字符之间');
     return;
   }
   if (nickname && nickname.length > 20) {
     message.warning('名称长度不能超过 20 字符');
+    return;
+  }
+  if (!isValidAlphanumeric(password)) {
+    message.warning('密码只能包含英文字母和数字');
     return;
   }
   if (password.length < 6 || password.length > 32) {
