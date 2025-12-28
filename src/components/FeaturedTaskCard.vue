@@ -47,11 +47,11 @@ const enhanceModeLabel = computed(() => {
     class="card-theme-gradient group relative cursor-pointer overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
   >
     <!-- 封面图区域 -->
-    <div class="relative aspect-2/1 overflow-hidden">
+    <div class="relative h-36 overflow-hidden">
       <img
         :src="coverUrl"
         :alt="featured.title"
-        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
         @error="($event.target as HTMLImageElement).src = defaultCover"
       />
       <!-- hover 遮罩和按钮 -->
@@ -86,7 +86,7 @@ const enhanceModeLabel = computed(() => {
         {{ featured.description }}
       </p>
       <!-- 启用的选项标签 -->
-      <div class="flex flex-wrap gap-1.5">
+      <div class="flex flex-nowrap gap-1.5 overflow-hidden">
         <span
           v-if="featured.smartRoutingEnabled"
           class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-600 dark:bg-violet-400/15 dark:text-violet-400"

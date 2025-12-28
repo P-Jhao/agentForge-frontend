@@ -292,12 +292,12 @@ onMounted(() => {
         <div class="mb-4 flex items-center justify-between">
           <h2 class="text-theme text-xl font-semibold">推荐示例</h2>
         </div>
-        <XScroll :height="260" :gap="16" loop @item-click="handleFeaturedClick">
+        <XScroll :height="224" :gap="16" loop @item-click="handleFeaturedClick">
           <FeaturedTaskCard
             v-for="featured in featuredTasks"
             :key="featured.id"
             :featured="featured"
-            class="w-72 shrink-0"
+            class="w-80 shrink-0"
           />
         </XScroll>
       </div>
