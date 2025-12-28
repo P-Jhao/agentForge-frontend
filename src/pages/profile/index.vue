@@ -104,12 +104,28 @@ function startEditEmail() {
   editingEmail.value = true;
 }
 
+// 邮箱格式校验正则
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// 校验邮箱格式
+function validateEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email);
+}
+
 // 保存邮箱
 async function saveEmail() {
+  const email = emailForm.value.email.trim();
+
+  // 如果邮箱不为空，校验格式
+  if (email && !validateEmail(email)) {
+    message.warning('请输入正确的邮箱格式');
+    return;
+  }
+
   savingEmail.value = true;
   try {
-    await http.put('/user/profile', { email: emailForm.value.email || null });
-    userStore.updateLocalUserInfo({ email: emailForm.value.email || null });
+    await http.put('/user/profile', { email: email || null });
+    userStore.updateLocalUserInfo({ email: email || null });
     editingEmail.value = false;
     message.success('邮箱更新成功');
   } catch {
