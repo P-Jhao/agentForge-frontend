@@ -259,3 +259,69 @@ export async function deleteAdminMember(id: number) {
 export async function restoreAdminMember(id: number) {
   await http.put(`/admin/member/${id}/restore`);
 }
+
+// ==================== 推荐示例管理 ====================
+
+// 推荐示例列表项
+export interface AdminFeaturedItem {
+  id: number;
+  taskUuid: string;
+  coverImage: string | null;
+  title: string;
+  description: string | null;
+  clonePrompt: string | null;
+  enableThinking: boolean;
+  enhanceMode: string;
+  smartRoutingEnabled: boolean;
+  sortOrder: number;
+  createdAt: string;
+  task: {
+    uuid: string;
+    title: string;
+    status: string;
+    agent: {
+      id: number;
+      displayName: string;
+      avatar: string | null;
+    } | null;
+  } | null;
+}
+
+// 推荐示例列表响应
+export interface AdminFeaturedListResponse {
+  list: AdminFeaturedItem[];
+}
+
+/**
+ * 获取推荐示例列表（管理员）
+ */
+export async function getAdminFeaturedList() {
+  const res = await http.get<AdminFeaturedListResponse>('/admin/featured/list');
+  return res.data;
+}
+
+// 更新推荐示例请求参数
+export interface UpdateFeaturedParams {
+  coverImage?: string;
+  title?: string;
+  description?: string;
+  clonePrompt?: string;
+  enableThinking?: boolean;
+  enhanceMode?: string;
+  smartRoutingEnabled?: boolean;
+  sortOrder?: number;
+}
+
+/**
+ * 更新推荐示例（管理员）
+ */
+export async function updateAdminFeatured(taskUuid: string, params: UpdateFeaturedParams) {
+  await http.put(`/admin/featured/${taskUuid}`, params);
+}
+
+/**
+ * 取消推荐示例（管理员）
+ */
+export async function removeAdminFeatured(taskUuid: string) {
+  await http.delete(`/admin/featured/${taskUuid}`);
+}
