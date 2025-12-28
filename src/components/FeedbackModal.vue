@@ -140,7 +140,7 @@ async function handleSubmit() {
             class="cursor-pointer rounded-md border px-3 py-1.5 text-sm transition-all duration-200 select-none hover:scale-105"
             :class="
               selectedTags.includes(tag)
-                ? 'border-primary bg-primary/10 text-primary'
+                ? 'border-indigo-500 bg-indigo-50 text-indigo-600 dark:border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-300'
                 : 'border-gray-300 bg-gray-50 text-gray-600 hover:border-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700'
             "
             @click="toggleTag(tag)"
