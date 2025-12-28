@@ -16,7 +16,13 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
-import { SearchOutline, RefreshOutline } from '@vicons/ionicons5';
+import {
+  SearchOutline,
+  RefreshOutline,
+  ThumbsUp,
+  ThumbsDown,
+  CloseCircle,
+} from '@vicons/ionicons5';
 import {
   getAdminFeedbackList,
   type AdminFeedbackItem,
@@ -64,27 +70,13 @@ const feedbackTypeOptions = [
   { label: '取消', value: 'cancel' },
 ];
 
-// 获取反馈类型标签配置
-const getFeedbackTypeTag = (type: string) => {
-  switch (type) {
-    case 'like':
-      return { type: 'success' as const, text: '点赞' };
-    case 'dislike':
-      return { type: 'error' as const, text: '踩' };
-    case 'cancel':
-      return { type: 'default' as const, text: '取消' };
-    default:
-      return { type: 'default' as const, text: type };
-  }
-};
-
 // 表格列定义
 const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
   {
     title: '任务名称',
     key: 'task.title',
     ellipsis: { tooltip: true },
-    width: 180,
+    width: 150,
     render: (row) =>
       h(
         NButton,
@@ -97,16 +89,14 @@ const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
       ),
   },
   {
-    title: '任务创建时间',
-    key: 'task.createdAt',
-    width: 140,
-    render: (row) => formatDateTime(row.task.createdAt),
-  },
-  {
-    title: '任务更新时间',
-    key: 'task.updatedAt',
-    width: 140,
-    render: (row) => formatDateTime(row.task.updatedAt),
+    title: '任务创建与更新时间',
+    key: 'task.time',
+    width: 160,
+    render: (row) =>
+      h('div', { style: 'line-height: 1.6;' }, [
+        h('div', {}, `创建: ${formatDateTime(row.task.createdAt)}`),
+        h('div', { style: 'color: #999;' }, `更新: ${formatDateTime(row.task.updatedAt)}`),
+      ]),
   },
   {
     title: '反馈人',
@@ -117,16 +107,21 @@ const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
   {
     title: '反馈类型',
     key: 'type',
-    width: 80,
+    width: 60,
     render: (row) => {
-      const { type, text } = getFeedbackTypeTag(row.type);
-      return h(NTag, { type, size: 'small' }, () => text);
+      if (row.type === 'like') {
+        return h(NIcon, { component: ThumbsUp, size: 18, color: '#18a058' });
+      } else if (row.type === 'dislike') {
+        return h(NIcon, { component: ThumbsDown, size: 18, color: '#d03050' });
+      } else {
+        return h(NIcon, { component: CloseCircle, size: 18, color: '#999' });
+      }
     },
   },
   {
     title: '反馈标签',
     key: 'tags',
-    width: 180,
+    width: 160,
     ellipsis: { tooltip: true },
     render: (row) => {
       if (!row.tags || row.tags.length === 0) return '-';
@@ -140,14 +135,18 @@ const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
   {
     title: '反馈内容',
     key: 'content',
-    width: 200,
-    ellipsis: { tooltip: true },
+    width: 160,
+    ellipsis: { tooltip: false },
     render: (row) => {
       if (!row.content) return '-';
       const content = row.content;
       return h(
         NTooltip,
-        { trigger: 'hover' },
+        {
+          trigger: 'hover',
+          placement: 'left',
+          style: 'max-width: 400px;',
+        },
         {
           trigger: () =>
             h(
@@ -155,7 +154,12 @@ const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
               { style: 'cursor: pointer;' },
               content.length > 30 ? content.slice(0, 30) + '...' : content
             ),
-          default: () => content,
+          default: () =>
+            h(
+              'div',
+              { style: 'white-space: pre-wrap; word-break: break-word; line-height: 1.5;' },
+              content
+            ),
         }
       );
     },
@@ -347,7 +351,7 @@ onMounted(() => {
         onUpdatePage: handlePageChange,
         onUpdatePageSize: handlePageSizeChange,
       }"
-      :scroll-x="1200"
+      :scroll-x="0"
       remote
     />
   </div>
