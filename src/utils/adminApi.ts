@@ -14,6 +14,12 @@ export interface AdminTaskItem {
     username: string;
     nickname: string;
   };
+  // 关联的 Forge 信息
+  agent: {
+    id: number;
+    displayName: string;
+    avatar: string | null;
+  } | null;
   totalTokens: number;
   createdAt: string;
   updatedAt: string;

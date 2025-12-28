@@ -11,6 +11,7 @@ import {
   NIcon,
   NPopconfirm,
   NTag,
+  NTooltip,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
@@ -73,6 +74,58 @@ const columns = computed<DataTableColumns<AdminTaskItem>>(() => [
     key: 'title',
     ellipsis: { tooltip: true },
     width: 200,
+  },
+  {
+    title: 'Forge',
+    key: 'agent',
+    width: 140,
+    render: (row) => {
+      if (!row.agent) return '-';
+      // 显示 Forge 头像 + 名称，点击跳转到 Forge 详情
+      return h(
+        NTooltip,
+        { trigger: 'hover' },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              {
+                text: true,
+                type: 'primary',
+                onClick: () => handleViewForge(row.agent!.id),
+                style: 'max-width: 130px;',
+              },
+              () =>
+                h(
+                  'span',
+                  {
+                    style:
+                      'display: flex; align-items: center; gap: 6px; max-width: 100%; overflow: hidden;',
+                  },
+                  [
+                    // 显示头像图片
+                    row.agent!.avatar
+                      ? h('img', {
+                        src: row.agent!.avatar,
+                        alt: row.agent!.displayName,
+                        style:
+                          'width: 20px; height: 20px; border-radius: 4px; object-fit: cover; flex-shrink: 0;',
+                      })
+                      : null,
+                    h(
+                      'span',
+                      {
+                        style: 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;',
+                      },
+                      row.agent!.displayName
+                    ),
+                  ]
+                )
+            ),
+          default: () => row.agent!.displayName,
+        }
+      );
+    },
   },
   {
     title: '创建者',
@@ -244,6 +297,11 @@ function handleView(task: AdminTaskItem) {
   window.open(`/task/${task.uuid}`, '_blank');
 }
 
+// 查看 Forge 详情（新标签页打开）
+function handleViewForge(forgeId: number) {
+  window.open(`/forge/${forgeId}`, '_blank');
+}
+
 // 删除任务
 async function handleDelete(task: AdminTaskItem) {
   try {
@@ -319,7 +377,7 @@ onMounted(() => {
         onUpdatePage: handlePageChange,
         onUpdatePageSize: handlePageSizeChange,
       }"
-      :scroll-x="900"
+      :scroll-x="1020"
       remote
       @update:sorter="handleSorterChange"
     />

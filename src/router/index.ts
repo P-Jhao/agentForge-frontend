@@ -63,12 +63,13 @@ router.beforeEach(async (to, _from, next) => {
 
     const role = userStore.role;
 
-    // operator 角色限制：只能访问 /admin 和 /task/:id
+    // operator 角色限制：只能访问 /admin、/task/:id 和 /forge/:id
     if (role === 'operator') {
       const isAdminRoute = to.path.startsWith('/admin');
       const isTaskDetailRoute = to.path.match(/^\/task\/[^/]+$/);
+      const isForgeDetailRoute = to.path.match(/^\/forge\/\d+$/);
 
-      if (!isAdminRoute && !isTaskDetailRoute) {
+      if (!isAdminRoute && !isTaskDetailRoute && !isForgeDetailRoute) {
         next('/admin');
         return;
       }

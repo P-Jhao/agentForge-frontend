@@ -14,6 +14,7 @@ import {
   NSpace,
   NTag,
   NPopconfirm,
+  NTooltip,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
@@ -74,6 +75,12 @@ const handleRowClick = (task: Task) => {
   router.push(`/task/${task.uuid}`);
 };
 
+// 点击 Forge 跳转到详情页
+const handleForgeClick = (forgeId: number, e: MouseEvent) => {
+  e.stopPropagation();
+  router.push(`/forge/${forgeId}`);
+};
+
 // 切换收藏
 const handleToggleFavorite = async (task: Task, e: MouseEvent) => {
   e.stopPropagation();
@@ -106,6 +113,59 @@ const columns: DataTableColumns<Task> = [
     key: 'title',
     ellipsis: { tooltip: true },
     render: (row) => h('span', { class: 'cursor-pointer hover:text-primary-500' }, row.title),
+  },
+  {
+    title: 'Forge',
+    key: 'agent',
+    width: 180,
+    render: (row) => {
+      if (!row.agent) return h('span', { class: 'text-gray-400' }, '-');
+      // 显示 Forge 头像 + 名称，点击跳转到详情页
+      return h(
+        NTooltip,
+        { trigger: 'hover' },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              {
+                text: true,
+                type: 'primary',
+                size: 'small',
+                onClick: (e: MouseEvent) => handleForgeClick(row.agent!.id, e),
+                style: 'max-width: 170px;',
+              },
+              () =>
+                h(
+                  'span',
+                  {
+                    style:
+                      'display: flex; align-items: center; gap: 6px; max-width: 100%; overflow: hidden;',
+                  },
+                  [
+                    // 显示头像图片
+                    row.agent!.avatar
+                      ? h('img', {
+                        src: row.agent!.avatar,
+                        alt: row.agent!.displayName,
+                        style:
+                          'width: 18px; height: 18px; border-radius: 4px; object-fit: cover; flex-shrink: 0;',
+                      })
+                      : null,
+                    h(
+                      'span',
+                      {
+                        style: 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;',
+                      },
+                      row.agent!.displayName
+                    ),
+                  ]
+                )
+            ),
+          default: () => row.agent!.displayName,
+        }
+      );
+    },
   },
   {
     title: '状态',
