@@ -325,3 +325,51 @@ export async function updateAdminFeatured(taskUuid: string, params: UpdateFeatur
 export async function removeAdminFeatured(taskUuid: string) {
   await http.delete(`/admin/featured/${taskUuid}`);
 }
+
+// ==================== 控制台统计 ====================
+
+// 时间范围类型
+export type TimeRangeType = 'last24h' | 'last7d' | 'last30d' | 'all' | 'custom';
+
+// 统计查询参数
+export interface StatisticsQuery {
+  range: TimeRangeType;
+  startTime?: string; // ISO 8601 格式，range='custom' 时必填
+  endTime?: string; // ISO 8601 格式，range='custom' 时必填
+}
+
+// 汇总数据
+export interface StatisticsSummary {
+  taskCount: number; // 任务总数
+  totalTokens: number; // Token 总消耗
+  avgTokensPerTask: number; // 平均单次任务 Token
+  uv: number; // 独立访客数
+  pv: number; // 访问次数
+}
+
+// 趋势数据
+export interface StatisticsTrends {
+  labels: string[]; // 时间标签数组
+  tasks: number[]; // 任务次数数组
+  tokens: number[]; // Token 消耗数组
+  avgTokens: number[]; // 平均 Token 数组
+  uv: number[]; // UV 数组
+  pv: number[]; // PV 数组
+}
+
+// 统计响应数据
+export interface StatisticsData {
+  summary: StatisticsSummary;
+  trends: StatisticsTrends;
+}
+
+/**
+ * 获取控制台统计数据（管理员）
+ */
+export async function getDashboardStatistics(params: StatisticsQuery) {
+  const res = await http.get<StatisticsData>(
+    '/admin/statistics',
+    params as Record<string, unknown>
+  );
+  return res.data;
+}
