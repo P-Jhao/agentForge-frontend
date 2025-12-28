@@ -65,7 +65,7 @@ const chartOption = computed<EChartsOption>(() => ({
     data: props.labels,
     axisLabel: {
       // 根据数据量自动计算间隔，最多显示约 5 个标签
-      interval: props.labels.length > 5 ? Math.floor(props.labels.length / 5) - 1 : 0,
+      interval: Math.max(0, Math.ceil(props.labels.length / 5) - 1),
       rotate: props.labels.length > 20 ? 30 : 0,
     },
   },
