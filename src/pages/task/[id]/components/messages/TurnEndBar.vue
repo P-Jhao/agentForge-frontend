@@ -3,11 +3,19 @@
  * 轮次结束操作栏组件
  * 显示复制、点赞/踩、完成时间、累积 token 消耗
  */
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { NButton, NTooltip, NIcon, useMessage } from 'naive-ui';
-import { CopyOutline, ThumbsUpOutline, ThumbsDownOutline } from '@vicons/ionicons5';
+import {
+  CopyOutline,
+  ThumbsUpOutline,
+  ThumbsDownOutline,
+  ThumbsUp,
+  ThumbsDown,
+} from '@vicons/ionicons5';
 import { useTaskStore } from '@/stores';
+import { cancelFeedback } from '@/utils/feedbackApi';
+import FeedbackModal from '@/components/FeedbackModal.vue';
 import type { TurnEndMessageData } from '@/composable/task/useChat';
 
 const props = defineProps<{
@@ -15,15 +23,28 @@ const props = defineProps<{
   chatContent?: string; // 当前轮次的 chat 内容
 }>();
 
+const emit = defineEmits<{
+  (e: 'feedbackChange', type: 'like' | 'dislike' | null): void;
+}>();
+
 const route = useRoute();
 const taskStore = useTaskStore();
 const message = useMessage();
 
+// 反馈弹窗状态
+const showFeedbackModal = ref(false);
+const feedbackType = ref<'like' | 'dislike'>('like');
+
+// 当前反馈状态（从 props 获取，支持响应式更新）
+const currentFeedbackType = computed(() => props.data.feedbackType ?? null);
+
 // 是否为分享模式
 const isShareMode = computed(() => !!route.query.shareSign);
 
-// 是否显示点赞/踩按钮（自己的任务且非分享模式）
-const showFeedbackButtons = computed(() => taskStore.isOwnTask && !isShareMode.value);
+// 是否显示点赞/踩按钮（自己的任务且非分享模式且有 messageId）
+const showFeedbackButtons = computed(
+  () => taskStore.isOwnTask && !isShareMode.value && !!props.data.messageId
+);
 
 // 格式化时间（MM-DD HH:mm:ss）
 const formattedTime = computed(() => {
@@ -66,16 +87,57 @@ const handleCopy = async () => {
   }
 };
 
-// 点赞功能（占位）
-const handleThumbsUp = () => {
-  console.log('[TurnEndBar] 点赞按钮点击');
-  // TODO: 实现点赞反馈
+// 点赞按钮点击
+const handleThumbsUp = async () => {
+  if (currentFeedbackType.value === 'like') {
+    // 已点赞，取消反馈
+    await handleCancelFeedback();
+  } else {
+    // 打开反馈弹窗
+    feedbackType.value = 'like';
+    showFeedbackModal.value = true;
+  }
 };
 
-// 踩功能（占位）
-const handleThumbsDown = () => {
-  console.log('[TurnEndBar] 踩按钮点击');
-  // TODO: 实现踩反馈
+// 踩按钮点击
+const handleThumbsDown = async () => {
+  if (currentFeedbackType.value === 'dislike') {
+    // 已踩，取消反馈
+    await handleCancelFeedback();
+  } else {
+    // 打开反馈弹窗
+    feedbackType.value = 'dislike';
+    showFeedbackModal.value = true;
+  }
+};
+
+// 取消反馈
+const handleCancelFeedback = async () => {
+  if (!props.data.messageId) return;
+
+  try {
+    await cancelFeedback({
+      taskId: taskStore.currentTask?.uuid || '',
+      turnEndMessageId: props.data.messageId,
+    });
+    // 更新本地状态
+    emit('feedbackChange', null);
+  } catch (error: unknown) {
+    // 处理节流错误
+    if (error && typeof error === 'object' && 'response' in error) {
+      const response = (error as { response?: { status?: number } }).response;
+      if (response?.status === 429) {
+        message.warning('反馈过于频繁，请稍后再试');
+        return;
+      }
+    }
+    message.error('取消反馈失败');
+  }
+};
+
+// 反馈成功回调
+const handleFeedbackSuccess = (type: 'like' | 'dislike') => {
+  emit('feedbackChange', type);
 };
 </script>
 
@@ -99,24 +161,42 @@ const handleThumbsDown = () => {
     <template v-if="showFeedbackButtons">
       <NTooltip trigger="hover">
         <template #trigger>
-          <NButton quaternary size="tiny" class="action-btn" @click="handleThumbsUp">
+          <NButton
+            quaternary
+            size="tiny"
+            class="action-btn"
+            :class="{ 'feedback-like-active': currentFeedbackType === 'like' }"
+            @click="handleThumbsUp"
+          >
             <template #icon>
-              <NIcon :component="ThumbsUpOutline" :size="14" />
+              <NIcon
+                :component="currentFeedbackType === 'like' ? ThumbsUp : ThumbsUpOutline"
+                :size="14"
+              />
             </template>
           </NButton>
         </template>
-        有帮助
+        {{ currentFeedbackType === 'like' ? '取消点赞' : '有帮助' }}
       </NTooltip>
 
       <NTooltip trigger="hover">
         <template #trigger>
-          <NButton quaternary size="tiny" class="action-btn" @click="handleThumbsDown">
+          <NButton
+            quaternary
+            size="tiny"
+            class="action-btn"
+            :class="{ 'feedback-dislike-active': currentFeedbackType === 'dislike' }"
+            @click="handleThumbsDown"
+          >
             <template #icon>
-              <NIcon :component="ThumbsDownOutline" :size="14" />
+              <NIcon
+                :component="currentFeedbackType === 'dislike' ? ThumbsDown : ThumbsDownOutline"
+                :size="14"
+              />
             </template>
           </NButton>
         </template>
-        没帮助
+        {{ currentFeedbackType === 'dislike' ? '取消踩' : '没帮助' }}
       </NTooltip>
     </template>
 
@@ -131,6 +211,15 @@ const handleThumbsDown = () => {
 
     <!-- Token 消耗（仅在有数据时显示） -->
     <span v-if="hasTokenData">累积 {{ formattedTokens }} tokens</span>
+
+    <!-- 反馈弹窗 -->
+    <FeedbackModal
+      v-model:show="showFeedbackModal"
+      :type="feedbackType"
+      :task-id="taskStore.currentTask?.uuid || ''"
+      :turn-end-message-id="data.messageId || 0"
+      @success="handleFeedbackSuccess"
+    />
   </div>
 </template>
 
@@ -153,8 +242,26 @@ const handleThumbsDown = () => {
   min-width: auto !important;
 }
 
+/* 点赞激活状态 - 绿色 */
+.feedback-like-active {
+  color: #18a058 !important;
+}
+
+/* 踩激活状态 - 红色 */
+.feedback-dislike-active {
+  color: #d03050 !important;
+}
+
 :deep(.n-button) {
   --n-text-color: inherit !important;
   --n-text-color-hover: #666 !important;
+}
+
+.feedback-like-active :deep(.n-button) {
+  --n-text-color: #18a058 !important;
+}
+
+.feedback-dislike-active :deep(.n-button) {
+  --n-text-color: #d03050 !important;
 }
 </style>

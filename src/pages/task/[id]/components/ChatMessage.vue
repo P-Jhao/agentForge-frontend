@@ -23,6 +23,10 @@ const props = withDefaults(defineProps<Props>(), {
   chatContent: '',
 });
 
+const emit = defineEmits<{
+  (e: 'feedbackChange', messageId: number, type: 'like' | 'dislike' | null): void;
+}>();
+
 const userStore = useUserStore();
 
 // 动态获取消息组件
@@ -77,6 +81,15 @@ const aiAvatarUrl = computed(() => {
 const userInitial = computed(() => {
   return userStore.userInfo?.username?.charAt(0)?.toUpperCase() || 'U';
 });
+
+// 处理反馈变更事件
+const handleFeedbackChange = (type: 'like' | 'dislike' | null) => {
+  // 从 data 中获取 messageId（仅 turn_end 类型有）
+  const messageId = (props.data as { messageId?: number }).messageId;
+  if (messageId) {
+    emit('feedbackChange', messageId, type);
+  }
+};
 </script>
 
 <template>
@@ -86,7 +99,12 @@ const userInitial = computed(() => {
     <div class="w-8 shrink-0"></div>
     <!-- 操作栏内容 -->
     <div class="flex-1">
-      <component :is="MessageComponent" :data="data" :chat-content="chatContent" />
+      <component
+        :is="MessageComponent"
+        :data="data"
+        :chat-content="chatContent"
+        @feedback-change="handleFeedbackChange"
+      />
     </div>
   </div>
 

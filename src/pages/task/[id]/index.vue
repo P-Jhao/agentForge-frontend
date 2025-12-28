@@ -80,7 +80,17 @@ const forceScrollToBottom = () => {
 };
 
 // 检查任务访问权限（普通模式）
+// 注意：如果是新任务（sessionStorage 中有 initMessage），跳过权限检查
 const checkTaskPermission = async (uuid: string) => {
+  // 检查是否是新任务（从首页跳转过来，需要先创建任务）
+  const initKey = `task_${uuid}_init`;
+  const initMessage = sessionStorage.getItem(initKey);
+  if (initMessage) {
+    // 新任务，跳过权限检查，让 init() 创建任务
+    taskStore.isOwnTask = true;
+    return true;
+  }
+
   try {
     const task = await getTask(uuid);
     // 检查是否为自己的任务
@@ -158,6 +168,7 @@ const {
   disconnectStream,
   needsSmartIterateReply,
   sendSmartIterateReply,
+  updateFeedbackStatus,
 } = useChat({
   taskId: taskId.value,
   onScrollToBottom: scrollToBottom,
@@ -203,6 +214,11 @@ const onCancel = () => {
 // 处理智能迭代回复
 const onSmartIterateReply = (answer: string) => {
   sendSmartIterateReply(answer);
+};
+
+// 处理反馈状态变更
+const handleFeedbackChange = (messageId: number, type: 'like' | 'dislike' | null) => {
+  updateFeedbackStatus(messageId, type);
 };
 
 // 是否显示智能迭代回复输入框
@@ -278,6 +294,7 @@ onBeforeUnmount(() => {
         :is-loading="displayIsLoading"
         :forge="currentForge"
         :is-own-task="taskStore.isOwnTask && !isShareMode"
+        @feedback-change="handleFeedbackChange"
       />
 
       <!-- 输入区域（固定在底部，非分享模式显示） -->

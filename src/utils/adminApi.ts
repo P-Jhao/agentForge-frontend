@@ -57,3 +57,57 @@ export async function getAdminTaskList(params: AdminTaskListParams = {}) {
 export async function deleteAdminTask(uuid: string) {
   await http.delete(`/admin/task/${uuid}`);
 }
+
+// 反馈列表项
+export interface AdminFeedbackItem {
+  id: number;
+  task: {
+    uuid: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  user: {
+    id: number;
+    username: string;
+    nickname: string;
+  };
+  type: 'like' | 'dislike' | 'cancel';
+  tags: string[];
+  content: string | null;
+  createdAt: string;
+}
+
+// 反馈列表响应
+export interface AdminFeedbackListResponse {
+  feedbacks: AdminFeedbackItem[];
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+// 反馈列表请求参数
+export interface AdminFeedbackListParams {
+  page?: number;
+  pageSize?: number;
+  taskKeyword?: string;
+  userKeyword?: string;
+  taskStartTime?: string;
+  taskEndTime?: string;
+  feedbackType?: 'all' | 'like' | 'dislike' | 'cancel';
+  feedbackStartTime?: string;
+  feedbackEndTime?: string;
+}
+
+/**
+ * 获取反馈列表（管理员）
+ */
+export async function getAdminFeedbackList(params: AdminFeedbackListParams = {}) {
+  const res = await http.get<AdminFeedbackListResponse>(
+    '/admin/feedback/list',
+    params as Record<string, unknown>
+  );
+  return res.data;
+}

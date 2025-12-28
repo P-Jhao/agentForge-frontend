@@ -80,6 +80,7 @@ export interface TokenUsage {
 export interface TurnEndData {
   completedAt: string; // ISO 8601 格式
   accumulatedTokens: TokenUsage;
+  messageId?: number; // 数据库消息 ID，用于反馈功能
 }
 
 // 消息角色

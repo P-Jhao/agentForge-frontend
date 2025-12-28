@@ -21,6 +21,10 @@ const props = withDefaults(defineProps<Props>(), {
   forge: null,
 });
 
+const emit = defineEmits<{
+  (e: 'feedbackChange', messageId: number, type: 'like' | 'dislike' | null): void;
+}>();
+
 // 滚动容器引用
 const containerRef = ref<HTMLElement | null>(null);
 // 是否允许自动滚动（用户在底部时为 true）
@@ -126,6 +130,11 @@ const getItemChatContent = (item: RenderItem, index: number): string => {
   }
   return '';
 };
+
+// 处理反馈变更事件
+const handleFeedbackChange = (messageId: number, type: 'like' | 'dislike' | null) => {
+  emit('feedbackChange', messageId, type);
+};
 </script>
 
 <template>
@@ -145,6 +154,7 @@ const getItemChatContent = (item: RenderItem, index: number): string => {
       :data="item.data"
       :forge="forge"
       :chat-content="getItemChatContent(item, index)"
+      @feedback-change="handleFeedbackChange"
     />
 
     <!-- 加载状态（仅在没有 assistant 消息时显示） -->

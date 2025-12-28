@@ -23,6 +23,13 @@ const adminRoutes: RouteRecordRaw = {
       component: () => import('@/pages/admin/tasks/index.vue'),
       meta: { title: '任务管理', requiresAuth: true, requiresOperator: true },
     },
+    // 反馈管理
+    {
+      path: 'feedback',
+      name: 'AdminFeedback',
+      component: () => import('@/pages/admin/feedback/index.vue'),
+      meta: { title: '反馈管理', requiresAuth: true, requiresOperator: true },
+    },
   ],
 };
 

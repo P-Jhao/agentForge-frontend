@@ -5,7 +5,7 @@
 import { computed } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { NLayoutSider, NIcon } from 'naive-ui';
-import { GridOutline, ListOutline } from '@vicons/ionicons5';
+import { GridOutline, ListOutline, ChatbubblesOutline } from '@vicons/ionicons5';
 
 const route = useRoute();
 
@@ -13,6 +13,7 @@ const route = useRoute();
 const menuItems = [
   { key: 'dashboard', label: '控制台', icon: GridOutline, path: '/admin' },
   { key: 'tasks', label: '任务管理', icon: ListOutline, path: '/admin/tasks' },
+  { key: 'feedback', label: '反馈管理', icon: ChatbubblesOutline, path: '/admin/feedback' },
 ];
 
 // 当前选中的菜单
@@ -20,6 +21,7 @@ const activeKey = computed(() => {
   const path = route.path;
   if (path === '/admin') return 'dashboard';
   if (path === '/admin/tasks') return 'tasks';
+  if (path === '/admin/feedback') return 'feedback';
   return '';
 });
 

@@ -5,6 +5,7 @@
  */
 import { ref, reactive, nextTick } from 'vue';
 import { createStreamRequest, createTask, abortTask } from '@/utils';
+import { batchGetFeedbackStatus } from '@/utils/feedbackApi';
 import { useTaskStore } from '@/stores';
 import type {
   FlatMessage,
@@ -90,8 +91,10 @@ export interface ToolCallMessageData extends BaseMessageData {
 // 轮次结束消息数据
 export interface TurnEndMessageData extends BaseMessageData {
   type: 'turn_end';
+  messageId?: number; // 数据库消息 ID，用于反馈功能
   completedAt: string; // ISO 8601 格式
   accumulatedTokens?: TokenUsage; // 可选，中断时可能没有
+  feedbackType?: 'like' | 'dislike' | null; // 当前反馈状态
 }
 
 // 消息数据联合类型
@@ -251,12 +254,60 @@ export function useChat(options: UseChatOptions) {
     const data = reactive<TurnEndMessageData>({
       id,
       type: 'turn_end',
+      messageId: turnEndData.messageId, // 从后端推送数据中获取消息 ID
       completedAt: turnEndData.completedAt,
       accumulatedTokens: turnEndData.accumulatedTokens,
     });
     const item: RenderItem = { id, type: 'turn_end', data };
     renderItems.value.push(item);
     return item;
+  };
+
+  /**
+   * 批量加载反馈状态
+   * 从 renderItems 中提取所有 turn_end 消息的 messageId，批量获取反馈状态
+   */
+  const loadFeedbackStatus = async () => {
+    // 提取所有 turn_end 消息的 messageId
+    const turnEndItems = renderItems.value.filter(
+      (item) => item.type === 'turn_end' && (item.data as TurnEndMessageData).messageId
+    );
+
+    if (turnEndItems.length === 0) return;
+
+    const messageIds = turnEndItems.map(
+      (item) => (item.data as TurnEndMessageData).messageId as number
+    );
+
+    try {
+      const statusMap = await batchGetFeedbackStatus({
+        taskId: currentTaskId.value,
+        turnEndMessageIds: messageIds,
+      });
+
+      // 更新每个 turn_end 消息的反馈状态
+      for (const item of turnEndItems) {
+        const data = item.data as TurnEndMessageData;
+        if (data.messageId && statusMap[data.messageId] !== undefined) {
+          data.feedbackType = statusMap[data.messageId];
+        }
+      }
+    } catch (error) {
+      console.error('[useChat] 加载反馈状态失败:', error);
+    }
+  };
+
+  /**
+   * 更新单个轮次的反馈状态
+   */
+  const updateFeedbackStatus = (messageId: number, type: 'like' | 'dislike' | null) => {
+    const item = renderItems.value.find(
+      (item) =>
+        item.type === 'turn_end' && (item.data as TurnEndMessageData).messageId === messageId
+    );
+    if (item) {
+      (item.data as TurnEndMessageData).feedbackType = type;
+    }
   };
 
   /**
@@ -446,6 +497,7 @@ export function useChat(options: UseChatOptions) {
         const data = reactive<TurnEndMessageData>({
           id,
           type: 'turn_end',
+          messageId: msg.id, // 保存数据库消息 ID
           completedAt: turnEndContent.completedAt,
           accumulatedTokens: turnEndContent.accumulatedTokens,
         });
@@ -455,6 +507,7 @@ export function useChat(options: UseChatOptions) {
         const data = reactive<TurnEndMessageData>({
           id,
           type: 'turn_end',
+          messageId: msg.id, // 保存数据库消息 ID
           completedAt: new Date().toISOString(),
           accumulatedTokens: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
         });
@@ -511,11 +564,14 @@ export function useChat(options: UseChatOptions) {
           await throttledScrollToBottom();
         }
       },
-      onComplete: () => {
+      onComplete: async () => {
         isLoading.value = false;
         historyLoaded.value = true;
         abortCurrentRequest = null;
         currentStreamItem = null;
+
+        // 批量获取反馈状态
+        await loadFeedbackStatus();
       },
       onError: (error) => {
         console.error('加载历史消息失败:', error.message);
@@ -911,5 +967,7 @@ export function useChat(options: UseChatOptions) {
     // 智能迭代相关
     needsSmartIterateReply,
     sendSmartIterateReply,
+    // 反馈相关
+    updateFeedbackStatus,
   };
 }
