@@ -60,7 +60,7 @@ const cards = computed(() => [
       <NSpin :show="loading">
         <div class="flex items-center gap-4">
           <!-- 图标 -->
-          <div :class="['rounded-lg p-3', card.bgColor]">
+          <div :class="['flex items-center justify-center rounded-lg p-3', card.bgColor]">
             <NIcon :component="card.icon" :size="24" :class="card.color" />
           </div>
           <!-- 数值 -->
