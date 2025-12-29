@@ -51,6 +51,13 @@ const adminRoutes: RouteRecordRaw = {
       component: () => import('@/pages/admin/members/index.vue'),
       meta: { title: '成员管理', requiresAuth: true, requiresOperator: true },
     },
+    // MCP 管理
+    {
+      path: 'mcp',
+      name: 'AdminMcp',
+      component: () => import('@/pages/admin/mcp/index.vue'),
+      meta: { title: 'MCP 管理', requiresAuth: true, requiresOperator: true },
+    },
   ],
 };
 

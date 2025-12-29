@@ -396,3 +396,87 @@ export async function getDashboardStatistics(params: StatisticsQuery) {
   );
   return res.data;
 }
+
+// ==================== MCP 管理 ====================
+
+// MCP 列表项
+export interface AdminMcpItem {
+  id: number;
+  name: string;
+  description: string | null;
+  transportType: 'stdio' | 'sse' | 'streamableHttp';
+  command: string | null;
+  args: string | null;
+  env: string | null;
+  url: string | null;
+  source: 'builtin' | 'user';
+  isPublic: boolean;
+  timeout: number | null;
+  status: 'connected' | 'disconnected' | 'closed';
+  remarks: string | null;
+  creator: {
+    id: number;
+    username: string;
+    nickname: string | null;
+  };
+  createdAt: string;
+}
+
+// MCP 列表响应
+export interface AdminMcpListResponse {
+  mcps: AdminMcpItem[];
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+// MCP 列表请求参数
+export interface AdminMcpListParams {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  status?: 'all' | 'connected' | 'disconnected' | 'closed';
+  source?: 'all' | 'builtin' | 'user';
+}
+
+/**
+ * 获取 MCP 列表（管理员）
+ */
+export async function getAdminMcpList(params: AdminMcpListParams = {}) {
+  const res = await http.get<AdminMcpListResponse>(
+    '/admin/mcp/list',
+    params as Record<string, unknown>
+  );
+  return res.data;
+}
+
+// 更新 MCP 请求参数
+export interface UpdateAdminMcpParams {
+  name?: string;
+  description?: string | null;
+  transportType?: 'stdio' | 'sse' | 'streamableHttp';
+  command?: string | null;
+  args?: string | null;
+  env?: string | null;
+  url?: string | null;
+  isPublic?: boolean;
+  timeout?: number | null;
+  remarks?: string | null;
+  status?: 'connected' | 'disconnected' | 'closed';
+}
+
+/**
+ * 更新 MCP（管理员）
+ */
+export async function updateAdminMcp(id: number, params: UpdateAdminMcpParams) {
+  await http.put(`/admin/mcp/${id}`, params);
+}
+
+/**
+ * 删除 MCP（管理员）
+ */
+export async function deleteAdminMcp(id: number) {
+  await http.delete(`/admin/mcp/${id}`);
+}

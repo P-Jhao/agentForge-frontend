@@ -312,29 +312,6 @@ function handleDelete() {
             </NTag>
           </NDescriptionsItem>
           <NDescriptionsItem label="创建时间">{{ formattedTime }}</NDescriptionsItem>
-          <!-- stdio 类型显示命令、参数、环境变量 -->
-          <template v-if="mcp.transportType === 'stdio'">
-            <NDescriptionsItem label="启动命令" :span="2">
-              <code class="text-theme-secondary text-sm">{{ mcp.command }}</code>
-            </NDescriptionsItem>
-            <NDescriptionsItem v-if="mcp.args" label="命令参数" :span="2">
-              <code class="text-theme-secondary text-sm whitespace-pre-wrap">
-                {{ formattedArgs }}
-              </code>
-            </NDescriptionsItem>
-            <NDescriptionsItem v-if="mcp.env" label="环境变量" :span="2">
-              <code class="text-theme-secondary text-sm">{{ mcp.env }}</code>
-            </NDescriptionsItem>
-          </template>
-          <!-- sse/http 类型显示 URL、请求头 -->
-          <template v-else>
-            <NDescriptionsItem label="连接地址" :span="2">
-              <code class="text-theme-secondary text-sm">{{ mcp.url }}</code>
-            </NDescriptionsItem>
-            <NDescriptionsItem v-if="mcp.headers" label="请求头" :span="2">
-              <code class="text-theme-secondary text-sm">{{ mcp.headers }}</code>
-            </NDescriptionsItem>
-          </template>
           <NDescriptionsItem v-if="mcp.timeout" label="超时时间">
             {{ mcp.timeout }} 秒
           </NDescriptionsItem>
