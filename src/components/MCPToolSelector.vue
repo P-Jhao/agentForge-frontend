@@ -15,6 +15,7 @@ import {
   NCheckbox,
   NCheckboxGroup,
   NScrollbar,
+  useMessage,
 } from 'naive-ui';
 import { AddOutline, TrashOutline, ChevronForward, CloseOutline } from '@vicons/ionicons5';
 import { useMCPStore, useThemeStore } from '@/stores';
@@ -34,6 +35,7 @@ const emit = defineEmits<{
 
 const mcpStore = useMCPStore();
 const themeStore = useThemeStore();
+const message = useMessage();
 
 // 弹窗显示状态
 const showModal = ref(false);
@@ -89,6 +91,12 @@ const fetchMCPDetail = async (mcpId: number) => {
 
 // 选择 MCP
 const handleSelectMcp = async (mcp: MCP) => {
+  // 检查 MCP 是否可用
+  if (mcp.status !== 'connected') {
+    message.warning('该 MCP 工具不可用');
+    return;
+  }
+
   selectedMcpId.value = mcp.id;
   await fetchMCPDetail(mcp.id);
 
@@ -346,19 +354,26 @@ onUnmounted(() => {
                 <div
                   v-for="mcp in filteredMcpList"
                   :key="mcp.id"
-                  class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 transition-all"
-                  :class="
+                  class="flex items-center gap-2 rounded-lg px-3 py-2.5 transition-all"
+                  :class="[
+                    mcp.status !== 'connected' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                     selectedMcpId === mcp.id
                       ? 'bg-primary-500/20 text-primary-500'
                       : themeStore.isDark
                         ? 'hover:bg-gray-800'
-                        : 'hover:bg-gray-100'
-                  "
+                        : 'hover:bg-gray-100',
+                  ]"
                   @click="handleSelectMcp(mcp)"
                 >
                   <div
                     class="h-1.5 w-1.5 rounded-full"
-                    :class="selectedMcpId === mcp.id ? 'bg-primary-500' : 'bg-gray-400'"
+                    :class="
+                      mcp.status !== 'connected'
+                        ? 'bg-gray-400'
+                        : selectedMcpId === mcp.id
+                          ? 'bg-primary-500'
+                          : 'bg-emerald-500'
+                    "
                     :style="
                       selectedMcpId === mcp.id && themeStore.isDark
                         ? 'box-shadow: 0 0 6px rgba(99, 102, 241, 0.6)'
