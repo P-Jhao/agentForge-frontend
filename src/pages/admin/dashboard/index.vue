@@ -105,7 +105,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
+  <div class="space-y-6">
     <!-- 时间筛选器 -->
     <TimeRangeFilter
       v-model="timeRange"

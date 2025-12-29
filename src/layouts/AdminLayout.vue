@@ -14,14 +14,14 @@ import AdminSidebar from './components/AdminSidebar.vue';
     <AdminSidebar />
 
     <!-- 右侧主体 -->
-    <NLayoutContent class="flex flex-col overflow-hidden">
+    <NLayoutContent content-class="flex flex-col h-full" class="overflow-hidden">
       <!-- 顶部导航栏 -->
       <div class="h-16 shrink-0">
         <LayoutHeader />
       </div>
 
       <!-- 内容区域 -->
-      <div class="main-content-bg flex-1 overflow-auto">
+      <div class="main-content-bg min-h-0 flex-1 overflow-auto p-6">
         <RouterView />
       </div>
     </NLayoutContent>
