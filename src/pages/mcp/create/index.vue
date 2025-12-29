@@ -1,33 +1,30 @@
 <script setup lang="ts">
 /**
  * 新建 MCP 页面
- * 仅管理员可访问
+ * 所有登录用户可访问
+ * 管理员可选择所有传输方式，普通用户只能选择 SSE 和 StreamableHTTP
  */
-import { ref, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton, NIcon, useMessage } from 'naive-ui';
 import { ArrowBackOutline } from '@vicons/ionicons5';
-import { useUserStore, useMCPStore } from '@/stores';
+import { useMCPStore, useUserStore } from '@/stores';
 import MCPForm from '@/components/MCPForm.vue';
 import type { CreateMCPParams } from '@/types';
 
 const router = useRouter();
 const message = useMessage();
-const userStore = useUserStore();
 const mcpStore = useMCPStore();
+const userStore = useUserStore();
 
-// 权限检查：非管理员跳转到 MCP 列表页
-onMounted(() => {
-  if (!userStore.isAdmin) {
-    message.warning('无权限访问此页面');
-    router.replace('/mcp');
-  }
-});
+// 根据用户角色设置默认传输类型
+// 管理员默认 stdio，普通用户默认 sse
+const defaultTransportType = computed(() => (userStore.isAdmin ? 'stdio' : 'sse'));
 
 // 表单数据
 const formData = ref<CreateMCPParams>({
   name: '',
-  transportType: 'stdio',
+  transportType: defaultTransportType.value,
   command: '',
   args: '',
   env: '',

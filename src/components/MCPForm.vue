@@ -2,10 +2,11 @@
 /**
  * MCP 表单组件
  * 用于新建和编辑 MCP，复用表单逻辑
+ * 管理员可选择所有传输方式，普通用户只能选择 SSE 和 StreamableHTTP
  */
 import { computed } from 'vue';
 import { NButton, NInput, NSelect, NInputNumber, NCard, useMessage } from 'naive-ui';
-import { useThemeStore } from '@/stores';
+import { useThemeStore, useUserStore } from '@/stores';
 import type { CreateMCPParams, UpdateMCPParams } from '@/types';
 
 // Props 定义
@@ -33,6 +34,7 @@ const emit = defineEmits<Emits>();
 
 const message = useMessage();
 const themeStore = useThemeStore();
+const userStore = useUserStore();
 
 // 表单数据（双向绑定）
 const formData = computed({
@@ -40,12 +42,22 @@ const formData = computed({
   set: (val) => emit('update:modelValue', val),
 });
 
-// 传输方式选项
-const transportOptions = [
+// 所有传输方式选项
+const allTransportOptions = [
   { value: 'stdio', label: 'Stdio（本地命令）' },
   { value: 'sse', label: 'SSE（Server-Sent Events）' },
   { value: 'streamableHttp', label: 'StreamableHTTP' },
 ];
+
+// 根据用户角色过滤传输方式选项
+// 管理员可选择所有方式，普通用户只能选择 SSE 和 StreamableHTTP
+const transportOptions = computed(() => {
+  if (userStore.isAdmin) {
+    return allTransportOptions;
+  }
+  // 普通用户过滤掉 stdio 选项
+  return allTransportOptions.filter((opt) => opt.value !== 'stdio');
+});
 
 // 是否为 stdio 类型
 const isStdio = computed(() => formData.value.transportType === 'stdio');
