@@ -19,13 +19,14 @@ import {
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
-import { SearchOutline, RefreshOutline } from '@vicons/ionicons5';
+import { SearchOutline, RefreshOutline, AddOutline } from '@vicons/ionicons5';
 import {
   getAdminMemberList,
   updateAdminMember,
   resetAdminMemberPassword,
   deleteAdminMember,
   restoreAdminMember,
+  createAdminMember,
   type AdminMemberItem,
   type AdminMemberListParams,
 } from '@/utils/adminApi';
@@ -85,6 +86,17 @@ const resetPasswordMember = ref<AdminMemberItem | null>(null);
 const resetPasswordForm = ref({
   password: '',
   confirmPassword: '',
+});
+
+// 新增成员弹窗
+const showCreateModal = ref(false);
+const createForm = ref({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  role: 'user' as 'user' | 'premium',
+  email: '',
+  adminNote: '',
 });
 
 // 获取角色标签配置
@@ -420,6 +432,57 @@ async function handleRestore(member: AdminMemberItem) {
   }
 }
 
+// 打开新增成员弹窗
+function handleOpenCreate() {
+  createForm.value = {
+    username: '',
+    password: '',
+    confirmPassword: '',
+    role: 'user',
+    email: '',
+    adminNote: '',
+  };
+  showCreateModal.value = true;
+}
+
+// 提交新增成员
+async function handleCreateSubmit() {
+  // 验证必填字段
+  if (!createForm.value.username) {
+    message.error('请输入用户名');
+    return;
+  }
+  if (!createForm.value.password) {
+    message.error('请输入密码');
+    return;
+  }
+  if (createForm.value.password !== createForm.value.confirmPassword) {
+    message.error('两次输入的密码不一致');
+    return;
+  }
+  if (createForm.value.password.length < 6 || createForm.value.password.length > 32) {
+    message.error('密码长度需在 6-32 字符之间');
+    return;
+  }
+
+  try {
+    const encryptedPassword = await rsaEncrypt(createForm.value.password);
+    await createAdminMember({
+      username: createForm.value.username,
+      encryptedPassword,
+      role: createForm.value.role,
+      email: createForm.value.email || undefined,
+      adminNote: createForm.value.adminNote || undefined,
+    });
+    message.success('创建成功');
+    showCreateModal.value = false;
+    fetchMembers();
+  } catch (error) {
+    const err = error as { message?: string };
+    message.error(err.message || '创建失败');
+  }
+}
+
 // 组件挂载时获取数据
 onMounted(() => {
   fetchMembers();
@@ -461,6 +524,15 @@ onMounted(() => {
           <NIcon :component="RefreshOutline" />
         </template>
         重置
+      </NButton>
+
+      <!-- 右侧新增按钮 -->
+      <div class="flex-1"></div>
+      <NButton type="primary" @click="handleOpenCreate">
+        <template #icon>
+          <NIcon :component="AddOutline" />
+        </template>
+        新增成员
       </NButton>
     </div>
 
@@ -550,6 +622,62 @@ onMounted(() => {
             type="password"
             show-password-on="click"
             placeholder="请再次输入新密码"
+          />
+        </NFormItem>
+      </NForm>
+    </NModal>
+
+    <!-- 新增成员弹窗 -->
+    <NModal
+      v-model:show="showCreateModal"
+      preset="dialog"
+      title="新增成员"
+      positive-text="创建"
+      negative-text="取消"
+      style="width: 500px"
+      @positive-click="handleCreateSubmit"
+    >
+      <NForm :model="createForm" label-placement="left" label-width="80px">
+        <NFormItem label="用户名" path="username">
+          <NInput
+            v-model:value="createForm.username"
+            placeholder="请输入用户名（3-20位字母数字）"
+          />
+        </NFormItem>
+        <NFormItem label="密码" path="password">
+          <NInput
+            v-model:value="createForm.password"
+            type="password"
+            show-password-on="click"
+            placeholder="请输入密码（6-32位）"
+          />
+        </NFormItem>
+        <NFormItem label="确认密码" path="confirmPassword">
+          <NInput
+            v-model:value="createForm.confirmPassword"
+            type="password"
+            show-password-on="click"
+            placeholder="请再次输入密码"
+          />
+        </NFormItem>
+        <NFormItem label="权限" path="role">
+          <NSelect
+            v-model:value="createForm.role"
+            :options="[
+              { label: '普通用户', value: 'user' },
+              { label: '高级用户', value: 'premium' },
+            ]"
+          />
+        </NFormItem>
+        <NFormItem label="邮箱" path="email">
+          <NInput v-model:value="createForm.email" placeholder="请输入邮箱（选填）" />
+        </NFormItem>
+        <NFormItem label="备注" path="adminNote">
+          <NInput
+            v-model:value="createForm.adminNote"
+            type="textarea"
+            placeholder="请输入备注（选填，仅运营员可见）"
+            :rows="3"
           />
         </NFormItem>
       </NForm>

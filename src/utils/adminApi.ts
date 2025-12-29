@@ -260,6 +260,29 @@ export async function restoreAdminMember(id: number) {
   await http.put(`/admin/member/${id}/restore`);
 }
 
+// 创建成员请求参数
+export interface CreateMemberParams {
+  username: string;
+  encryptedPassword: string;
+  role: 'user' | 'premium';
+  email?: string;
+  adminNote?: string;
+}
+
+// 创建成员响应
+export interface CreateMemberResponse {
+  id: number;
+  username: string;
+}
+
+/**
+ * 创建成员（管理员）
+ */
+export async function createAdminMember(params: CreateMemberParams) {
+  const res = await http.post<CreateMemberResponse>('/admin/member', params);
+  return res.data;
+}
+
 // ==================== 推荐示例管理 ====================
 
 // 推荐示例列表项
