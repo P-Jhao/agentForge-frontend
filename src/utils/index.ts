@@ -13,3 +13,4 @@ export * from './intentApi';
 export * from './crypto';
 export * from './shareApi';
 export * from './format';
+export * from './statsApi';

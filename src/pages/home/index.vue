@@ -139,11 +139,26 @@ const handleSend = async (
 };
 
 // 统计数据
-const stats = [
-  { label: '已处理任务', value: '12,847' },
-  { label: '活跃 Forge', value: '5' },
-  { label: 'MCP 工具', value: '28' },
-];
+const stats = ref([
+  { label: '已处理任务', value: '-', key: 'taskCount' },
+  { label: '活跃 Forge', value: '-', key: 'forgeCount' },
+  { label: 'MCP 工具', value: '-', key: 'mcpToolCount' },
+]);
+
+// 加载首页统计数据
+async function loadHomeStats() {
+  try {
+    const { getHomeStats } = await import('@/utils');
+    const data = await getHomeStats();
+    stats.value = [
+      { label: '已处理任务', value: data.taskCount.toLocaleString(), key: 'taskCount' },
+      { label: '活跃 Forge', value: String(data.forgeCount), key: 'forgeCount' },
+      { label: 'MCP 工具', value: String(data.mcpToolCount), key: 'mcpToolCount' },
+    ];
+  } catch (error) {
+    console.error('加载统计数据失败:', error);
+  }
+}
 
 // 加载推荐示例
 async function loadFeaturedTasks() {
@@ -218,6 +233,7 @@ function handleFeaturedClick(e: MouseEvent) {
 
 onMounted(() => {
   loadFeaturedTasks();
+  loadHomeStats();
 });
 </script>
 
