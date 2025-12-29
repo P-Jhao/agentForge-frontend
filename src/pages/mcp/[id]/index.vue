@@ -59,6 +59,11 @@ function handleMCPStatusChange(event: Event) {
   // 只处理当前 MCP 的状态变化
   if (eventMcpId === mcpId.value) {
     console.log(`[MCP详情] 收到状态变化: ${status}`);
+    // 如果当前状态是 closed，忽略 disconnected 的推送（避免关闭操作被覆盖）
+    if (mcp.value?.status === 'closed' && status === 'disconnected') {
+      console.log('[MCP详情] 已关闭状态，忽略 disconnected 推送');
+      return;
+    }
     // 刷新详情数据
     mcpStore.fetchMCPDetail(mcpId.value);
     // 显示提示
@@ -163,8 +168,7 @@ async function handleClose() {
   try {
     await mcpStore.closeMCP(mcpId.value);
     message.success('已关闭 MCP');
-    // 重新获取详情更新状态
-    await mcpStore.fetchMCPDetail(mcpId.value);
+    // store 中已更新状态，无需重新获取
   } catch {
     message.error('关闭失败');
   } finally {

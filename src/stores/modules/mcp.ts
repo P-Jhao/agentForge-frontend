@@ -146,13 +146,13 @@ export const useMCPStore = defineStore('mcp', () => {
   async function closeMCP(id: number) {
     try {
       await closeMCPApi(id);
-      // 更新本地状态
+      // 更新本地状态为 closed
       const mcp = mcpList.value.find((m) => m.id === id);
       if (mcp) {
-        mcp.status = 'disconnected';
+        mcp.status = 'closed';
       }
       if (currentMCP.value?.id === id) {
-        currentMCP.value.status = 'disconnected';
+        currentMCP.value.status = 'closed';
       }
     } catch (error) {
       console.error('关闭 MCP 失败:', error);
@@ -228,11 +228,20 @@ export const useMCPStore = defineStore('mcp', () => {
     // 更新列表中的 MCP 状态
     const mcp = mcpList.value.find((m) => m.id === mcpId);
     if (mcp) {
+      // 如果当前状态是 closed，忽略 disconnected 的推送（避免关闭操作被覆盖）
+      if (mcp.status === 'closed' && status === 'disconnected') {
+        console.log(`[MCPStore] MCP ${mcpId} 已关闭，忽略 disconnected 状态推送`);
+        return;
+      }
       mcp.status = status;
     }
 
     // 更新当前 MCP 详情的状态
     if (currentMCP.value?.id === mcpId) {
+      // 同样的逻辑
+      if (currentMCP.value.status === 'closed' && status === 'disconnected') {
+        return;
+      }
       currentMCP.value.status = status;
     }
 
