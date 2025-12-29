@@ -3,7 +3,7 @@ import { h, watch, type Component } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { NLayoutHeader, NButton, NSpace, NAvatar, NDropdown, NIcon, NTooltip } from 'naive-ui';
 import { PersonOutline, LogOutOutline, SunnyOutline, MoonOutline } from '@vicons/ionicons5';
-import { useThemeStore, useUserStore, useTaskStore } from '@/stores';
+import { useThemeStore, useUserStore, useTaskStore, useNotificationStore } from '@/stores';
 import NotificationPopover from '@/components/NotificationPopover.vue';
 
 const router = useRouter();
@@ -11,6 +11,7 @@ const route = useRoute();
 const themeStore = useThemeStore();
 const userStore = useUserStore();
 const taskStore = useTaskStore();
+const notificationStore = useNotificationStore();
 
 // 监听路由变化，离开任务页面时清除当前任务
 watch(
@@ -50,6 +51,7 @@ const userOptions = [
 function handleUserSelect(key: string) {
   if (key === 'logout') {
     userStore.logout();
+    notificationStore.clearAll(); // 清除通知状态
     router.push('/login');
   } else if (key === 'profile') {
     router.push('/profile');

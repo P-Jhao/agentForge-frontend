@@ -124,7 +124,7 @@ const columns = computed<DataTableColumns<AdminFeedbackItem>>(() => [
   {
     title: '反馈类型',
     key: 'type',
-    width: 60,
+    width: 80,
     render: (row) => {
       if (row.type === 'like') {
         return h(NIcon, { component: ThumbsUp, size: 18, color: '#18a058' });
