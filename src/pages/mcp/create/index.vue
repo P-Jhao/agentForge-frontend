@@ -34,6 +34,7 @@ const formData = ref<CreateMCPParams>({
   timeout: 30,
   remarks: '',
   example: '',
+  isPublic: false, // 默认私有
 });
 
 // 提交加载状态
@@ -84,6 +85,9 @@ function buildSubmitData(): CreateMCPParams {
   if (formData.value.example?.trim()) {
     submitData.example = formData.value.example.trim();
   }
+
+  // 公开设置
+  submitData.isPublic = formData.value.isPublic ?? false;
 
   return submitData;
 }

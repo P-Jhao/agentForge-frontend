@@ -5,8 +5,11 @@
 // MCP 传输方式类型
 export type MCPTransportType = 'stdio' | 'sse' | 'streamableHttp';
 
-// MCP 来源类型（固定为 builtin）
-export type MCPSource = 'builtin';
+// MCP 来源类型
+export type MCPSource = 'builtin' | 'user';
+
+// MCP 列表筛选类型
+export type MCPFilterType = 'all' | 'builtin' | 'mine' | 'other';
 
 // MCP 连接状态
 // connected: 连通成功
@@ -19,6 +22,12 @@ export interface MCPTool {
   name: string;
   description: string;
   inputSchema?: Record<string, unknown>;
+}
+
+// MCP 创建者信息
+export interface MCPCreator {
+  id: number;
+  nickname: string;
 }
 
 // MCP 基础类型
@@ -43,6 +52,8 @@ export interface MCP {
   status: MCPStatus;
   createdAt: string;
   updatedAt: string;
+  // 创建者信息（列表查询时返回）
+  user?: MCPCreator;
 }
 
 // MCP 关联的 Forge 信息
@@ -76,6 +87,7 @@ export interface CreateMCPParams {
   timeout?: number;
   remarks?: string;
   example?: string;
+  isPublic?: boolean; // 是否公开，默认私有
 }
 
 // 更新 MCP 参数
@@ -93,6 +105,7 @@ export interface UpdateMCPParams {
   timeout?: number;
   remarks?: string;
   example?: string;
+  isPublic?: boolean; // 是否公开
 }
 
 // 删除 MCP 响应

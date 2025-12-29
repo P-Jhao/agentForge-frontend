@@ -14,7 +14,14 @@ import {
   reconnectMCP as reconnectMCPApi,
   deleteMCP as deleteMCPApi,
 } from '@/utils';
-import type { MCP, MCPDetail, CreateMCPParams, UpdateMCPParams, MCPStatus } from '@/types';
+import type {
+  MCP,
+  MCPDetail,
+  CreateMCPParams,
+  UpdateMCPParams,
+  MCPStatus,
+  MCPFilterType,
+} from '@/types';
 
 export const useMCPStore = defineStore('mcp', () => {
   // ========== 状态 ==========
@@ -31,20 +38,28 @@ export const useMCPStore = defineStore('mcp', () => {
   // 搜索关键词
   const searchKeyword = ref('');
 
+  // 筛选类型
+  const filterType = ref<MCPFilterType>('all');
+
   // ========== 方法 ==========
 
   /**
    * 获取 MCP 列表
-   * @param keyword 搜索关键词（可选）
+   * @param options 查询选项
+   * @param options.keyword 搜索关键词（可选）
+   * @param options.filter 筛选类型（可选）
    */
-  async function fetchMCPList(keyword?: string) {
+  async function fetchMCPList(options?: { keyword?: string; filter?: MCPFilterType }) {
     loading.value = true;
     try {
-      // 更新搜索关键词
-      if (keyword !== undefined) {
-        searchKeyword.value = keyword;
+      // 更新搜索关键词和筛选类型
+      if (options?.keyword !== undefined) {
+        searchKeyword.value = options.keyword;
       }
-      mcpList.value = await fetchMCPListApi(searchKeyword.value || undefined);
+      if (options?.filter !== undefined) {
+        filterType.value = options.filter;
+      }
+      mcpList.value = await fetchMCPListApi(searchKeyword.value || undefined, filterType.value);
     } catch (error) {
       console.error('获取 MCP 列表失败:', error);
       throw error;
@@ -252,6 +267,7 @@ export const useMCPStore = defineStore('mcp', () => {
     currentMCP,
     loading,
     searchKeyword,
+    filterType,
 
     // 方法
     fetchMCPList,

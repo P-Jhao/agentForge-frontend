@@ -33,6 +33,7 @@ const formData = ref<UpdateMCPParams>({
   timeout: 30,
   remarks: '',
   example: '',
+  isPublic: false,
 });
 
 // 提交加载状态
@@ -74,6 +75,7 @@ onMounted(async () => {
       timeout: mcp.timeout || 30,
       remarks: mcp.remarks || '',
       example: mcp.example || '',
+      isPublic: mcp.isPublic,
     };
   } catch {
     message.error('加载 MCP 信息失败');
@@ -121,6 +123,7 @@ function buildSubmitData(): UpdateMCPParams {
   submitData.timeout = formData.value.timeout || undefined;
   submitData.remarks = formData.value.remarks?.trim() || undefined;
   submitData.example = formData.value.example?.trim() || undefined;
+  submitData.isPublic = formData.value.isPublic;
 
   return submitData;
 }

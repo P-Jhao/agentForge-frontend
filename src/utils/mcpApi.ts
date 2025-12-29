@@ -10,10 +10,12 @@ import type {
   DeleteMCPResult,
   ReconnectMCPResult,
   ValidateForgePublishResult,
+  MCPFilterType,
 } from '@/types';
 
 /**
- * 创建 MCP（仅管理员）
+ * 创建 MCP
+ * 管理员可创建所有类型，普通用户只能创建 SSE 和 StreamableHTTP 类型
  * @param params MCP 配置参数
  */
 export async function createMCP(params: CreateMCPParams): Promise<MCP> {
@@ -24,9 +26,16 @@ export async function createMCP(params: CreateMCPParams): Promise<MCP> {
 /**
  * 获取 MCP 列表
  * @param keyword 搜索关键词（可选）
+ * @param filter 筛选类型：all/builtin/mine/other（可选）
  */
-export async function getMCPList(keyword?: string): Promise<MCP[]> {
-  const res = await http.get<MCP[]>('/mcp/list', keyword ? { keyword } : undefined);
+export async function getMCPList(keyword?: string, filter?: MCPFilterType): Promise<MCP[]> {
+  const params: Record<string, string> = {};
+  if (keyword) params.keyword = keyword;
+  if (filter) params.filter = filter;
+  const res = await http.get<MCP[]>(
+    '/mcp/list',
+    Object.keys(params).length > 0 ? params : undefined
+  );
   return res.data;
 }
 

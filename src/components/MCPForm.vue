@@ -5,7 +5,7 @@
  * 管理员可选择所有传输方式，普通用户只能选择 SSE 和 StreamableHTTP
  */
 import { computed } from 'vue';
-import { NButton, NInput, NSelect, NInputNumber, NCard, useMessage } from 'naive-ui';
+import { NButton, NInput, NSelect, NInputNumber, NCard, NSwitch, useMessage } from 'naive-ui';
 import { useThemeStore, useUserStore } from '@/stores';
 import type { CreateMCPParams, UpdateMCPParams } from '@/types';
 
@@ -288,6 +288,15 @@ defineExpose({ validateForm });
           :rows="2"
           @update:value="updateField('remarks', $event)"
         />
+      </div>
+
+      <!-- 公开设置 -->
+      <div class="flex items-center justify-between">
+        <div>
+          <label class="text-theme block text-sm font-medium">公开 MCP</label>
+          <p class="text-theme-muted text-xs">公开后其他用户可以看到并使用此 MCP</p>
+        </div>
+        <NSwitch :value="formData.isPublic" @update:value="updateField('isPublic', $event)" />
       </div>
 
       <!-- 操作按钮 -->

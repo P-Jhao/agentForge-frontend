@@ -1,11 +1,16 @@
 <script setup lang="ts">
 /**
  * MCP 卡片组件
- * 展示单个 MCP 的信息：名称、描述、传输方式、连接状态、创建时间
+ * 展示单个 MCP 的信息：名称、描述、来源标签、连接状态、创建时间
+ * 标签逻辑：
+ * - 内置（管理员创建 + 公开）
+ * - 用户名（普通用户创建 + 公开）
+ * - 私有（不公开）
  */
 import { computed } from 'vue';
 import { NTag, NIcon } from 'naive-ui';
-import { CloudOutline, TerminalOutline, ServerOutline } from '@vicons/ionicons5';
+import { LockClosedOutline, GlobeOutline, ShieldCheckmarkOutline } from '@vicons/ionicons5';
+import { useUserStore } from '@/stores';
 import type { MCP } from '@/types';
 
 const props = defineProps<{
@@ -15,6 +20,8 @@ const props = defineProps<{
 defineEmits<{
   click: [];
 }>();
+
+const userStore = useUserStore();
 
 // 连接状态颜色
 const statusColor = computed(() => {
@@ -26,14 +33,47 @@ const statusText = computed(() => {
   return props.mcp.status === 'connected' ? '连通成功' : '连通失败';
 });
 
-// 传输方式配置
-const transportConfig = computed(() => {
-  const configs = {
-    stdio: { text: 'Stdio', icon: TerminalOutline, type: 'warning' as const },
-    sse: { text: 'SSE', icon: CloudOutline, type: 'info' as const },
-    streamableHttp: { text: 'HTTP', icon: ServerOutline, type: 'success' as const },
+// 来源标签配置
+// - 内置：管理员创建 + 公开
+// - 用户名：普通用户创建 + 公开
+// - 私有：不公开
+const sourceConfig = computed(() => {
+  const { source, isPublic, user, userId } = props.mcp;
+
+  if (!isPublic) {
+    // 私有 MCP
+    return {
+      text: '私有',
+      icon: LockClosedOutline,
+      type: 'default' as const,
+    };
+  }
+
+  if (source === 'builtin') {
+    // 管理员创建的公开 MCP
+    return {
+      text: '内置',
+      icon: ShieldCheckmarkOutline,
+      type: 'success' as const,
+    };
+  }
+
+  // 普通用户创建的公开 MCP
+  // 如果是当前用户创建的，显示"我的"
+  if (userId === userStore.userInfo?.id) {
+    return {
+      text: '我的',
+      icon: GlobeOutline,
+      type: 'info' as const,
+    };
+  }
+
+  // 其他用户创建的，显示用户名
+  return {
+    text: user?.nickname || '其他用户',
+    icon: GlobeOutline,
+    type: 'warning' as const,
   };
-  return configs[props.mcp.transportType];
 });
 
 // 格式化创建时间
@@ -62,13 +102,13 @@ const formattedTime = computed(() => {
       <h3 class="text-theme flex-1 truncate text-sm font-medium">{{ mcp.name }}</h3>
     </div>
 
-    <!-- 传输方式 + 创建时间 -->
+    <!-- 来源标签 + 创建时间 -->
     <div class="mb-3 flex items-center gap-2">
-      <NTag size="small" :type="transportConfig.type" round>
+      <NTag size="small" :type="sourceConfig.type" round>
         <template #icon>
-          <NIcon :component="transportConfig.icon" :size="12" />
+          <NIcon :component="sourceConfig.icon" :size="12" />
         </template>
-        {{ transportConfig.text }}
+        {{ sourceConfig.text }}
       </NTag>
       <span class="text-theme-muted text-xs">{{ formattedTime }}</span>
     </div>
