@@ -160,6 +160,26 @@
     @apply from-primary-600 via-primary-700 to-accent-purple bg-linear-to-r bg-clip-text text-transparent;
   }
 
+  /* 动态渐变文字 - 颜色流动动画 */
+  .text-gradient-animated {
+    background: linear-gradient(90deg, #8098f9, #a855f7, #ec4899, #06b6d4, #8098f9);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-flow 6s ease-in-out infinite;
+  }
+
+  /* 浅色模式动态渐变文字 */
+  html:not(.dark) .text-gradient-animated {
+    background: linear-gradient(90deg, #444ce7, #3538cd, #a855f7, #6172f3, #444ce7);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-flow 6s ease-in-out infinite;
+  }
+
   /* 动画网格背景 */
   .bg-grid {
     background-image:
@@ -856,6 +876,11 @@
     animation: glow 2s ease-in-out infinite alternate;
   }
 
+  /* 动画暂停工具类 */
+  .animation-paused {
+    animation-play-state: paused;
+  }
+
   /* 隐藏滚动条 */
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -883,6 +908,18 @@
   }
   to {
     box-shadow: 0 0 30px rgba(168, 85, 247, 0.6);
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 

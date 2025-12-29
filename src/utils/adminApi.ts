@@ -369,7 +369,7 @@ export interface StatisticsData {
 export async function getDashboardStatistics(params: StatisticsQuery) {
   const res = await http.get<StatisticsData>(
     '/admin/statistics',
-    params as Record<string, unknown>
+    params as unknown as Record<string, unknown>
   );
   return res.data;
 }

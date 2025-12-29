@@ -31,6 +31,17 @@ const router = useRouter();
 const taskStore = useTaskStore();
 const forgeStore = useForgeStore();
 
+// 判断是否在首页
+const isHomePage = computed(() => route.path === '/' || route.path === '/home');
+
+// Logo 文字样式类 - 始终使用动画类，首页时暂停动画
+const logoTextClass = computed(() => [
+  'text-gradient-animated',
+  'text-lg',
+  'font-bold',
+  { 'animation-paused': isHomePage.value },
+]);
+
 // 新建任务 - 跳转到首页
 function handleNewTask() {
   router.push('/');
@@ -192,7 +203,7 @@ watch(searchKeyword, (keyword) => {
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(async () => {
     try {
-      await taskStore.fetchTasks(keyword || undefined);
+      await taskStore.fetchTasks(keyword ? { keyword } : undefined);
     } catch (error) {
       console.error('搜索任务失败:', error);
     }
@@ -217,7 +228,7 @@ watch(searchKeyword, (keyword) => {
       <RouterLink to="/" class="flex h-16 shrink-0 items-center px-3">
         <div v-if="!collapsed" class="flex items-center gap-2">
           <img src="@/assets/imgs/logo.png" alt="AgentForge Logo" class="h-10" />
-          <span class="text-gradient text-lg font-bold">AgentForge</span>
+          <span :class="logoTextClass">AgentForge</span>
         </div>
         <img
           v-else

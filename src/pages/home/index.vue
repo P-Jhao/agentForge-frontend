@@ -244,7 +244,7 @@ onMounted(() => {
         </div>
         <h1 class="title-glow mb-4 text-5xl font-bold">
           欢迎使用
-          <span class="text-gradient">AgentForge</span>
+          <span class="text-gradient-animated">AgentForge</span>
         </h1>
         <p class="text-theme-secondary mx-auto max-w-2xl text-lg">
           锻造你的专属 AI Agent，通过 MCP 选配打造强大的智能助手
