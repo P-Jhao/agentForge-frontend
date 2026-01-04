@@ -5,9 +5,17 @@
  * - tool: 展示工具执行结果的 Markdown 摘要
  * - file: 展示输出文件的预览内容或下载提示
  */
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { NModal, NIcon, NButton } from 'naive-ui';
-import { CheckmarkCircle, CloseCircle, Close, Download, DocumentText } from '@vicons/ionicons5';
+import {
+  CheckmarkCircle,
+  CloseCircle,
+  Close,
+  Download,
+  DocumentText,
+  Expand,
+  Contract,
+} from '@vicons/ionicons5';
 import EMarkdown from '@/components/EMarkdown.vue';
 import { useThemeStore } from '@/stores';
 import type { OutputFileInfo } from '@/types';
@@ -44,8 +52,17 @@ const emit = defineEmits<{
 
 const themeStore = useThemeStore();
 
+// 全屏状态
+const isFullscreen = ref(false);
+
+// 切换全屏
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value;
+};
+
 // 关闭弹窗
 const handleClose = () => {
+  isFullscreen.value = false; // 关闭时重置全屏状态
   emit('update:show', false);
 };
 
@@ -145,7 +162,11 @@ const modalStyle = computed(() => {
     :close-on-esc="true"
     @update:show="emit('update:show', $event)"
   >
-    <div class="tool-result-modal" :style="modalStyle">
+    <div
+      class="tool-result-modal"
+      :class="{ 'tool-result-modal--fullscreen': isFullscreen }"
+      :style="modalStyle"
+    >
       <!-- 头部 -->
       <div class="modal-header">
         <!-- 工具模式头部 -->
@@ -193,6 +214,12 @@ const modalStyle = computed(() => {
           >
             <template #icon>
               <NIcon :component="Download" />
+            </template>
+          </NButton>
+          <!-- 全屏按钮 -->
+          <NButton quaternary circle size="small" @click="toggleFullscreen">
+            <template #icon>
+              <NIcon :component="isFullscreen ? Contract : Expand" />
             </template>
           </NButton>
           <!-- 关闭按钮 -->
@@ -259,6 +286,16 @@ const modalStyle = computed(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 全屏模式 */
+.tool-result-modal--fullscreen {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
 }
 
 .modal-header {
