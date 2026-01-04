@@ -120,6 +120,11 @@ function formatDateTime(dateStr: string | null): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+// 查看 MCP 详情（新标签页打开）
+function handleViewDetail(mcp: AdminMcpItem) {
+  window.open(`/mcp/${mcp.id}`, '_blank');
+}
+
 // 表格列定义
 const columns = computed<DataTableColumns<AdminMcpItem>>(() => [
   {
@@ -127,6 +132,15 @@ const columns = computed<DataTableColumns<AdminMcpItem>>(() => [
     key: 'name',
     width: 160,
     ellipsis: { tooltip: true },
+    render: (row) =>
+      h(
+        'span',
+        {
+          style: 'color: var(--primary-color); cursor: pointer;',
+          onClick: () => handleViewDetail(row),
+        },
+        row.name
+      ),
   },
   {
     title: '传输方式',

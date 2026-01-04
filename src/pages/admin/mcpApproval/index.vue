@@ -12,8 +12,6 @@ import {
   NTag,
   NModal,
   NInput,
-  NDescriptions,
-  NDescriptionsItem,
   useMessage,
   type DataTableColumns,
 } from 'naive-ui';
@@ -50,14 +48,11 @@ const statusOptions = [
   { label: '已取消', value: 'cancelled' },
 ];
 
-// 详情弹窗
-const showDetailModal = ref(false);
-const currentMcp = ref<AdminMcpApprovalItem | null>(null);
-
 // 拒绝弹窗
 const showRejectModal = ref(false);
 const rejectNote = ref('');
 const rejectLoading = ref(false);
+const currentMcp = ref<AdminMcpApprovalItem | null>(null);
 
 // 批准加载状态
 const approveLoading = ref(false);
@@ -229,10 +224,9 @@ function handleRefresh() {
   fetchList();
 }
 
-// 查看详情
+// 查看详情（新标签页打开 MCP 详情页）
 function handleViewDetail(mcp: AdminMcpApprovalItem) {
-  currentMcp.value = mcp;
-  showDetailModal.value = true;
+  window.open(`/mcp/${mcp.id}`, '_blank');
 }
 
 // 批准申请
@@ -324,51 +318,6 @@ onMounted(() => {
       :scroll-x="900"
       remote
     />
-
-    <!-- 详情弹窗 -->
-    <NModal v-model:show="showDetailModal" preset="card" title="MCP 详情" style="width: 600px">
-      <NDescriptions v-if="currentMcp" :column="1" label-placement="left" bordered>
-        <NDescriptionsItem label="名称">{{ currentMcp.name }}</NDescriptionsItem>
-        <NDescriptionsItem label="描述">{{ currentMcp.description || '-' }}</NDescriptionsItem>
-        <NDescriptionsItem label="传输方式">{{ currentMcp.transportType }}</NDescriptionsItem>
-        <NDescriptionsItem v-if="currentMcp.url" label="连接地址">
-          {{ currentMcp.url }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="连接状态">
-          <NTag :type="getConnectionStatusTag(currentMcp.status).type" size="small">
-            {{ getConnectionStatusTag(currentMcp.status).text }}
-          </NTag>
-        </NDescriptionsItem>
-        <NDescriptionsItem label="审核状态">
-          <NTag :type="getStatusTag(currentMcp.publicApprovalStatus).type" size="small">
-            {{ getStatusTag(currentMcp.publicApprovalStatus).text }}
-          </NTag>
-        </NDescriptionsItem>
-        <NDescriptionsItem v-if="currentMcp.publicApprovalNote" label="审核备注">
-          {{ currentMcp.publicApprovalNote }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="申请人">
-          {{ currentMcp.creator.nickname || currentMcp.creator.username }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="创建时间">
-          {{ formatDateTime(currentMcp.createdAt) }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="申请时间">
-          {{ formatDateTime(currentMcp.updatedAt) }}
-        </NDescriptionsItem>
-      </NDescriptions>
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <NButton @click="showDetailModal = false">关闭</NButton>
-          <template v-if="currentMcp?.publicApprovalStatus === 'pending'">
-            <NButton type="error" @click="handleRejectClick(currentMcp!)">拒绝</NButton>
-            <NButton type="success" :loading="approveLoading" @click="handleApprove(currentMcp!)">
-              批准
-            </NButton>
-          </template>
-        </div>
-      </template>
-    </NModal>
 
     <!-- 拒绝原因弹窗 -->
     <NModal v-model:show="showRejectModal" preset="card" title="拒绝公开申请" style="width: 480px">
