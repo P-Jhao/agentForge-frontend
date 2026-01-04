@@ -59,6 +59,7 @@ const localToolPathConfig = ref<ToolPathConfig>({});
 const pathTypeOptions: Array<{ value: string | null; label: string }> = [
   { value: null, label: '无' },
   { value: 'output', label: '输出路径' },
+  { value: 'input', label: '输入路径' },
 ];
 
 // 检测配置是否有变化
