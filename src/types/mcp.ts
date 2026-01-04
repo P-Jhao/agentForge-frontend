@@ -83,11 +83,13 @@ export interface MCPAssociatedForge {
   usageCount: number;
 }
 
-// MCP 详情（含关联 Forge、工具列表）
+// MCP 详情（含关联 Forge、工具列表、创建者信息）
 export interface MCPDetail extends MCP {
   associatedForges: MCPAssociatedForge[];
   tools: MCPTool[];
   toolPathConfig: ToolPathConfig | null;
+  // 创建者信息（详情查询时返回）
+  creator: MCPCreator | null;
 }
 
 // 创建 MCP 参数

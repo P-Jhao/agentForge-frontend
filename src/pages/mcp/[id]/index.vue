@@ -490,6 +490,9 @@ async function handleConfirmRequestPublic() {
             </NTag>
           </NDescriptionsItem>
           <NDescriptionsItem label="创建时间">{{ formattedTime }}</NDescriptionsItem>
+          <NDescriptionsItem v-if="mcp.creator?.nickname" label="创建者">
+            {{ mcp.creator.nickname }}
+          </NDescriptionsItem>
           <NDescriptionsItem v-if="mcp.timeout" label="超时时间">
             {{ mcp.timeout }} 秒
           </NDescriptionsItem>
