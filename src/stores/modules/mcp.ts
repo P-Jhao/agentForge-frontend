@@ -13,6 +13,7 @@ import {
   closeMCP as closeMCPApi,
   reconnectMCP as reconnectMCPApi,
   deleteMCP as deleteMCPApi,
+  updateToolPathConfig as updateToolPathConfigApi,
 } from '@/utils';
 import type {
   MCP,
@@ -21,6 +22,7 @@ import type {
   UpdateMCPParams,
   MCPStatus,
   MCPFilterType,
+  ToolPathConfig,
 } from '@/types';
 
 export const useMCPStore = defineStore('mcp', () => {
@@ -270,6 +272,24 @@ export const useMCPStore = defineStore('mcp', () => {
     console.log('[MCPStore] SSE 监听器已初始化');
   }
 
+  /**
+   * 更新 MCP 工具路径配置（仅管理员）
+   * @param id MCP ID
+   * @param toolPathConfig 工具路径配置
+   */
+  async function updateToolPathConfig(id: number, toolPathConfig: ToolPathConfig | null) {
+    try {
+      await updateToolPathConfigApi(id, toolPathConfig);
+      // 更新当前 MCP 详情
+      if (currentMCP.value?.id === id) {
+        currentMCP.value.toolPathConfig = toolPathConfig;
+      }
+    } catch (error) {
+      console.error('更新工具路径配置失败:', error);
+      throw error;
+    }
+  }
+
   return {
     // 状态
     mcpList,
@@ -291,5 +311,6 @@ export const useMCPStore = defineStore('mcp', () => {
     setSearchKeyword,
     updateMCPStatus,
     initializeSSEListener,
+    updateToolPathConfig,
   };
 });

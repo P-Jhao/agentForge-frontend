@@ -11,6 +11,7 @@ import type {
   ReconnectMCPResult,
   ValidateForgePublishResult,
   MCPFilterType,
+  ToolPathConfig,
 } from '@/types';
 
 /**
@@ -101,6 +102,21 @@ export async function deleteMCP(id: number): Promise<DeleteMCPResult> {
 export async function validateForgePublish(forgeId: number): Promise<ValidateForgePublishResult> {
   const res = await http.post<ValidateForgePublishResult>('/mcp/validate-forge-publish', {
     forgeId,
+  });
+  return res.data;
+}
+
+/**
+ * 更新 MCP 工具路径配置（仅管理员）
+ * @param id MCP ID
+ * @param toolPathConfig 工具路径配置
+ */
+export async function updateToolPathConfig(
+  id: number,
+  toolPathConfig: ToolPathConfig | null
+): Promise<{ success: boolean }> {
+  const res = await http.put<{ success: boolean }>(`/mcp/${id}/tool-path-config`, {
+    toolPathConfig,
   });
   return res.data;
 }

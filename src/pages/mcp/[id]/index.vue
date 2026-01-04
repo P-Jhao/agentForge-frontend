@@ -2,10 +2,10 @@
 /**
  * MCP 详情页面
  * 显示 MCP 详细信息、关联的 Forge 列表、工具列表
- * 管理员可以关闭、编辑、删除 MCP
+ * 管理员可以关闭、编辑、删除 MCP，配置工具路径类型
  * 所有用户可以重连 MCP
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   NButton,
@@ -16,6 +16,9 @@ import {
   NCard,
   NDescriptions,
   NDescriptionsItem,
+  NCollapse,
+  NCollapseItem,
+  NSelect,
   useMessage,
   useDialog,
 } from 'naive-ui';
@@ -29,9 +32,11 @@ import {
   CloudOutline,
   TerminalOutline,
   ServerOutline,
+  SaveOutline,
 } from '@vicons/ionicons5';
 import { useUserStore, useMCPStore } from '@/stores';
 import ForgeCard from '../components/ForgeCard.vue';
+import type { ToolPathConfig, ToolPathType } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -45,6 +50,22 @@ const mcpId = computed(() => Number(route.params.id));
 
 // 操作加载状态
 const actionLoading = ref(false);
+
+// 工具路径配置相关
+const saveConfigLoading = ref(false);
+const localToolPathConfig = ref<ToolPathConfig>({});
+
+// 路径类型选项
+const pathTypeOptions: Array<{ value: string | null; label: string }> = [
+  { value: null, label: '无' },
+  { value: 'output', label: '输出路径' },
+];
+
+// 检测配置是否有变化
+const configChanged = computed(() => {
+  const original = mcp.value?.toolPathConfig || {};
+  return JSON.stringify(localToolPathConfig.value) !== JSON.stringify(original);
+});
 
 // MCP 状态变化事件详情
 interface MCPStatusChangeDetail {
@@ -73,21 +94,37 @@ function handleMCPStatusChange(event: Event) {
   }
 }
 
+// 当前 MCP
+const mcp = computed(() => mcpStore.currentMCP);
+
 // 初始化
 onMounted(async () => {
   // 加载 MCP 详情
   await mcpStore.fetchMCPDetail(mcpId.value);
+  // 初始化本地工具路径配置
+  if (mcp.value?.toolPathConfig) {
+    localToolPathConfig.value = JSON.parse(JSON.stringify(mcp.value.toolPathConfig));
+  }
   // 监听 MCP 状态变化事件
   window.addEventListener('mcp:status_change', handleMCPStatusChange);
 });
+
+// 监听 mcp 变化，同步工具路径配置
+watch(
+  () => mcp.value?.toolPathConfig,
+  (newConfig) => {
+    if (newConfig) {
+      localToolPathConfig.value = JSON.parse(JSON.stringify(newConfig));
+    } else {
+      localToolPathConfig.value = {};
+    }
+  }
+);
 
 // 清理
 onUnmounted(() => {
   window.removeEventListener('mcp:status_change', handleMCPStatusChange);
 });
-
-// 当前 MCP
-const mcp = computed(() => mcpStore.currentMCP);
 
 // 连接状态颜色
 const statusColor = computed(() => {
@@ -122,20 +159,6 @@ const formattedTime = computed(() => {
   if (!mcp.value) return '';
   const date = new Date(mcp.value.createdAt);
   return date.toLocaleString('zh-CN');
-});
-
-// 格式化命令参数（JSON 数组转多行显示）
-const formattedArgs = computed(() => {
-  if (!mcp.value?.args) return '';
-  try {
-    const argsArray = JSON.parse(mcp.value.args);
-    if (Array.isArray(argsArray)) {
-      return argsArray.join('\n');
-    }
-  } catch {
-    // 解析失败，直接返回原值
-  }
-  return mcp.value.args;
 });
 
 // 返回上一页
@@ -222,6 +245,68 @@ function handleDelete() {
       }
     },
   });
+}
+
+// ========== 工具路径配置相关方法 ==========
+
+// 获取参数的路径类型
+function getParamPathType(toolName: string, paramName: string): ToolPathType {
+  return localToolPathConfig.value[toolName]?.[paramName] || null;
+}
+
+// 设置参数的路径类型
+function setParamPathType(toolName: string, paramName: string, value: ToolPathType) {
+  if (!localToolPathConfig.value[toolName]) {
+    localToolPathConfig.value[toolName] = {};
+  }
+  if (value === null) {
+    delete localToolPathConfig.value[toolName][paramName];
+    // 如果工具下没有配置了，删除工具键
+    if (Object.keys(localToolPathConfig.value[toolName]).length === 0) {
+      delete localToolPathConfig.value[toolName];
+    }
+  } else {
+    localToolPathConfig.value[toolName][paramName] = value;
+  }
+}
+
+// 保存工具路径配置
+async function handleSaveConfig() {
+  saveConfigLoading.value = true;
+  try {
+    const configToSave =
+      Object.keys(localToolPathConfig.value).length > 0 ? localToolPathConfig.value : null;
+    await mcpStore.updateToolPathConfig(mcpId.value, configToSave);
+    message.success('配置已保存');
+  } catch {
+    message.error('保存失败');
+  } finally {
+    saveConfigLoading.value = false;
+  }
+}
+
+// 格式化参数 schema 显示
+function formatParamSchema(schema: unknown): string {
+  if (!schema || typeof schema !== 'object') return '未知类型';
+  const s = schema as Record<string, unknown>;
+  const type = s.type || '未知';
+  const desc = s.description ? ` - ${s.description}` : '';
+  return `${type}${desc}`;
+}
+
+// 获取工具的参数列表
+function getToolParams(tool: {
+  inputSchema?: Record<string, unknown>;
+}): Array<{ name: string; schema: unknown; required: boolean }> {
+  if (!tool.inputSchema) return [];
+  const properties = tool.inputSchema.properties as Record<string, unknown> | undefined;
+  if (!properties) return [];
+  const required = (tool.inputSchema.required as string[]) || [];
+  return Object.entries(properties).map(([name, schema]) => ({
+    name,
+    schema,
+    required: required.includes(name),
+  }));
 }
 </script>
 
@@ -346,15 +431,69 @@ function handleDelete() {
 
       <!-- 工具列表 -->
       <NCard title="工具列表">
-        <div v-if="mcp.tools.length > 0" class="space-y-3">
-          <div
-            v-for="tool in mcp.tools"
-            :key="tool.name"
-            class="rounded-lg border border-gray-200 p-3 dark:border-white/10"
+        <template #header-extra>
+          <!-- 保存配置按钮（仅管理员且有变化时显示） -->
+          <NButton
+            v-if="userStore.isAdmin && configChanged"
+            type="primary"
+            size="small"
+            :loading="saveConfigLoading"
+            @click="handleSaveConfig"
           >
-            <div class="text-theme mb-1 font-medium">{{ tool.name }}</div>
-            <div class="text-theme-secondary text-sm">{{ tool.description }}</div>
-          </div>
+            <template #icon>
+              <NIcon :component="SaveOutline" />
+            </template>
+            保存配置
+          </NButton>
+        </template>
+        <div v-if="mcp.tools.length > 0">
+          <NCollapse>
+            <NCollapseItem v-for="tool in mcp.tools" :key="tool.name" :name="tool.name">
+              <template #header>
+                <span class="text-theme font-medium">{{ tool.name }}</span>
+              </template>
+              <!-- 工具详情：描述 + 参数列表 -->
+              <div class="space-y-4">
+                <!-- 工具描述 -->
+                <div class="text-theme-secondary text-sm">{{ tool.description }}</div>
+                <!-- 参数信息 -->
+                <div v-if="getToolParams(tool).length > 0">
+                  <div class="text-theme-muted mb-2 text-sm font-medium">📋 参数信息：</div>
+                  <div class="space-y-2">
+                    <div
+                      v-for="param in getToolParams(tool)"
+                      :key="param.name"
+                      class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-white/5"
+                    >
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                          <span class="text-theme font-medium">{{ param.name }}</span>
+                          <NTag v-if="param.required" type="error" size="tiny">必填</NTag>
+                        </div>
+                        <div class="text-theme-muted mt-1 text-sm">
+                          {{ formatParamSchema(param.schema) }}
+                        </div>
+                      </div>
+                      <!-- 管理员可配置路径类型 -->
+                      <div v-if="userStore.isAdmin" class="ml-4 shrink-0">
+                        <NSelect
+                          :value="getParamPathType(tool.name, param.name)"
+                          :options="pathTypeOptions as any"
+                          size="small"
+                          style="width: 110px"
+                          placeholder="路径类型"
+                          @update:value="
+                            (v: ToolPathType) => setParamPathType(tool.name, param.name, v)
+                          "
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-theme-muted text-sm">无参数</div>
+              </div>
+            </NCollapseItem>
+          </NCollapse>
         </div>
         <NEmpty v-else description="暂无工具" />
       </NCard>

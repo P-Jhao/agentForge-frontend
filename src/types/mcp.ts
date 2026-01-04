@@ -24,6 +24,10 @@ export interface MCPTool {
   inputSchema?: Record<string, unknown>;
 }
 
+// 工具路径配置类型
+export type ToolPathType = 'output' | 'input' | null;
+export type ToolPathConfig = Record<string, Record<string, ToolPathType>>;
+
 // MCP 创建者信息
 export interface MCPCreator {
   id: number;
@@ -70,6 +74,7 @@ export interface MCPAssociatedForge {
 export interface MCPDetail extends MCP {
   associatedForges: MCPAssociatedForge[];
   tools: MCPTool[];
+  toolPathConfig: ToolPathConfig | null;
 }
 
 // 创建 MCP 参数
