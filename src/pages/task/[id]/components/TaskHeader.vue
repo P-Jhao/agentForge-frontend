@@ -8,6 +8,17 @@ import { NAvatar, NButton, NIcon, NTooltip } from 'naive-ui';
 import { StarOutline, Star, ShareSocialOutline } from '@vicons/ionicons5';
 import { useThemeStore, useTaskStore } from '@/stores';
 import ShareModal from './ShareModal.vue';
+import OutputFilesPopover from './OutputFilesPopover.vue';
+import type { OutputFileInfo } from '@/types';
+
+// Props
+interface Props {
+  files?: OutputFileInfo[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  files: () => [],
+});
 
 const themeStore = useThemeStore();
 const taskStore = useTaskStore();
@@ -81,8 +92,11 @@ const titleClass = computed(() => ({
       </NTooltip>
     </div>
 
-    <!-- 右侧：分享和收藏按钮 -->
+    <!-- 右侧：文件列表、分享和收藏按钮 -->
     <div v-if="currentTask" class="flex items-center gap-1">
+      <!-- 文件列表按钮 -->
+      <OutputFilesPopover :files="props.files" />
+
       <!-- 分享按钮 -->
       <NTooltip trigger="hover">
         <template #trigger>

@@ -17,6 +17,7 @@ import TaskHeader from './components/TaskHeader.vue';
 import ShareHeader from './components/ShareHeader.vue';
 import ChatMessageList from './components/ChatMessageList.vue';
 import type { EnhanceMode } from '@/utils/enhanceMode';
+import type { OutputFileInfo } from '@/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -212,6 +213,21 @@ const displayIsLoading = computed(() => {
   return isLoading.value;
 });
 
+// 从渲染项中提取所有输出文件
+const allOutputFiles = computed<OutputFileInfo[]>(() => {
+  const files: OutputFileInfo[] = [];
+  const items = displayRenderItems.value;
+  for (const item of items) {
+    if (item.type === 'tool_call' && item.data.type === 'tool_call') {
+      const toolData = item.data as { outputFiles?: OutputFileInfo[] };
+      if (toolData.outputFiles && toolData.outputFiles.length > 0) {
+        files.push(...toolData.outputFiles);
+      }
+    }
+  }
+  return files;
+});
+
 // 处理发送事件
 const onSend = (
   content: string,
@@ -307,7 +323,7 @@ onBeforeUnmount(() => {
         :forge="currentForge"
         :owner-name="taskStore.currentTask.ownerName"
       />
-      <TaskHeader v-else />
+      <TaskHeader v-else :files="allOutputFiles" />
 
       <!-- 消息列表（可滚动区域） -->
       <ChatMessageList
