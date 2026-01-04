@@ -23,6 +23,7 @@ interface Props {
   success?: boolean;
   summarizedResult?: string;
   error?: string;
+  callId?: string; // 工具调用 ID，用于下载
   // 文件模式属性
   file?: OutputFileInfo;
 }
@@ -33,6 +34,7 @@ const props = withDefaults(defineProps<Props>(), {
   toolName: '',
   summarizedResult: undefined,
   error: undefined,
+  callId: undefined,
   file: undefined,
 });
 
@@ -47,13 +49,26 @@ const handleClose = () => {
   emit('update:show', false);
 };
 
-// 下载文件
+// 下载文件（文件模式）
 const handleDownload = () => {
   if (!props.file?.url) return;
   // 创建隐藏的 a 标签触发下载
   const link = document.createElement('a');
   link.href = props.file.url;
   link.download = props.file.name;
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// 下载工具执行结果（工具模式）
+const handleDownloadToolResult = () => {
+  if (!props.callId) return;
+  // 通过 API 下载工具执行结果
+  const link = document.createElement('a');
+  link.href = `/api/files/tool-result/${props.callId}`;
+  link.download = `${props.toolName}_${props.callId}.md`;
   link.target = '_blank';
   document.body.appendChild(link);
   link.click();
@@ -156,6 +171,18 @@ const modalStyle = computed(() => {
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-1">
+          <!-- 工具模式下载按钮 -->
+          <NButton
+            v-if="mode === 'tool' && callId"
+            quaternary
+            circle
+            size="small"
+            @click="handleDownloadToolResult"
+          >
+            <template #icon>
+              <NIcon :component="Download" />
+            </template>
+          </NButton>
           <!-- 文件模式下载按钮 -->
           <NButton
             v-if="mode === 'file' && file?.url"

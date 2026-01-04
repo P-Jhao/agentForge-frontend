@@ -125,6 +125,7 @@ const hasOutputFiles = computed(() => {
     :tool-name="toolName"
     :success="success"
     :summarized-result="summarizedResult"
+    :call-id="callId"
     :file="selectedFile || undefined"
   />
 </template>
