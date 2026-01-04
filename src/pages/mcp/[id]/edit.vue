@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * 编辑 MCP 页面
- * 仅管理员可访问
+ * 管理员可编辑所有 MCP，普通用户可编辑自己创建的非 stdio 类型 MCP
  */
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -41,16 +41,21 @@ const submitLoading = ref(false);
 
 // 初始化
 onMounted(async () => {
-  // 权限检查：非管理员跳转到 MCP 详情页
-  if (!userStore.isAdmin) {
-    message.warning('无权限访问此页面');
-    router.replace(`/mcp/${mcpId.value}`);
-    return;
-  }
-
   // 加载 MCP 详情
   try {
     const mcp = await mcpStore.fetchMCP(mcpId.value);
+
+    // 权限检查：管理员可编辑所有，普通用户只能编辑自己创建的非 stdio 类型
+    const isAdmin = userStore.isAdmin;
+    const isOwner = mcp.userId === userStore.userInfo?.id;
+    const isStdio = mcp.transportType === 'stdio';
+
+    if (!isAdmin && (!isOwner || isStdio)) {
+      message.warning('无权限编辑此 MCP');
+      router.replace(`/mcp/${mcpId.value}`);
+      return;
+    }
+
     // 将 JSON 数组转为多行文本显示
     let argsText = '';
     if (mcp.args) {

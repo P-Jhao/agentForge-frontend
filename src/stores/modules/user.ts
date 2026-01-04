@@ -6,7 +6,7 @@ import { defineStore } from 'pinia';
 import { http, encryptApiKey } from '@/utils';
 
 // 用户角色类型
-export type UserRole = 'user' | 'root' | 'operator';
+export type UserRole = 'user' | 'premium' | 'root' | 'operator';
 
 // 用户信息类型
 export interface UserInfo {
@@ -16,7 +16,7 @@ export interface UserInfo {
   avatar?: string | null;
   email?: string | null;
   apiQuota?: number;
-  role?: UserRole; // 用户角色：user 普通用户 / root 超级管理员 / operator 平台运营员
+  role?: UserRole; // 用户角色：user 普通用户 / premium 高级用户 / root 超级管理员 / operator 平台运营员
 }
 
 export const useUserStore = defineStore('user', () => {

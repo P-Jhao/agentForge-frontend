@@ -58,6 +58,13 @@ const adminRoutes: RouteRecordRaw = {
       component: () => import('@/pages/admin/mcp/index.vue'),
       meta: { title: 'MCP 管理', requiresAuth: true, requiresOperator: true },
     },
+    // MCP 公开审核
+    {
+      path: 'mcp-approval',
+      name: 'AdminMcpApproval',
+      component: () => import('@/pages/admin/mcpApproval/index.vue'),
+      meta: { title: 'MCP 公开审核', requiresAuth: true, requiresOperator: true },
+    },
   ],
 };
 

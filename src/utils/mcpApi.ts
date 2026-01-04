@@ -120,3 +120,12 @@ export async function updateToolPathConfig(
   });
   return res.data;
 }
+
+/**
+ * 申请公开 MCP（普通用户）
+ * @param id MCP ID
+ */
+export async function requestPublicMCP(id: number): Promise<{ success: boolean }> {
+  const res = await http.post<{ success: boolean }>(`/mcp/${id}/request-public`);
+  return res.data;
+}

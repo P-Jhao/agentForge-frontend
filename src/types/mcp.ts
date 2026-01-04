@@ -17,6 +17,14 @@ export type MCPFilterType = 'all' | 'builtin' | 'mine' | 'other';
 // closed: 管理员主动关闭（普通用户不可见）
 export type MCPStatus = 'connected' | 'disconnected' | 'closed';
 
+// MCP 公开审核状态
+// none: 未申请公开
+// pending: 待审核
+// approved: 已通过
+// rejected: 已拒绝
+// cancelled: 用户已取消
+export type MCPPublicApprovalStatus = 'none' | 'pending' | 'approved' | 'rejected' | 'cancelled';
+
 // MCP 工具接口
 export interface MCPTool {
   name: string;
@@ -54,6 +62,11 @@ export interface MCP {
   remarks: string | null;
   example: string | null;
   status: MCPStatus;
+  // 公开审核相关字段
+  publicApprovalStatus: MCPPublicApprovalStatus;
+  publicApprovalNote: string | null;
+  publicApprovalAt: string | null;
+  publicApprovalBy: number | null;
   createdAt: string;
   updatedAt: string;
   // 创建者信息（列表查询时返回）

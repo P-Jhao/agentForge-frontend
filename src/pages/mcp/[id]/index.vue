@@ -4,6 +4,7 @@
  * 显示 MCP 详细信息、关联的 Forge 列表、工具列表
  * 管理员可以关闭、编辑、删除 MCP，配置工具路径类型
  * 所有用户可以重连 MCP
+ * 普通用户可以申请公开自己创建的 MCP
  */
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -19,6 +20,8 @@ import {
   NCollapse,
   NCollapseItem,
   NSelect,
+  NModal,
+  NResult,
   useMessage,
   useDialog,
 } from 'naive-ui';
@@ -33,8 +36,13 @@ import {
   TerminalOutline,
   ServerOutline,
   SaveOutline,
+  GlobeOutline,
+  TimeOutline,
+  CheckmarkCircleOutline,
+  CloseOutline,
 } from '@vicons/ionicons5';
 import { useUserStore, useMCPStore } from '@/stores';
+import { requestPublicMCP } from '@/utils/mcpApi';
 import ForgeCard from '../components/ForgeCard.vue';
 import type { ToolPathConfig, ToolPathType } from '@/types';
 
@@ -54,6 +62,10 @@ const actionLoading = ref(false);
 // 工具路径配置相关
 const saveConfigLoading = ref(false);
 const localToolPathConfig = ref<ToolPathConfig>({});
+
+// 申请公开相关
+const showRequestPublicModal = ref(false);
+const requestPublicLoading = ref(false);
 
 // 路径类型选项
 const pathTypeOptions: Array<{ value: string | null; label: string }> = [
@@ -143,6 +155,37 @@ const statusText = computed(() => {
 
 // 是否已关闭（管理员主动关闭）
 const isClosed = computed(() => mcp.value?.status === 'closed');
+
+// 是否为当前用户创建的 MCP
+const isOwner = computed(() => mcp.value?.userId === userStore.userInfo?.id);
+
+// 是否可以申请公开（当前用户创建的私有 MCP，且未在审核中）
+const canRequestPublic = computed(() => {
+  if (!mcp.value || userStore.isAdmin) return false;
+  return isOwner.value && !mcp.value.isPublic && mcp.value.publicApprovalStatus !== 'pending';
+});
+
+// 普通用户是否可以编辑（自己创建的非 stdio 类型 MCP）
+const canEdit = computed(() => {
+  if (!mcp.value) return false;
+  // 管理员可以编辑所有
+  if (userStore.isAdmin) return true;
+  // 普通用户只能编辑自己创建的非 stdio 类型 MCP
+  return isOwner.value && mcp.value.transportType !== 'stdio';
+});
+
+// 公开审核状态配置
+const approvalStatusConfig = computed(() => {
+  if (!mcp.value) return null;
+  const configs = {
+    none: null,
+    pending: { text: '审核中', type: 'warning' as const, icon: TimeOutline },
+    approved: { text: '已通过', type: 'success' as const, icon: CheckmarkCircleOutline },
+    rejected: { text: '已拒绝', type: 'error' as const, icon: CloseOutline },
+    cancelled: { text: '已取消', type: 'default' as const, icon: CloseOutline },
+  };
+  return configs[mcp.value.publicApprovalStatus];
+});
 
 // 传输方式配置
 const transportConfig = computed(() => {
@@ -309,6 +352,31 @@ function getToolParams(tool: {
     required: required.includes(name),
   }));
 }
+
+// ========== 申请公开相关方法 ==========
+
+// 打开申请公开确认弹窗
+function handleRequestPublicClick() {
+  showRequestPublicModal.value = true;
+}
+
+// 确认申请公开
+async function handleConfirmRequestPublic() {
+  requestPublicLoading.value = true;
+  try {
+    await requestPublicMCP(mcpId.value);
+    message.success('申请已提交，请等待管理员审核');
+    showRequestPublicModal.value = false;
+    // 刷新详情
+    await mcpStore.fetchMCPDetail(mcpId.value);
+  } catch (error) {
+    // 显示后端返回的具体错误信息
+    const err = error as { message?: string };
+    message.error(err.message || '申请提交失败');
+  } finally {
+    requestPublicLoading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -339,6 +407,26 @@ function getToolParams(tool: {
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-2">
+          <!-- 申请公开按钮（普通用户，自己创建的私有 MCP） -->
+          <NButton v-if="canRequestPublic" type="info" @click="handleRequestPublicClick">
+            <template #icon>
+              <NIcon :component="GlobeOutline" />
+            </template>
+            申请公开
+          </NButton>
+
+          <!-- 审核状态标签（待审核/已拒绝时显示） -->
+          <NTag
+            v-if="isOwner && approvalStatusConfig && mcp.publicApprovalStatus !== 'approved'"
+            :type="approvalStatusConfig.type"
+            size="medium"
+          >
+            <template #icon>
+              <NIcon :component="approvalStatusConfig.icon" :size="14" />
+            </template>
+            {{ approvalStatusConfig.text }}
+          </NTag>
+
           <!-- 已关闭状态：显示开启按钮（仅管理员可见此 MCP） -->
           <template v-if="isClosed">
             <NButton
@@ -372,21 +460,21 @@ function getToolParams(tool: {
             </NButton>
           </template>
 
-          <!-- 管理员操作 -->
-          <template v-if="userStore.isAdmin">
-            <NButton type="primary" class="btn-theme" @click="handleEdit">
-              <template #icon>
-                <NIcon :component="CreateOutline" />
-              </template>
-              编辑
-            </NButton>
-            <NButton type="error" @click="handleDelete">
-              <template #icon>
-                <NIcon :component="TrashOutline" />
-              </template>
-              删除
-            </NButton>
-          </template>
+          <!-- 编辑按钮（管理员或普通用户自己的非 stdio MCP） -->
+          <NButton v-if="canEdit" type="primary" class="btn-theme" @click="handleEdit">
+            <template #icon>
+              <NIcon :component="CreateOutline" />
+            </template>
+            编辑
+          </NButton>
+
+          <!-- 删除按钮（仅管理员） -->
+          <NButton v-if="userStore.isAdmin" type="error" @click="handleDelete">
+            <template #icon>
+              <NIcon :component="TrashOutline" />
+            </template>
+            删除
+          </NButton>
         </div>
       </div>
 
@@ -506,5 +594,48 @@ function getToolParams(tool: {
         <NButton @click="handleBack">返回</NButton>
       </template>
     </NEmpty>
+
+    <!-- 申请公开确认弹窗 -->
+    <NModal v-model:show="showRequestPublicModal" preset="card" style="width: 480px">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <NIcon :component="GlobeOutline" :size="20" class="text-blue-500" />
+          <span>申请公开 MCP</span>
+        </div>
+      </template>
+      <div class="space-y-4">
+        <NResult status="info" title="需要管理员审核" size="small">
+          <template #default>
+            <div class="text-theme-secondary space-y-2 text-sm">
+              <p>公开 MCP 后，其他用户将可以看到并使用此 MCP。</p>
+              <p>为了保证平台内容质量，您的公开申请需要经过管理员审核。</p>
+              <p class="text-theme-muted">
+                审核通常会在 1-2 个工作日内完成，届时您将收到审核结果通知。
+              </p>
+            </div>
+          </template>
+        </NResult>
+        <!-- 如果之前被拒绝过，显示拒绝原因 -->
+        <div
+          v-if="mcp?.publicApprovalStatus === 'rejected' && mcp?.publicApprovalNote"
+          class="rounded-lg bg-red-50 p-3 dark:bg-red-900/20"
+        >
+          <div class="text-theme-muted mb-1 text-xs">上次拒绝原因：</div>
+          <div class="text-sm text-red-600 dark:text-red-400">{{ mcp.publicApprovalNote }}</div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <NButton @click="showRequestPublicModal = false">取消</NButton>
+          <NButton
+            type="primary"
+            :loading="requestPublicLoading"
+            @click="handleConfirmRequestPublic"
+          >
+            确认申请
+          </NButton>
+        </div>
+      </template>
+    </NModal>
   </div>
 </template>

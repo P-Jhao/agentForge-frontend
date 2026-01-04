@@ -13,6 +13,7 @@ import {
   PeopleOutline,
   StarOutline,
   ExtensionPuzzleOutline,
+  CheckmarkCircleOutline,
 } from '@vicons/ionicons5';
 
 const route = useRoute();
@@ -23,6 +24,12 @@ const menuItems = [
   { key: 'tasks', label: '任务管理', icon: ListOutline, path: '/admin/tasks' },
   { key: 'forge', label: 'Forge 管理', icon: HammerOutline, path: '/admin/forge' },
   { key: 'mcp', label: 'MCP 管理', icon: ExtensionPuzzleOutline, path: '/admin/mcp' },
+  {
+    key: 'mcp-approval',
+    label: 'MCP 公开审核',
+    icon: CheckmarkCircleOutline,
+    path: '/admin/mcp-approval',
+  },
   { key: 'featured', label: '推荐示例', icon: StarOutline, path: '/admin/featured' },
   { key: 'members', label: '成员管理', icon: PeopleOutline, path: '/admin/members' },
   { key: 'feedback', label: '反馈管理', icon: ChatbubblesOutline, path: '/admin/feedback' },
@@ -35,6 +42,7 @@ const activeKey = computed(() => {
   if (path === '/admin/tasks') return 'tasks';
   if (path === '/admin/forge') return 'forge';
   if (path === '/admin/mcp') return 'mcp';
+  if (path === '/admin/mcp-approval') return 'mcp-approval';
   if (path === '/admin/featured') return 'featured';
   if (path === '/admin/members') return 'members';
   if (path === '/admin/feedback') return 'feedback';

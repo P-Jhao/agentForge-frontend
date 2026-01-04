@@ -59,6 +59,12 @@ const transportOptions = computed(() => {
   return allTransportOptions.filter((opt) => opt.value !== 'stdio');
 });
 
+// 是否为普通用户（需要审核才能公开）
+const isRegularUser = computed(() => {
+  const role = userStore.userInfo?.role;
+  return role === 'user' || role === 'premium';
+});
+
 // 是否为 stdio 类型
 const isStdio = computed(() => formData.value.transportType === 'stdio');
 
@@ -291,12 +297,22 @@ defineExpose({ validateForm });
       </div>
 
       <!-- 公开设置 -->
-      <div class="flex items-center justify-between">
+      <!-- 管理员：显示开关可直接设置公开 -->
+      <div v-if="!isRegularUser" class="flex items-center justify-between">
         <div>
           <label class="text-theme block text-sm font-medium">公开 MCP</label>
           <p class="text-theme-muted text-xs">公开后其他用户可以看到并使用此 MCP</p>
         </div>
         <NSwitch :value="formData.isPublic" @update:value="updateField('isPublic', $event)" />
+      </div>
+      <!-- 普通用户：显示提示信息，公开需要在详情页申请 -->
+      <div v-else class="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+        <p class="text-theme text-sm">
+          <span class="font-medium">💡 关于公开 MCP</span>
+        </p>
+        <p class="text-theme-muted mt-1 text-xs">
+          如需公开此 MCP，请在创建/保存后前往详情页点击「申请公开」，审核通过后将自动公开。
+        </p>
       </div>
 
       <!-- 操作按钮 -->

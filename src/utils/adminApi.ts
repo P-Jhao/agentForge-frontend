@@ -480,3 +480,68 @@ export async function updateAdminMcp(id: number, params: UpdateAdminMcpParams) {
 export async function deleteAdminMcp(id: number) {
   await http.delete(`/admin/mcp/${id}`);
 }
+
+// ==================== MCP 公开审核 ====================
+
+// MCP 公开审核列表项
+export interface AdminMcpApprovalItem {
+  id: number;
+  name: string;
+  description: string | null;
+  transportType: 'stdio' | 'sse' | 'streamableHttp';
+  url: string | null;
+  source: 'builtin' | 'user';
+  status: 'connected' | 'disconnected' | 'closed';
+  publicApprovalStatus: 'none' | 'pending' | 'approved' | 'rejected';
+  publicApprovalNote: string | null;
+  publicApprovalAt: string | null;
+  creator: {
+    id: number;
+    username: string;
+    nickname: string | null;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// MCP 公开审核列表响应
+export interface AdminMcpApprovalListResponse {
+  mcps: AdminMcpApprovalItem[];
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+// MCP 公开审核列表请求参数
+export interface AdminMcpApprovalListParams {
+  page?: number;
+  pageSize?: number;
+  status?: 'pending' | 'approved' | 'rejected' | 'cancelled';
+}
+
+/**
+ * 获取 MCP 公开审核列表（管理员/运营员）
+ */
+export async function getAdminMcpApprovalList(params: AdminMcpApprovalListParams = {}) {
+  const res = await http.get<AdminMcpApprovalListResponse>(
+    '/admin/mcp/approval/list',
+    params as Record<string, unknown>
+  );
+  return res.data;
+}
+
+/**
+ * 审核 MCP 公开申请（管理员/运营员）
+ * @param id MCP ID
+ * @param action 审核动作：approve（通过）/ reject（拒绝）
+ * @param note 审核备注（拒绝时必填）
+ */
+export async function reviewMcpPublicRequest(
+  id: number,
+  action: 'approve' | 'reject',
+  note?: string
+) {
+  await http.post(`/mcp/${id}/review-public`, { action, note });
+}
