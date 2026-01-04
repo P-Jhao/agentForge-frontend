@@ -18,5 +18,6 @@ defineProps<{
     :status="data.status"
     :success="data.success"
     :summarized-result="data.summarizedResult"
+    :output-files="data.outputFiles"
   />
 </template>

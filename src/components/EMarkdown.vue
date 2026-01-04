@@ -124,6 +124,7 @@ const handleHtmlChanged = (html: string) => {
       :no-mermaid="true"
       :no-katex="true"
       code-theme="github"
+      :code-foldable="false"
     />
   </div>
 </template>

@@ -2,7 +2,7 @@
  * 聊天相关类型定义
  * 被 useChat 和 useShareChat 共享
  */
-import type { TokenUsage } from '@/types';
+import type { OutputFileInfo, TokenUsage } from '@/types';
 
 // 工具调用状态类型
 export type ToolCallStatus = 'running' | 'success' | 'failed';
@@ -75,6 +75,7 @@ export interface ToolCallMessageData extends BaseMessageData {
   summarizedResult?: string; // Markdown 格式摘要
   success: boolean;
   status: ToolCallStatus;
+  outputFiles?: OutputFileInfo[]; // 输出文件列表
 }
 
 // 轮次结束消息数据

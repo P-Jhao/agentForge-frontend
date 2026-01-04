@@ -49,6 +49,7 @@ export interface ToolCallSegment {
   summarizedResult?: string; // Markdown 格式摘要
   error?: string;
   success: boolean;
+  outputFiles?: OutputFileInfo[]; // 输出文件列表
 }
 
 // 消息段落（assistant 消息的数组元素）
@@ -60,6 +61,15 @@ export interface ToolCallStartData {
   toolName: string;
 }
 
+// 输出文件信息
+export interface OutputFileInfo {
+  path: string; // 服务器文件路径
+  name: string; // 文件名
+  size: number; // 文件大小（字节）
+  url: string; // 下载 URL
+  previewContent?: string; // 预览内容（Markdown 格式，可选）
+}
+
 // 工具调用结果数据（SSE 推送）
 export interface ToolCallResultData {
   callId: string;
@@ -67,6 +77,7 @@ export interface ToolCallResultData {
   success: boolean;
   summarizedResult?: string; // Markdown 格式摘要
   error?: string;
+  outputFiles?: OutputFileInfo[]; // 输出文件列表
 }
 
 // Token 使用统计
@@ -105,6 +116,7 @@ export interface FlatMessage {
   toolName?: string;
   summarizedResult?: string; // Markdown 格式摘要
   success?: boolean;
+  outputFiles?: OutputFileInfo[]; // 输出文件列表
   // 用户上传的文件
   files?: UploadedFileInfo[];
   // 中断标记（消息是否因用户中断而不完整）

@@ -1,23 +1,40 @@
 <script setup lang="ts">
 /**
- * 工具结果展示弹窗组件
- * 以 Markdown 格式展示工具执行结果的摘要
+ * 工具结果/文件预览弹窗组件
+ * 支持两种模式：
+ * - tool: 展示工具执行结果的 Markdown 摘要
+ * - file: 展示输出文件的预览内容或下载提示
  */
 import { computed } from 'vue';
 import { NModal, NIcon, NButton } from 'naive-ui';
-import { CheckmarkCircle, CloseCircle, Close } from '@vicons/ionicons5';
+import { CheckmarkCircle, CloseCircle, Close, Download, DocumentText } from '@vicons/ionicons5';
 import EMarkdown from '@/components/EMarkdown.vue';
 import { useThemeStore } from '@/stores';
+import type { OutputFileInfo } from '@/types';
+
+// 弹窗模式
+type ModalMode = 'tool' | 'file';
 
 interface Props {
   show: boolean;
-  toolName: string;
-  success: boolean;
+  mode?: ModalMode;
+  // 工具模式属性
+  toolName?: string;
+  success?: boolean;
   summarizedResult?: string;
   error?: string;
+  // 文件模式属性
+  file?: OutputFileInfo;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  mode: 'tool',
+  success: true,
+  toolName: '',
+  summarizedResult: undefined,
+  error: undefined,
+  file: undefined,
+});
 
 const emit = defineEmits<{
   'update:show': [value: boolean];
@@ -30,13 +47,26 @@ const handleClose = () => {
   emit('update:show', false);
 };
 
-// 状态图标颜色
+// 下载文件
+const handleDownload = () => {
+  if (!props.file?.url) return;
+  // 创建隐藏的 a 标签触发下载
+  const link = document.createElement('a');
+  link.href = props.file.url;
+  link.download = props.file.name;
+  link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// 状态图标颜色（工具模式）
 const statusColor = computed(() => {
   return props.success ? '#22c55e' : '#ef4444';
 });
 
-// 显示的内容
-const displayContent = computed(() => {
+// 工具模式显示的内容
+const toolDisplayContent = computed(() => {
   if (props.error) {
     return `## 执行失败\n\n${props.error}`;
   }
@@ -44,6 +74,27 @@ const displayContent = computed(() => {
     return '## 执行概要\n\n工具执行完成，无返回数据';
   }
   return props.summarizedResult;
+});
+
+// 文件模式显示的内容
+const fileDisplayContent = computed(() => {
+  if (props.file?.previewContent) {
+    return props.file.previewContent;
+  }
+  return null;
+});
+
+// 格式化文件大小
+const formattedFileSize = computed(() => {
+  if (!props.file) return '';
+  const size = props.file.size;
+  if (size < 1024) {
+    return `${size} B`;
+  } else if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  } else {
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
 });
 
 // 弹窗样式
@@ -75,24 +126,78 @@ const modalStyle = computed(() => {
     <div class="tool-result-modal" :style="modalStyle">
       <!-- 头部 -->
       <div class="modal-header">
-        <div class="flex items-center gap-2">
-          <NIcon
-            :component="success ? CheckmarkCircle : CloseCircle"
-            :size="20"
-            :color="statusColor"
-          />
-          <span class="font-medium">工具 {{ toolName }} 执行结果</span>
+        <!-- 工具模式头部 -->
+        <template v-if="mode === 'tool'">
+          <div class="flex items-center gap-2">
+            <NIcon
+              :component="success ? CheckmarkCircle : CloseCircle"
+              :size="20"
+              :color="statusColor"
+            />
+            <span class="font-medium">工具 {{ toolName }} 执行结果</span>
+          </div>
+        </template>
+
+        <!-- 文件模式头部 -->
+        <template v-else>
+          <div class="flex items-center gap-2">
+            <NIcon :component="DocumentText" :size="20" class="opacity-70" />
+            <span class="max-w-[400px] truncate font-medium">{{ file?.name }}</span>
+            <span class="text-xs opacity-50">{{ formattedFileSize }}</span>
+          </div>
+        </template>
+
+        <!-- 操作按钮 -->
+        <div class="flex items-center gap-1">
+          <!-- 文件模式下载按钮 -->
+          <NButton
+            v-if="mode === 'file' && file?.url"
+            quaternary
+            circle
+            size="small"
+            @click="handleDownload"
+          >
+            <template #icon>
+              <NIcon :component="Download" />
+            </template>
+          </NButton>
+          <!-- 关闭按钮 -->
+          <NButton quaternary circle size="small" @click="handleClose">
+            <template #icon>
+              <NIcon :component="Close" />
+            </template>
+          </NButton>
         </div>
-        <NButton quaternary circle size="small" @click="handleClose">
-          <template #icon>
-            <NIcon :component="Close" />
-          </template>
-        </NButton>
       </div>
 
       <!-- 内容区域 -->
       <div class="modal-content">
-        <EMarkdown :model-value="displayContent" mode="preview" />
+        <!-- 工具模式内容 -->
+        <template v-if="mode === 'tool'">
+          <EMarkdown :model-value="toolDisplayContent" mode="preview" />
+        </template>
+
+        <!-- 文件模式内容 -->
+        <template v-else>
+          <!-- 有预览内容 -->
+          <template v-if="fileDisplayContent">
+            <EMarkdown :model-value="fileDisplayContent" mode="preview" />
+          </template>
+          <!-- 无法预览 -->
+          <template v-else>
+            <div class="flex flex-col items-center justify-center py-12 text-center">
+              <NIcon :component="DocumentText" :size="48" class="mb-4 opacity-30" />
+              <p class="mb-2 text-lg opacity-70">无法预览此类型文件</p>
+              <p class="mb-6 text-sm opacity-50">点击下方按钮下载文件查看</p>
+              <NButton type="primary" @click="handleDownload">
+                <template #icon>
+                  <NIcon :component="Download" />
+                </template>
+                下载文件
+              </NButton>
+            </div>
+          </template>
+        </template>
       </div>
     </div>
   </NModal>

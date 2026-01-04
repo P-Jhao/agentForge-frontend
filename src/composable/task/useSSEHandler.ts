@@ -89,6 +89,7 @@ export function useSSEHandler(options: UseSSEHandlerOptions) {
         toolData.success = resultData.success;
         toolData.summarizedResult = resultData.summarizedResult;
         toolData.status = resultData.success ? 'success' : 'failed';
+        toolData.outputFiles = resultData.outputFiles;
       }
       return true;
     }

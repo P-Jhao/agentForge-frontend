@@ -191,6 +191,7 @@ export function convertFlatMessage(msg: FlatMessage): RenderItem {
       summarizedResult: msg.summarizedResult,
       success: msg.success ?? false,
       status: msg.success ? 'success' : 'failed',
+      outputFiles: msg.outputFiles,
     });
     return { id, type: 'tool_call', data };
   }
