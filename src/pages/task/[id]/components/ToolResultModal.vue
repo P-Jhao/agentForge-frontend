@@ -84,6 +84,13 @@ const fileDisplayContent = computed(() => {
   return null;
 });
 
+// 是否为大文件（没有预览内容且文件大小超过 1MB）
+const isLargeFile = computed(() => {
+  if (!props.file) return false;
+  // 没有预览内容且文件大小超过 1MB
+  return !props.file.previewContent && props.file.size > 1024 * 1024;
+});
+
 // 格式化文件大小
 const formattedFileSize = computed(() => {
   if (!props.file) return '';
@@ -183,7 +190,21 @@ const modalStyle = computed(() => {
           <template v-if="fileDisplayContent">
             <EMarkdown :model-value="fileDisplayContent" mode="preview" />
           </template>
-          <!-- 无法预览 -->
+          <!-- 大文件无法预览 -->
+          <template v-else-if="isLargeFile">
+            <div class="flex flex-col items-center justify-center py-12 text-center">
+              <NIcon :component="DocumentText" :size="48" class="mb-4 opacity-30" />
+              <p class="mb-2 text-lg opacity-70">文件过大，无法预览</p>
+              <p class="mb-6 text-sm opacity-50">文件大小超过 1MB，请下载后查看</p>
+              <NButton type="primary" @click="handleDownload">
+                <template #icon>
+                  <NIcon :component="Download" />
+                </template>
+                下载文件
+              </NButton>
+            </div>
+          </template>
+          <!-- 不支持预览的文件类型 -->
           <template v-else>
             <div class="flex flex-col items-center justify-center py-12 text-center">
               <NIcon :component="DocumentText" :size="48" class="mb-4 opacity-30" />
